@@ -1,18 +1,50 @@
 "use client"
 
-import { useState } from "react"
-import { X, Utensils, ShoppingBag, Building2, Fuel, Hotel, Landmark, TreePine, GraduationCap, Loader2, MapPin } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import {
+  X,
+  Utensils,
+  Coffee,
+  ShoppingBag,
+  ShoppingCart,
+  Building2,
+  Fuel,
+  Hotel,
+  Landmark,
+  TreePine,
+  GraduationCap,
+  Loader2,
+  MapPin,
+  CreditCard,
+  Pill,
+  Hospital,
+  ParkingCircle,
+  Church,
+  Clapperboard,
+  Dumbbell,
+  Plane,
+  Star,
+} from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { searchNearbyPlaces, type Place } from "@/lib/geocoding"
 
-interface Place {
-  id: string
-  name: string
-  address: string
-  lat: number
-  lng: number
-  type: string
-}
+/*
+ * PREVIOUSLY: this panel queried the Overpass API directly from
+ * the browser using tag combinations that, for several categories
+ * (notably "Shopping"), don't correspond to any real OpenStreetMap
+ * tag at all — so those categories always returned zero results
+ * and silently showed a FAKE placeholder ("Sample shop") instead.
+ * Only point (node) features were queried, so anything mapped as
+ * a building/way (most supermarkets, malls, hotels...) was
+ * invisible.
+ *
+ * NOW: category queries go through /api/places, which uses correct
+ * tag filters and includes ways/relations too, with an honest
+ * "no results" state instead of fabricated data. The category list
+ * is also considerably larger so more of what's actually in an
+ * area can be found.
+ */
 
 interface PlacesPanelProps {
   isOpen: boolean
@@ -23,73 +55,85 @@ interface PlacesPanelProps {
 
 const CATEGORIES = [
   { id: "restaurant", label: "Restaurants", icon: Utensils },
+  { id: "cafe", label: "Cafes", icon: Coffee },
   { id: "shop", label: "Shopping", icon: ShoppingBag },
+  { id: "supermarket", label: "Supermarkets", icon: ShoppingCart },
   { id: "bank", label: "Banks", icon: Building2 },
+  { id: "atm", label: "ATMs", icon: CreditCard },
   { id: "fuel", label: "Gas Stations", icon: Fuel },
   { id: "hotel", label: "Hotels", icon: Hotel },
   { id: "tourism", label: "Attractions", icon: Landmark },
   { id: "park", label: "Parks", icon: TreePine },
   { id: "university", label: "Universities", icon: GraduationCap },
-]
+  { id: "hospital", label: "Hospitals", icon: Hospital },
+  { id: "pharmacy", label: "Pharmacies", icon: Pill },
+  { id: "parking", label: "Parking", icon: ParkingCircle },
+  { id: "place_of_worship", label: "Worship", icon: Church },
+  { id: "cinema", label: "Cinemas", icon: Clapperboard },
+  { id: "gym", label: "Gyms", icon: Dumbbell },
+  { id: "airport", label: "Airports", icon: Plane },
+] as const
 
 export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: PlacesPanelProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [places, setPlaces] = useState<Place[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
-  const searchNearbyPlaces = async (category: string) => {
+  useEffect(() => {
+    // Cancel any in-flight lookup when the panel closes or the
+    // map center changes significantly, to avoid stale results
+    // landing after a newer request.
+    return () => abortControllerRef.current?.abort()
+  }, [])
+
+  const searchCategory = async (category: string) => {
+    abortControllerRef.current?.abort()
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     setSelectedCategory(category)
     setIsLoading(true)
+    setError(null)
     setPlaces([])
 
     try {
-      // Search for places near the map center using Overpass API
-      const radius = 10000 // 10km radius
-      const query = `
-        [out:json][timeout:25];
-        (
-          node["amenity"="${category}"](around:${radius},${mapCenter[0]},${mapCenter[1]});
-          node["tourism"="${category}"](around:${radius},${mapCenter[0]},${mapCenter[1]});
-          node["shop"="${category}"](around:${radius},${mapCenter[0]},${mapCenter[1]});
-        );
-        out body 20;
-      `
+      const found = await searchNearbyPlaces(
+        category,
+        mapCenter,
+        10000,
+        controller.signal
+      )
 
-      const response = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query,
-      })
-      const data = await response.json()
+      if (controller.signal.aborted) return
 
-      if (data.elements) {
-        const foundPlaces: Place[] = data.elements.map((element: any, index: number) => ({
-          id: `place-${index}`,
-          name: element.tags?.name || `${category.charAt(0).toUpperCase() + category.slice(1)}`,
-          address: element.tags?.["addr:street"] 
-            ? `${element.tags["addr:street"]}${element.tags["addr:city"] ? `, ${element.tags["addr:city"]}` : ""}`
-            : "Ghana",
-          lat: element.lat,
-          lng: element.lon,
-          type: category,
-        }))
-        setPlaces(foundPlaces)
+      setPlaces(found)
+
+      if (found.length === 0) {
+        setError("No places found in this area for this category.")
       }
-    } catch (error) {
-      console.log("[v0] Places search error:", error)
-      // Fallback with sample data
-      setPlaces([
-        {
-          id: "1",
-          name: `Sample ${selectedCategory}`,
-          address: "Near your location",
-          lat: mapCenter[0] + 0.01,
-          lng: mapCenter[1] + 0.01,
-          type: category,
-        },
-      ])
-    }
+    } catch (err) {
+      if (controller.signal.aborted) return
 
-    setIsLoading(false)
+      // The free public Overpass API this route proxies to is
+      // known to return occasional 5xx errors under load — a
+      // real-world condition, not a code defect, and one the UI
+      // already surfaces properly via setError() below. console.error
+      // trips Next's dev overlay as a blocking "Console Error" for
+      // something that's already handled gracefully, so this stays
+      // a warn (still visible for debugging, just not disruptive).
+      console.warn("Places search error:", err)
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not load nearby places. Please try again."
+      )
+    } finally {
+      if (!controller.signal.aborted) {
+        setIsLoading(false)
+      }
+    }
   }
 
   if (!isOpen) return null
@@ -117,7 +161,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
             {CATEGORIES.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => searchNearbyPlaces(id)}
+                onClick={() => searchCategory(id)}
                 className={cn(
                   "flex flex-col items-center gap-2 p-3 rounded-xl transition-colors",
                   selectedCategory === id
@@ -142,7 +186,9 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
           {!isLoading && selectedCategory && places.length === 0 && (
             <div className="text-center py-12">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No places found in this area</p>
+              <p className="text-muted-foreground">
+                {error || "No places found in this area"}
+              </p>
             </div>
           )}
 
@@ -158,16 +204,29 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
                   className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-secondary transition-colors text-left"
                 >
                   <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-                    {CATEGORIES.find((c) => c.id === place.type)?.icon && (
-                      (() => {
-                        const IconComponent = CATEGORIES.find((c) => c.id === place.type)!.icon
-                        return <IconComponent className="w-5 h-5 text-primary" />
-                      })()
-                    )}
+                    {(() => {
+                      const IconComponent =
+                        CATEGORIES.find((c) => c.id === place.type)?.icon ??
+                        MapPin
+                      return <IconComponent className="w-5 h-5 text-primary" />
+                    })()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground truncate">{place.name}</p>
                     <p className="text-sm text-muted-foreground truncate">{place.address}</p>
+                    {/* Only Google-sourced results carry a rating —
+                        the free OSM/Overpass fallback has none, so
+                        this quietly doesn't render for those. */}
+                    {typeof place.rating === "number" && (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                        <span className="text-xs text-muted-foreground">
+                          {place.rating.toFixed(1)}
+                          {typeof place.ratingCount === "number" &&
+                            ` (${place.ratingCount})`}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </button>
               ))}

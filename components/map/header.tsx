@@ -7,7 +7,7 @@ interface HeaderProps {
   onSearchClick: () => void
   onDirectionsClick: () => void
   onPlacesClick: () => void
-  activePanel: "search" | "directions" | "places" | null
+  activePanel: "search" | "directions" | "places" | "saved" | null
 }
 
 export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, activePanel }: HeaderProps) {
@@ -36,7 +36,7 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
               )}
             >
               <Search className="w-4 h-4" />
-              <span className="text-sm">Search places in Ghana...</span>
+              <span className="text-sm">Search anywhere...</span>
             </button>
 
             {/* Quick Actions */}

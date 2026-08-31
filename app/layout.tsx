@@ -36,7 +36,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="bg-background">
-      <body className="font-sans antialiased overflow-hidden">
+      {/*
+        suppressHydrationWarning on <body> only: browser extensions
+        like Grammarly inject attributes (data-new-gr-c-s-check-loaded,
+        data-gr-ext-installed) directly onto <body> before React
+        hydrates, which otherwise trips React's hydration-mismatch
+        warning even though nothing is actually broken. This does NOT
+        suppress mismatches in the app's own content — only on this
+        one element's attributes.
+      */}
+      <body
+        className="font-sans antialiased overflow-hidden"
+        suppressHydrationWarning
+      >
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

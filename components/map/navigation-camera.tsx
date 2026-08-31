@@ -1,15 +1,31 @@
 "use client"
 
-import { useEffect } from "react"
-import L from "leaflet"
+import { useEffect, useRef } from "react"
+import * as maplibregl from "maplibre-gl"
+
+/*
+ * PREVIOUSLY: Leaflet cannot rotate its map, so this component
+ * (also never actually rendered — see location-marker.tsx) could
+ * only pan the camera; the code explicitly said "Leaflet does not
+ * natively rotate the map."
+ *
+ * NOW: MapLibre GL supports bearing + pitch natively, so live
+ * navigation gets a real Apple/Google Maps-style following camera —
+ * it rotates to face the direction of travel and tilts into a 3D
+ * chase view while navigating, then eases back to a flat, north-up
+ * view when navigation stops.
+ */
 
 interface NavigationCameraProps {
-  map: L.Map | null
+  map: maplibregl.Map | null
   latitude: number | null
   longitude: number | null
   heading?: number | null
   navigating?: boolean
 }
+
+const NAVIGATION_PITCH = 55
+const NAVIGATION_ZOOM = 17.5
 
 export function NavigationCamera({
   map,
@@ -18,6 +34,11 @@ export function NavigationCamera({
   heading,
   navigating = false,
 }: NavigationCameraProps) {
+  const wasNavigatingRef = useRef(false)
+
+  /*
+   * Follow the user's position and heading while navigating.
+   */
   useEffect(() => {
     if (
       !map ||
@@ -28,61 +49,38 @@ export function NavigationCamera({
       return
     }
 
-    const target = L.latLng(
-      latitude,
-      longitude
-    )
+    const hasHeading =
+      typeof heading === "number" && Number.isFinite(heading)
 
-    /*
-     * Smoothly follow the user's position.
-     */
-
-    map.panTo(target, {
-      animate: true,
-      duration: 0.6,
-      easeLinearity: 0.25,
-      noMoveStart: true,
+    map.easeTo({
+      center: [longitude, latitude],
+      zoom: Math.max(map.getZoom(), NAVIGATION_ZOOM),
+      pitch: NAVIGATION_PITCH,
+      bearing: hasHeading ? heading : map.getBearing(),
+      duration: 700,
+      easing: (t: number) => t,
     })
-  }, [
-    map,
-    latitude,
-    longitude,
-    navigating,
-  ])
+
+    wasNavigatingRef.current = true
+  }, [map, latitude, longitude, heading, navigating])
 
   /*
-   * Keep the map following the user's
-   * direction without rotating the
-   * entire Leaflet map.
-   *
-   * The heading is intentionally accepted
-   * here so the component can later support
-   * a navigation camera mode.
+   * When navigation ends, smoothly return to a flat, north-up
+   * overview instead of leaving the camera tilted/rotated.
    */
-
   useEffect(() => {
-    if (
-      !map ||
-      heading === null ||
-      heading === undefined ||
-      !Number.isFinite(heading) ||
-      !navigating
-    ) {
-      return
-    }
+    if (!map) return
 
-    /*
-     * Leaflet does not natively rotate the map.
-     *
-     * We therefore leave the map orientation
-     * unchanged and allow LocationMarker to
-     * rotate the user's direction arrow.
-     */
-  }, [
-    map,
-    heading,
-    navigating,
-  ])
+    if (!navigating && wasNavigatingRef.current) {
+      wasNavigatingRef.current = false
+
+      map.easeTo({
+        pitch: 0,
+        bearing: 0,
+        duration: 600,
+      })
+    }
+  }, [map, navigating])
 
   return null
 }

@@ -389,22 +389,33 @@ function getGpsErrorMessage(
    *
    * Browser GeolocationPositionError objects often
    * appear as {} when logged as normal objects.
+   *
+   * DEFENSIVE: `error` isn't always a real, well-formed
+   * GeolocationPositionError. Some browsers/embedded contexts
+   * (a Permissions-Policy that blocks "geolocation" outright, an
+   * insecure/non-HTTPS origin, geolocation disabled at the OS
+   * level, or the call happening inside an iframe without
+   * allow="geolocation") invoke the error callback with an object
+   * that has no `code` at all — that used to fall through to the
+   * generic "Unable to receive..." message with no indication of
+   * *why*, which is exactly the unhelpful case this function
+   * previously couldn't distinguish from a normal timeout.
    */
-  switch (error.code) {
-    case error.PERMISSION_DENIED:
+  switch (error?.code) {
+    case error?.PERMISSION_DENIED:
       return (
         "Location permission was denied. " +
         "Please allow location access for localhost:3000 " +
         "in your browser settings and try again."
       )
 
-    case error.POSITION_UNAVAILABLE:
+    case error?.POSITION_UNAVAILABLE:
       return (
         "Your current GPS position is unavailable. " +
         "Make sure Location Services are enabled and try again."
       )
 
-    case error.TIMEOUT:
+    case error?.TIMEOUT:
       return (
         "GPS location timed out. " +
         "Please wait a moment and try again."
@@ -412,7 +423,10 @@ function getGpsErrorMessage(
 
     default:
       return (
-        "Unable to receive your current GPS location."
+        "Unable to receive your current GPS location. " +
+        "If this keeps happening, location access may be blocked " +
+        "for this page (check your browser's site settings) or " +
+        "unavailable in this environment."
       )
   }
 }
@@ -421,11 +435,32 @@ function logGpsError(
   context: string,
   error: GeolocationPositionError
 ): void {
-  console.error(
+  /*
+   * DEFENSIVE + DOWNGRADED TO warn:
+   *
+   * This fires for expected, already-handled runtime conditions
+   * (permission denied, GPS unavailable, timeout) — not a code
+   * defect — and Next.js's dev overlay treats any console.error()
+   * call as a blocking "Console Error" report. Using console.warn
+   * keeps this visible in the console for debugging without
+   * surfacing a red-screen overlay for something the UI already
+   * shows the user a proper message for (see setGpsError below).
+   *
+   * `error?.code`/`error?.message` guard against the object not
+   * being a real GeolocationPositionError at all (see the comment
+   * in getGpsErrorMessage above) — previously this logged a bare
+   * `{}` with zero information about what actually went wrong.
+   */
+  console.warn(
     `Lincoln Navigation GPS error (${context}):`,
     {
-      code: error.code,
-      message: error.message,
+      code: error?.code ?? "unknown",
+      message:
+        error?.message ||
+        "No message provided by the browser — this can happen " +
+          "when geolocation is blocked by a permissions policy, " +
+          "the page isn't served over a secure origin, or " +
+          "location access is disabled at the OS level.",
     }
   )
 }
@@ -1287,14 +1322,19 @@ export function useLiveNavigation({
           isStartingRef.current =
             false
 
-          console.error(
-            "Lincoln Navigation initial GPS error:",
-            {
-              code: error.code,
-              message: error.message,
-            }
-          )
-
+          /*
+           * PREVIOUSLY: this logged the raw error with its own
+           * console.error call right before handleGpsError below
+           * did the exact same thing again via logGpsError — two
+           * near-identical log lines for one failure, and (since
+           * `error` here isn't always a real, fully-populated
+           * GeolocationPositionError — see getGpsErrorMessage's
+           * comment) the naive {code, message} extraction printed
+           * as an uninformative bare "{}" with no indication of
+           * what actually failed. handleGpsError's own logging
+           * (now defensive, and a console.warn instead of an
+           * error — see logGpsError) already covers this.
+           */
           handleGpsError(
             error,
             "initial location"

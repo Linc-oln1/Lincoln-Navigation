@@ -1,10 +1,22 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import L from "leaflet"
+import * as maplibregl from "maplibre-gl"
+
+/*
+ * PREVIOUSLY: this component was written against the Leaflet API
+ * (L.Marker / L.divIcon) — but map-view.tsx used a MapLibre-style
+ * config and never actually rendered <LocationMarker>, so the nice
+ * pulsing/heading GPS dot below was completely dead code. The map
+ * only ever showed a plain static blue circle.
+ *
+ * NOW: ported to MapLibre GL's Marker API and actually rendered by
+ * map-view.tsx, so live position + heading + accuracy show up on
+ * the map for real.
+ */
 
 interface LocationMarkerProps {
-  map: L.Map | null
+  map: maplibregl.Map | null
   longitude: number | null
   latitude: number | null
   heading?: number | null
@@ -20,7 +32,7 @@ export function LocationMarker({
   accuracy,
   navigating = false,
 }: LocationMarkerProps) {
-  const markerRef = useRef<L.Marker | null>(null)
+  const markerRef = useRef<maplibregl.Marker | null>(null)
   const elementRef = useRef<HTMLDivElement | null>(null)
 
   /*
@@ -52,22 +64,19 @@ export function LocationMarker({
 
     element.style.width = "46px"
     element.style.height = "46px"
+    element.style.visibility = "hidden"
 
     elementRef.current = element
 
-    const icon = L.divIcon({
-      className: "lincoln-location-icon",
-      html: element,
-      iconSize: [46, 46],
-      iconAnchor: [23, 23],
-    })
-
-    const marker = L.marker([0, 0], {
-      icon,
-      interactive: false,
-      keyboard: false,
-      zIndexOffset: 1000,
-    })
+    const marker = new maplibregl.Marker({
+      element,
+      anchor: "center",
+      // Always face the viewer, even if the map is pitched
+      // during live navigation — matches how Apple/Google Maps
+      // render the "you are here" puck.
+      pitchAlignment: "viewport",
+      rotationAlignment: "viewport",
+    }).setLngLat([0, 0])
 
     marker.addTo(map)
 
@@ -95,10 +104,11 @@ export function LocationMarker({
       return
     }
 
-    markerRef.current.setLatLng([
-      latitude,
-      longitude,
-    ])
+    markerRef.current.setLngLat([longitude, latitude])
+
+    if (elementRef.current) {
+      elementRef.current.style.visibility = "visible"
+    }
   }, [longitude, latitude])
 
   /*
@@ -117,14 +127,18 @@ export function LocationMarker({
 
     if (!headingElement) return
 
-    const headingValue =
+    const hasHeading =
       typeof heading === "number" &&
       Number.isFinite(heading)
-        ? heading
-        : 0
 
-    headingElement.style.transform =
-      `rotate(${headingValue}deg)`
+    headingElement.style.transform = `rotate(${
+      hasHeading ? heading : 0
+    }deg)`
+
+    // Only show the direction arrow once we actually know a
+    // heading — an ambient (non-moving) dot shouldn't imply a
+    // direction it doesn't have.
+    headingElement.style.opacity = hasHeading ? "1" : "0"
   }, [heading])
 
   /*
@@ -152,8 +166,8 @@ export function LocationMarker({
     /*
      * Visual representation of GPS accuracy.
      *
-     * This is not a geographic Leaflet circle.
-     * It is intentionally lightweight.
+     * This is intentionally a lightweight screen-space circle
+     * rather than a geographic radius layer.
      */
 
     const size = Math.max(
@@ -161,17 +175,10 @@ export function LocationMarker({
       Math.min(safeAccuracy * 1.5, 130)
     )
 
-    accuracyElement.style.width =
-      `${size}px`
-
-    accuracyElement.style.height =
-      `${size}px`
-
-    accuracyElement.style.left =
-      `${(46 - size) / 2}px`
-
-    accuracyElement.style.top =
-      `${(46 - size) / 2}px`
+    accuracyElement.style.width = `${size}px`
+    accuracyElement.style.height = `${size}px`
+    accuracyElement.style.left = `${(46 - size) / 2}px`
+    accuracyElement.style.top = `${(46 - size) / 2}px`
   }, [accuracy])
 
   /*
@@ -193,16 +200,9 @@ export function LocationMarker({
     <style jsx global>{`
       /*
        * ========================================================
-       * LEAFLET LOCATION MARKER
+       * MAPLIBRE LOCATION MARKER
        * ========================================================
        */
-
-      .lincoln-location-icon {
-        background: transparent !important;
-        border: none !important;
-        width: 46px !important;
-        height: 46px !important;
-      }
 
       .lincoln-location-marker {
         position: relative;
@@ -227,12 +227,9 @@ export function LocationMarker({
 
         border-radius: 9999px;
 
-        background:
-          rgba(37, 99, 235, 0.14);
+        background: rgba(37, 99, 235, 0.14);
 
-        border:
-          1px solid
-          rgba(96, 165, 250, 0.32);
+        border: 1px solid rgba(96, 165, 250, 0.32);
 
         pointer-events: none;
 
@@ -260,13 +257,9 @@ export function LocationMarker({
 
         border-radius: 50%;
 
-        background:
-          rgba(37, 99, 235, 0.18);
+        background: rgba(37, 99, 235, 0.18);
 
-        animation:
-          lincolnLocationPulse
-          2s
-          infinite;
+        animation: lincolnLocationPulse 2s infinite;
 
         pointer-events: none;
       }
@@ -288,19 +281,13 @@ export function LocationMarker({
 
         border-radius: 50%;
 
-        background:
-          #2563eb;
+        background: #2563eb;
 
-        border:
-          3px solid
-          #ffffff;
+        border: 3px solid #ffffff;
 
         box-shadow:
-          0 2px 8px
-          rgba(0, 0, 0, 0.45),
-
-          0 0 0 1px
-          rgba(0, 0, 0, 0.15);
+          0 2px 8px rgba(0, 0, 0, 0.45),
+          0 0 0 1px rgba(0, 0, 0, 0.15);
 
         z-index: 3;
       }
@@ -322,8 +309,7 @@ export function LocationMarker({
 
         border-radius: 50%;
 
-        background:
-          #ffffff;
+        background: #ffffff;
 
         opacity: 0.95;
       }
@@ -348,7 +334,8 @@ export function LocationMarker({
         z-index: 5;
 
         transition:
-          transform 0.25s ease;
+          transform 0.25s ease,
+          opacity 0.2s ease;
       }
 
       /*
@@ -366,20 +353,11 @@ export function LocationMarker({
         width: 0;
         height: 0;
 
-        border-left:
-          4px solid transparent;
+        border-left: 4px solid transparent;
+        border-right: 4px solid transparent;
+        border-bottom: 12px solid #2563eb;
 
-        border-right:
-          4px solid transparent;
-
-        border-bottom:
-          12px solid #2563eb;
-
-        filter:
-          drop-shadow(
-            0 1px 2px
-            rgba(0, 0, 0, 0.4)
-          );
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
       }
 
       /*
@@ -388,22 +366,14 @@ export function LocationMarker({
        * ========================================================
        */
 
-      .lincoln-navigation-active
-        .lincoln-location-dot {
+      .lincoln-navigation-active .lincoln-location-dot {
         box-shadow:
-          0 2px 10px
-          rgba(0, 0, 0, 0.5),
-
-          0 0 0 2px
-          rgba(37, 99, 235, 0.25);
+          0 2px 10px rgba(0, 0, 0, 0.5),
+          0 0 0 2px rgba(37, 99, 235, 0.25);
       }
 
-      .lincoln-navigation-active
-        .lincoln-location-pulse {
-        animation:
-          lincolnNavigationPulse
-          1.8s
-          infinite;
+      .lincoln-navigation-active .lincoln-location-pulse {
+        animation: lincolnNavigationPulse 1.8s infinite;
       }
 
       /*

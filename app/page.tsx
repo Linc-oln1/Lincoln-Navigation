@@ -6,6 +6,7 @@ import { Header } from "@/components/map/header"
 import { SearchPanel } from "@/components/map/search-panel"
 import { DirectionsPanel } from "@/components/map/directions-panel"
 import { PlacesPanel } from "@/components/map/places-panel"
+import { SavedPlacesPanel } from "@/components/map/saved-places"
 import { MapControls } from "@/components/map/map-controls"
 import { LocationDetails } from "@/components/map/location-details"
 import { MobileNav } from "@/components/map/mobile-nav"
@@ -27,7 +28,7 @@ const MapView = dynamic(
   }
 )
 
-type PanelType = "search" | "directions" | "places" | null
+type PanelType = "search" | "directions" | "places" | "saved" | null
 
 export type MapStyle =
   | "light"
@@ -44,7 +45,23 @@ interface Location {
   type?: string
 }
 
+interface LiveNavigationState {
+  isNavigating: boolean
+  latitude: number | null
+  longitude: number | null
+  heading: number | null
+  accuracy: number | null
+}
+
 const GHANA_CENTER: [number, number] = [7.9465, -1.0232]
+
+const EMPTY_NAVIGATION_STATE: LiveNavigationState = {
+  isNavigating: false,
+  latitude: null,
+  longitude: null,
+  heading: null,
+  accuracy: null,
+}
 
 export default function MapNavigator() {
   const [activePanel, setActivePanel] = useState<PanelType>(null)
@@ -53,8 +70,7 @@ export default function MapNavigator() {
     useState<[number, number]>(GHANA_CENTER)
 
   // Device theme is the default
-  const [mapStyle, setMapStyle] =
-    useState<MapStyle>("device")
+  const [mapStyle, setMapStyle] = useState<MapStyle>("device")
 
   const [selectedLocation, setSelectedLocation] =
     useState<Location | null>(null)
@@ -70,10 +86,15 @@ export default function MapNavigator() {
     }>
   >([])
 
+  // Lives here (rather than being trapped inside DirectionsPanel)
+  // so MapView can render the real GPS puck + follow camera during
+  // live navigation instead of that state dead-ending in the
+  // directions UI.
+  const [navigationState, setNavigationState] =
+    useState<LiveNavigationState>(EMPTY_NAVIGATION_STATE)
+
   const handleOpenPanel = useCallback((panel: PanelType) => {
-    setActivePanel((current) =>
-      current === panel ? null : panel
-    )
+    setActivePanel((current) => (current === panel ? null : panel))
   }, [])
 
   const handleClosePanel = useCallback(() => {
@@ -119,7 +140,7 @@ export default function MapNavigator() {
       address: string
       lat: number
       lng: number
-      type: string
+      type?: string
     }) => {
       setMapCenter([place.lat, place.lng])
 
@@ -142,6 +163,27 @@ export default function MapNavigator() {
       setActivePanel(null)
     },
     []
+  )
+
+  const handleSelectSavedPlace = useCallback(
+    (place: {
+      id: string
+      name: string
+      address: string
+      lat: number
+      lng: number
+      icon: "home" | "work" | "favorite"
+    }) => {
+      handleSelectPlace({
+        id: place.id,
+        name: place.name,
+        address: place.address,
+        lat: place.lat,
+        lng: place.lng,
+        type: place.icon,
+      })
+    },
+    [handleSelectPlace]
   )
 
   const handleGetDirections = useCallback(() => {
@@ -180,17 +222,14 @@ export default function MapNavigator() {
         routePoints={routePoints}
         mapStyle={mapStyle}
         onMapClick={handleMapClick}
+        liveNavigation={navigationState}
       />
 
       {/* HEADER */}
       <Header
         onSearchClick={() => handleOpenPanel("search")}
-        onDirectionsClick={() =>
-          handleOpenPanel("directions")
-        }
-        onPlacesClick={() =>
-          handleOpenPanel("places")
-        }
+        onDirectionsClick={() => handleOpenPanel("directions")}
+        onPlacesClick={() => handleOpenPanel("places")}
         activePanel={activePanel}
       />
 
@@ -213,6 +252,7 @@ export default function MapNavigator() {
         onClose={handleClosePanel}
         initialDestination={selectedLocation}
         onRouteCalculated={handleRouteCalculated}
+        onNavigationStateChange={setNavigationState}
       />
 
       {/* PLACES */}
@@ -221,6 +261,13 @@ export default function MapNavigator() {
         onClose={handleClosePanel}
         onSelectPlace={handleSelectPlace}
         mapCenter={mapCenter}
+      />
+
+      {/* SAVED PLACES */}
+      <SavedPlacesPanel
+        isOpen={activePanel === "saved"}
+        onClose={handleClosePanel}
+        onSelectPlace={handleSelectSavedPlace}
       />
 
       {/* LOCATION DETAILS */}
@@ -239,15 +286,10 @@ export default function MapNavigator() {
       {/* MOBILE NAV */}
       <MobileNav
         activePanel={activePanel}
-        onSearchClick={() =>
-          handleOpenPanel("search")
-        }
-        onDirectionsClick={() =>
-          handleOpenPanel("directions")
-        }
-        onPlacesClick={() =>
-          handleOpenPanel("places")
-        }
+        onSearchClick={() => handleOpenPanel("search")}
+        onDirectionsClick={() => handleOpenPanel("directions")}
+        onPlacesClick={() => handleOpenPanel("places")}
+        onSavedClick={() => handleOpenPanel("saved")}
       />
 
       {/* ATTRIBUTION */}

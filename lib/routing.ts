@@ -1,4 +1,21 @@
 // lib/routing.ts
+//
+// Free, keyless routing client.
+//
+// PREVIOUSLY: this file required MAPBOX_ACCESS_TOKEN and called the paid
+// Mapbox Directions API. That variable was never set anywhere in the
+// project (.env.local only defines VALHALLA_URL / GEOCODER_URL, which
+// nothing ever read), so every call to calculateRoute() threw immediately
+// and the app's "Get Directions" feature never worked.
+//
+// NOW: this calls the public OSRM routing API (https://project-osrm.org),
+// which needs no API key. OSRM's response schema is what Mapbox's
+// Directions API itself was built on top of, so the maneuver / step /
+// route parsing logic below is unchanged in shape.
+//
+// Point NEXT_PUBLIC_OSRM_URL at a self-hosted OSRM (or OSRM-compatible)
+// server if you have one; otherwise it falls back to the public demo
+// server, which is fine for light/personal use.
 
 export type TravelMode =
   | "driving"
@@ -13,9 +30,6 @@ export interface RoutingOptions {
   mode?: TravelMode
   alternatives?: boolean
   steps?: boolean
-  voiceInstructions?: boolean
-  language?: string
-  units?: "metric" | "imperial"
   overview?: "full" | "simplified" | "false"
 }
 
@@ -45,9 +59,6 @@ export interface Route {
   distance: number
   duration: number
 
-  // Traffic-aware duration when available
-  durationTypical?: number
-
   geometry: {
     type: "LineString"
     coordinates: Coordinate[]
@@ -57,7 +68,9 @@ export interface Route {
 
   summary: string
 
-  // Traffic information
+  // Real-time traffic isn't available from a free/keyless routing
+  // backend, so this is always reported as unavailable. Kept as a
+  // field (rather than removed) so the UI can render consistently.
   traffic?: {
     hasTraffic: boolean
     congestion?: string[]
@@ -75,39 +88,33 @@ export interface RoutingResult {
 }
 
 /**
- * Mapbox access token.
+ * Base URL of the OSRM (or OSRM-compatible) routing server.
  *
- * IMPORTANT:
- * This file should be used from the server side.
- *
- * Put your token in:
- *
- * .env.local
- *
- * MAPBOX_ACCESS_TOKEN=your_token_here
+ * Falls back to the public OSRM demo server, which supports the
+ * "driving", "walking" and "cycling" profiles used by this app.
  */
-function getMapboxToken(): string {
-  const token = process.env.MAPBOX_ACCESS_TOKEN
+function getRoutingBaseUrl(): string {
+  const configured =
+    process.env.NEXT_PUBLIC_OSRM_URL
 
-  if (!token) {
-    throw new Error(
-      "MAPBOX_ACCESS_TOKEN is missing. Add MAPBOX_ACCESS_TOKEN to .env.local."
-    )
+  if (configured && configured.trim()) {
+    return configured.trim().replace(/\/+$/, "")
   }
 
-  return token
+  return "https://router.project-osrm.org"
 }
 
 /**
- * Convert our travel mode into a Mapbox Directions profile.
+ * Convert our travel mode into an OSRM routing profile.
+ *
+ * OSRM has no dedicated "traffic-aware" profile (that was a
+ * Mapbox-only extension), so driving-traffic falls back to driving.
  */
 function normalizeMode(mode: TravelMode): string {
   switch (mode) {
     case "driving":
-      return "driving"
-
     case "driving-traffic":
-      return "driving-traffic"
+      return "driving"
 
     case "walking":
       return "walking"
@@ -116,12 +123,12 @@ function normalizeMode(mode: TravelMode): string {
       return "cycling"
 
     default:
-      return "driving-traffic"
+      return "driving"
   }
 }
 
 /**
- * Build the Mapbox Directions URL.
+ * Build the OSRM route request URL.
  */
 function buildDirectionsUrl(
   coordinates: Coordinate[],
@@ -133,10 +140,10 @@ function buildDirectionsUrl(
     )
   }
 
-  const token = getMapboxToken()
+  const base = getRoutingBaseUrl()
 
-  const mode = normalizeMode(
-    options.mode ?? "driving-traffic"
+  const profile = normalizeMode(
+    options.mode ?? "driving"
   )
 
   const coordinateString = coordinates
@@ -144,8 +151,6 @@ function buildDirectionsUrl(
     .join(";")
 
   const params = new URLSearchParams()
-
-  params.set("access_token", token)
 
   params.set(
     "alternatives",
@@ -162,40 +167,10 @@ function buildDirectionsUrl(
     options.overview ?? "full"
   )
 
-  params.set(
-    "geometries",
-    "geojson"
-  )
-
-  params.set(
-    "language",
-    options.language ?? "en"
-  )
-
-  params.set(
-    "voice_instructions",
-    String(options.voiceInstructions ?? true)
-  )
-
-  params.set(
-    "voice_units",
-    options.units ?? "metric"
-  )
-
-  /*
-   * Traffic information is particularly useful for
-   * driving-traffic.
-   */
-  if (mode === "driving-traffic") {
-    params.set(
-      "annotations",
-      "duration,distance,speed,congestion"
-    )
-  }
+  params.set("geometries", "geojson")
 
   return (
-    `https://api.mapbox.com/directions/v5/mapbox/` +
-    `${mode}/${coordinateString}?${params.toString()}`
+    `${base}/route/v1/${profile}/${coordinateString}?${params.toString()}`
   )
 }
 
@@ -212,6 +187,10 @@ function numberOrUndefined(
 
 /**
  * Extract a human-readable maneuver instruction.
+ *
+ * OSRM (and therefore Mapbox, which is built on top of it) reports
+ * maneuvers as a {type, modifier} pair rather than free text, so we
+ * build the sentence ourselves.
  */
 function buildInstruction(
   maneuver: {
@@ -308,7 +287,7 @@ function buildInstruction(
       : "Take the fork"
   }
 
-  if (type === "roundabout") {
+  if (type === "roundabout" || type === "roundabout turn") {
     if (maneuver.exit) {
       return road
         ? `Take exit ${maneuver.exit} onto ${road}`
@@ -346,6 +325,24 @@ function buildInstruction(
     return road
       ? `Take the exit onto ${road}`
       : "Take the exit"
+  }
+
+  if (type === "end of road") {
+    if (modifier === "left") {
+      return road
+        ? `Turn left onto ${road}`
+        : "Turn left at the end of the road"
+    }
+
+    if (modifier === "right") {
+      return road
+        ? `Turn right onto ${road}`
+        : "Turn right at the end of the road"
+    }
+
+    return road
+      ? `Continue onto ${road}`
+      : "Continue at the end of the road"
   }
 
   if (type === "uturn") {
@@ -391,7 +388,7 @@ export function formatDuration(
 }
 
 /**
- * Format meters into km or miles.
+ * Format meters into km/m or mi/ft.
  */
 export function formatDistance(
   meters: number,
@@ -424,17 +421,10 @@ export function formatDistance(
 /**
  * Calculate a route between two or more points.
  *
- * Coordinates MUST be:
+ * Coordinates MUST be [longitude, latitude], e.g.:
  *
- * [longitude, latitude]
- *
- * Example:
- *
- * Accra:
- * [-0.1870, 5.6037]
- *
- * Kumasi:
- * [-1.6244, 6.6885]
+ * Accra: [-0.1870, 5.6037]
+ * Kumasi: [-1.6244, 6.6885]
  */
 export async function calculateRoute(
   coordinates: Coordinate[],
@@ -452,9 +442,6 @@ export async function calculateRoute(
       Accept: "application/json",
     },
 
-    /*
-     * Don't cache live traffic routes.
-     */
     cache: "no-store",
   })
 
@@ -573,50 +560,13 @@ export async function calculateRoute(
                   }
                 : undefined,
 
-            /*
-             * Mapbox may return voice instruction
-             * data on the step.
-             */
-            voiceInstruction:
-              typeof step.voiceInstructions?.[0]
-                ?.announcement === "string"
-                ? step.voiceInstructions[0]
-                    .announcement
-                : instruction,
+            voiceInstruction: instruction,
           })
         }
       }
 
-      const congestionValues =
-        route.legs
-          ?.flatMap(
-            (leg: any) =>
-              leg.annotation
-                ?.congestion ?? []
-          )
-          ?.filter(
-            (value: unknown) =>
-              typeof value === "string"
-          ) ?? []
-
-      const hasTraffic =
-        options.mode ===
-          "driving-traffic" ||
-        congestionValues.length > 0
-
-      const firstLeg =
-        route.legs?.[0]
-
-      const durationTypical =
-        numberOrUndefined(
-          firstLeg?.duration_typical
-        )
-
       return {
-        id:
-          typeof route.uuid === "string"
-            ? route.uuid
-            : `route-${routeIndex}`,
+        id: `route-${routeIndex}`,
 
         distance:
           numberOrUndefined(
@@ -627,8 +577,6 @@ export async function calculateRoute(
           numberOrUndefined(
             route.duration
           ) ?? 0,
-
-        durationTypical,
 
         geometry: {
           type: "LineString",
@@ -646,11 +594,7 @@ export async function calculateRoute(
             : "",
 
         traffic: {
-          hasTraffic,
-          congestion:
-            congestionValues.length > 0
-              ? congestionValues
-              : undefined,
+          hasTraffic: false,
         },
       }
     }
@@ -709,28 +653,6 @@ export async function getDrivingRoute(
 }
 
 /**
- * Convenience function for traffic-aware driving.
- *
- * Use this for your normal navigation mode.
- */
-export async function getTrafficRoute(
-  origin: Coordinate,
-  destination: Coordinate,
-  options: Omit<
-    RoutingOptions,
-    "mode"
-  > = {}
-): Promise<RoutingResult> {
-  return calculateRoute(
-    [origin, destination],
-    {
-      ...options,
-      mode: "driving-traffic",
-    }
-  )
-}
-
-/**
  * Walking route.
  */
 export async function getWalkingRoute(
@@ -783,56 +705,4 @@ export function getBestRoute(
   return [...result.routes].sort(
     (a, b) => a.duration - b.duration
   )[0]
-}
-
-/**
- * Get a traffic label suitable for the UI.
- */
-export function getTrafficLevel(
-  route: Route
-): "low" | "moderate" | "heavy" | "unknown" {
-  const congestion =
-    route.traffic?.congestion ?? []
-
-  if (!congestion.length) {
-    return "unknown"
-  }
-
-  let low = 0
-  let moderate = 0
-  let heavy = 0
-
-  for (const value of congestion) {
-    const normalized =
-      value.toLowerCase()
-
-    if (
-      normalized === "low"
-    ) {
-      low++
-    } else if (
-      normalized === "moderate"
-    ) {
-      moderate++
-    } else if (
-      normalized === "heavy" ||
-      normalized === "severe"
-    ) {
-      heavy++
-    }
-  }
-
-  if (heavy > 0) {
-    return "heavy"
-  }
-
-  if (moderate > 0) {
-    return "moderate"
-  }
-
-  if (low > 0) {
-    return "low"
-  }
-
-  return "unknown"
 }

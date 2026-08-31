@@ -1,125 +1,1018 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
+@import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
+/* =========================================================
+   LINCOLN NAVIGATION
+   DARK APPLE MAPS + GOOGLE MAPS INSPIRED UI
+   ========================================================= */
 
 :root {
-  --background: oklch(0.16 0.01 260);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.22 0.01 260);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.22 0.01 260);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.85 0.18 85);
-  --primary-foreground: oklch(0.16 0.01 260);
-  --secondary: oklch(0.28 0.01 260);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.25 0.01 260);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.85 0.18 85);
-  --accent-foreground: oklch(0.16 0.01 260);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.32 0.01 260);
-  --input: oklch(0.28 0.01 260);
-  --ring: oklch(0.85 0.18 85);
-  --chart-1: oklch(0.85 0.18 85);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.20 0.01 260);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.85 0.18 85);
-  --sidebar-primary-foreground: oklch(0.16 0.01 260);
-  --sidebar-accent: oklch(0.28 0.01 260);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.32 0.01 260);
-  --sidebar-ring: oklch(0.85 0.18 85);
-}
+    --primary: #0a84ff;
+    --primary-dark: #0066d6;
+    --primary-foreground: #ffffff;
+    --bg: #0b1118;
+    --surface: rgba(25, 29, 35, 0.88);
+    --surface-strong: rgba(30, 34, 40, 0.96);
+    --surface-soft: rgba(40, 44, 50, 0.86);
+    --text: #f5f5f7;
+    --text-secondary: #b8bbc1;
+    --text-muted: #858990;
+    --border: rgba(255, 255, 255, 0.12);
+    --border-strong: rgba(255, 255, 255, 0.18);
+    --shadow: 0 10px 35px rgba(0, 0, 0, 0.32);
+    --shadow-heavy: 0 18px 55px rgba(0, 0, 0, 0.48);
+    --radius-sm: 12px;
+    --radius-md: 18px;
+    --radius-lg: 24px;
+    --radius-xl: 30px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-.dark {
-  --background: oklch(0.16 0.01 260);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.22 0.01 260);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.22 0.01 260);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.85 0.18 85);
-  --primary-foreground: oklch(0.16 0.01 260);
-  --secondary: oklch(0.28 0.01 260);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.25 0.01 260);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.85 0.18 85);
-  --accent-foreground: oklch(0.16 0.01 260);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.32 0.01 260);
-  --input: oklch(0.28 0.01 260);
-  --ring: oklch(0.85 0.18 85);
-  --chart-1: oklch(0.85 0.18 85);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.20 0.01 260);
-  --sidebar-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.85 0.18 85);
-  --sidebar-primary-foreground: oklch(0.16 0.01 260);
-  --sidebar-accent: oklch(0.28 0.01 260);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(0.32 0.01 260);
-  --sidebar-ring: oklch(0.85 0.18 85);
+    /* =====================================================
+       SHADCN / TAILWIND v4 SEMANTIC TOKENS
+
+       IMPORTANT — this block was missing entirely before.
+       Every component in this app (search panel, places
+       panel, directions panel, header, cards, buttons,
+       inputs...) is styled with Tailwind utilities like
+       bg-card, text-foreground, bg-secondary, bg-primary,
+       text-muted-foreground, border-border, bg-destructive.
+
+       Without the matching --color-* theme tokens below,
+       Tailwind v4 cannot generate those utility classes at
+       all, so the entire UI rendered with no backgrounds,
+       borders, or text color — effectively invisible.
+
+       Values here reuse the dark Apple/Google Maps palette
+       already defined above instead of inventing a second
+       color system.
+       ===================================================== */
+    --background: var(--bg);
+    --foreground: var(--text);
+    --card: #171b21;
+    --card-foreground: var(--text);
+    --popover: #1a1e25;
+    --popover-foreground: var(--text);
+    --secondary: #232830;
+    --secondary-foreground: var(--text);
+    --muted: #1c2129;
+    --muted-foreground: #9a9da5;
+    --accent: #232830;
+    --accent-foreground: var(--text);
+    --destructive: #ff453a;
+    --destructive-foreground: #ffffff;
+    --input: rgba(255, 255, 255, 0.08);
+    --ring: var(--primary);
+    --chart-1: #0a84ff;
+    --chart-2: #34c759;
+    --chart-3: #ff9f0a;
+    --chart-4: #bf5af2;
+    --chart-5: #ff375f;
+    --sidebar: #14171d;
+    --sidebar-foreground: var(--text);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #232830;
+    --sidebar-accent-foreground: var(--text);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--primary);
 }
 
 @theme inline {
-  --font-sans: 'Geist', 'Geist Fallback';
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
+    * {
+        @apply border-border;
+    }
+}
+
+
+/* =========================================================
+   BASE
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #080d13;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+button,
+input {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+::selection {
+    background: rgba(10, 132, 255, 0.35);
+}
+
+
+/* =========================================================
+   APPLICATION
+   ========================================================= */
+
+.lincoln-app {
+    position: relative;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 100vh;
+    overflow: hidden;
+    background: #08111d;
+}
+
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+.map-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    background: #111d2c;
+}
+
+.map-container>div {
+    width: 100%;
+    height: 100%;
+}
+
+
+/* =========================================================
+   MAPLIBRE
+   ========================================================= */
+
+.maplibregl-map {
+    width: 100%;
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+.maplibregl-canvas {
+    outline: none;
+}
+
+
+/* =========================================================
+   DARK MODE
+   =========================================================
+
+   Dark mode is a genuinely repainted vector style (see
+   recolorVectorStyle() in map-view.tsx) — the same free/keyless
+   OpenFreeMap vector tiles as light mode, fetched once and
+   recolored against an Apple/Google-style dark palette (near-black
+   land, deep navy water, charcoal roads, soft lavender borders),
+   rather than a CSS filter over the light map. This also replaced
+   CARTO's "dark_all" raster tiles, which used to be free but now
+   require a CARTO API key/account (they render an "API KEY
+   REQUIRED" watermark without one).
+
+   map-view.tsx still toggles a ".lincoln-map-dark" class onto the
+   map container on every style change — kept as a hook for any
+   future dark-mode-only chrome styling, even though no rule here
+   currently depends on it.
+   ========================================================= */
+
+
+/* =========================================================
+   MAP CONTROLS
+   ========================================================= */
+
+.maplibregl-ctrl-group {
+    overflow: hidden;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: 18px !important;
+    background: rgba(28, 31, 36, 0.88) !important;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35) !important;
+}
+
+.maplibregl-ctrl-group button {
+    width: 44px;
+    height: 44px;
+    border: 0 !important;
+    background: transparent !important;
+    transition: background 160ms ease, transform 120ms ease;
+}
+
+.maplibregl-ctrl-group button:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.maplibregl-ctrl-group button:active {
+    transform: scale(0.92);
+}
+
+.maplibregl-ctrl-group button+button {
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.maplibregl-ctrl-attrib {
+    border-radius: 10px 0 0 0;
+    background: rgba(20, 23, 28, 0.85) !important;
+    color: #9b9fa7;
+    font-size: 10px;
+}
+
+
+/* =========================================================
+   GLASS SURFACE
+   ========================================================= */
+
+.apple-glass {
+    background: rgba(27, 30, 35, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.34);
+}
+
+
+/* =========================================================
+   TOP SEARCH
+   ========================================================= */
+
+.lincoln-search {
+    position: absolute;
+    top: calc(18px + var(--safe-top));
+    left: 50%;
+    z-index: 30;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    width: min(720px, calc(100vw - 470px));
+    min-width: 320px;
+    height: 62px;
+    padding: 7px 8px;
+    gap: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 31px;
+    background: rgba(38, 41, 47, 0.94);
+    backdrop-filter: blur(30px) saturate(150%);
+    -webkit-backdrop-filter: blur(30px) saturate(150%);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.lincoln-search-input {
+    flex: 1;
+    min-width: 0;
+    height: 48px;
+    padding: 0 17px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #f5f5f7;
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+}
+
+.lincoln-search-input::placeholder {
+    color: #a5a7ad;
+}
+
+.lincoln-search-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    font-size: 20px;
+    transition: transform 120ms ease, filter 150ms ease;
+}
+
+.lincoln-search-button:hover {
+    filter: brightness(1.08);
+}
+
+.lincoln-search-button:active {
+    transform: scale(0.91);
+}
+
+
+/* =========================================================
+   SEARCH AVATAR / MIC SUPPORT
+   ========================================================= */
+
+.lincoln-search img,
+.lincoln-search .avatar {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+
+/* =========================================================
+   CATEGORY CHIPS
+   =========================================================
+
+   Add:
+
+   <div className="map-category-chips">
+       <button>🍴 Restaurants</button>
+       <button>☕ Coffee</button>
+       <button>🏨 Hotels</button>
+       <button>⛽ Gas</button>
+   </div>
+
+   ========================================================= */
+
+.map-category-chips {
+    position: absolute;
+    top: calc(92px + var(--safe-top));
+    left: 50%;
+    z-index: 29;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: min(850px, calc(100vw - 30px));
+    overflow-x: auto;
+    padding: 5px 0 8px;
+    scrollbar-width: none;
+}
+
+.map-category-chips::-webkit-scrollbar {
+    display: none;
+}
+
+.map-category-chips button {
+    flex: 0 0 auto;
+    min-height: 48px;
+    padding: 0 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 25px;
+    background: rgba(39, 42, 48, 0.94);
+    color: #f2f2f4;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    transition: transform 120ms ease, background 150ms ease;
+}
+
+.map-category-chips button:hover {
+    background: rgba(55, 59, 66, 0.98);
+}
+
+.map-category-chips button:active {
+    transform: scale(0.95);
+}
+
+.map-category-chips button.active {
+    background: var(--primary);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+
+/* =========================================================
+   MAP LAYER MENU
+   ========================================================= */
+
+.map-layer-menu {
+    position: absolute;
+    top: calc(18px + var(--safe-top));
+    right: 18px;
+    z-index: 30;
+    width: 170px;
+    padding: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 17px;
+    background: rgba(27, 30, 35, 0.88);
+    backdrop-filter: blur(28px) saturate(150%);
+    -webkit-backdrop-filter: blur(28px) saturate(150%);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.38);
+}
+
+.map-layer-menu button {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 42px;
+    padding: 0 13px;
+    border: 0;
+    border-radius: 11px;
+    background: transparent;
+    color: #f2f2f4;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 150ms ease, transform 120ms ease;
+}
+
+.map-layer-menu button:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.map-layer-menu button:active {
+    transform: scale(0.97);
+}
+
+.map-layer-menu button.active {
+    background: rgba(10, 132, 255, 0.22);
+    color: #69b1ff;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   FLOATING NAVIGATION BUTTON
+   =========================================================
+
+   Optional:
+
+   <button className="floating-location-button">
+       ➤
+   </button>
+   ========================================================= */
+
+.floating-location-button {
+    position: absolute;
+    right: 24px;
+    bottom: calc(170px + var(--safe-bottom));
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    background: rgba(35, 38, 44, 0.94);
+    color: #f5f5f7;
+    font-size: 27px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+    transition: transform 120ms ease, background 150ms ease;
+}
+
+.floating-location-button:hover {
+    background: rgba(50, 54, 61, 0.98);
+}
+
+.floating-location-button:active {
+    transform: scale(0.9);
+}
+
+
+/* =========================================================
+   NAVIGATION ACTION BUTTON
+   ========================================================= */
+
+.navigation-action {
+    position: absolute;
+    right: 24px;
+    bottom: calc(90px + var(--safe-bottom));
+    z-index: 25;
+    width: 68px;
+    height: 68px;
+    border: 0;
+    border-radius: 22px;
+    background: #5bc4df;
+    color: #062631;
+    font-size: 25px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+    transition: transform 120ms ease, filter 150ms ease;
+}
+
+.navigation-action:hover {
+    filter: brightness(1.06);
+}
+
+.navigation-action:active {
+    transform: scale(0.92);
+}
+
+
+/* =========================================================
+   COMPASS
+   ========================================================= */
+
+.map-compass {
+    position: absolute;
+    right: 24px;
+    bottom: calc(250px + var(--safe-bottom));
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    background: rgba(32, 35, 41, 0.92);
+    color: #f5f5f7;
+    font-size: 24px;
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+}
+
+
+/* =========================================================
+   DIRECTIONS PANEL
+   ========================================================= */
+
+.directions-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 20;
+    width: min(410px, 100vw);
+    height: 100dvh;
+    padding: calc(24px + var(--safe-top)) 18px calc(24px + var(--safe-bottom));
+    overflow-y: auto;
+    color: var(--text);
+    background: rgba(22, 25, 30, 0.91);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(30px) saturate(140%);
+    -webkit-backdrop-filter: blur(30px) saturate(140%);
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.35);
+    scrollbar-width: none;
+}
+
+.directions-panel::-webkit-scrollbar {
+    display: none;
+}
+
+.directions-panel h2 {
+    margin: 0 0 20px;
+    color: #f5f5f7;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+}
+
+
+/* =========================================================
+   TRANSPORT TABS
+   ========================================================= */
+
+.transport-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    margin-bottom: 16px;
+    padding: 4px;
+    border-radius: 13px;
+    background: rgba(118, 118, 128, 0.16);
+}
+
+.transport-tabs button {
+    min-height: 40px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #a7a9af;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 160ms ease, color 160ms ease, transform 120ms ease;
+}
+
+.transport-tabs button:hover {
+    color: white;
+}
+
+.transport-tabs button.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    font-weight: 600;
+}
+
+.transport-tabs button:active {
+    transform: scale(0.97);
+}
+
+
+/* =========================================================
+   DIRECTIONS INPUTS
+   ========================================================= */
+
+.directions-panel input {
+    width: 100%;
+    height: 50px;
+    padding: 0 15px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 13px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.07);
+    color: #f5f5f7;
+    font-size: 15px;
+    transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.directions-panel input::placeholder {
+    color: #858990;
+}
+
+.directions-panel input:focus {
+    border-color: rgba(10, 132, 255, 0.65);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.14);
+}
+
+
+/* =========================================================
+   DIRECTION ARROW
+   ========================================================= */
+
+.direction-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: -1px auto;
+    color: #8d9199;
+    font-size: 18px;
+}
+
+
+/* =========================================================
+   GET DIRECTIONS
+   ========================================================= */
+
+.directions-button {
+    width: 100%;
+    height: 50px;
+    margin-top: 14px;
+    border: 0;
+    border-radius: 13px;
+    background: var(--primary);
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 6px 18px rgba(10, 132, 255, 0.25);
+    transition: transform 120ms ease, filter 150ms ease;
+}
+
+.directions-button:hover {
+    filter: brightness(1.08);
+}
+
+.directions-button:active {
+    transform: scale(0.985);
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.error {
+    margin-top: 14px;
+    padding: 13px 14px;
+    border: 1px solid rgba(255, 69, 58, 0.25);
+    border-radius: 13px;
+    background: rgba(255, 69, 58, 0.11);
+    color: #ff6961;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   LOCAL VIBE CARD
+   =========================================================
+
+   Optional bottom information panel matching screenshot.
+
+   ========================================================= */
+
+.local-vibe {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(70px + var(--safe-bottom));
+    z-index: 20;
+    min-height: 120px;
+    padding: 20px 22px;
+    border-radius: 28px 28px 0 0;
+    background: rgba(17, 18, 20, 0.94);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -12px 35px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(30px) saturate(140%);
+    -webkit-backdrop-filter: blur(30px) saturate(140%);
+}
+
+.local-vibe::before {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 5px;
+    margin: -10px auto 18px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.local-vibe h2 {
+    margin: 0;
+    color: #f5f5f7;
+    font-size: 25px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+}
+
+
+/* =========================================================
+   BOTTOM NAVIGATION
+   =========================================================
+
+   Optional:
+
+   <nav className="bottom-navigation">
+       <button className="active">...</button>
+       ...
+   </nav>
+
+   ========================================================= */
+
+.bottom-navigation {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    height: calc(78px + var(--safe-bottom));
+    padding: 7px 12px calc(7px + var(--safe-bottom));
+    background: rgba(24, 28, 30, 0.94);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(30px) saturate(140%);
+    -webkit-backdrop-filter: blur(30px) saturate(140%);
+}
+
+.bottom-navigation button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 0;
+    border: 0;
+    border-radius: 18px;
+    background: transparent;
+    color: #a6a8ad;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 150ms ease, color 150ms ease, transform 120ms ease;
+}
+
+.bottom-navigation button:hover {
+    color: #f5f5f7;
+}
+
+.bottom-navigation button.active {
+    color: #f5f5f7;
+    background: rgba(10, 132, 255, 0.22);
+}
+
+.bottom-navigation button:active {
+    transform: scale(0.94);
+}
+
+
+/* =========================================================
+   LOCATION DOT
+   ========================================================= */
+
+.location-dot {
+    width: 26px;
+    height: 26px;
+    border: 5px solid white;
+    border-radius: 50%;
+    background: #1677ff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 0 0 8px rgba(10, 132, 255, 0.18);
+}
+
+
+/* =========================================================
+   MAP MARKERS
+   ========================================================= */
+
+.map-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    height: 42px;
+    padding: 0 10px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: #1d1d1f;
+    border: 3px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+    .lincoln-search {
+        top: calc(12px + var(--safe-top));
+        left: 12px;
+        right: 12px;
+        transform: none;
+        width: auto;
+        min-width: 0;
+        height: 60px;
+    }
+    .lincoln-search-input {
+        font-size: 19px;
+    }
+    .map-category-chips {
+        top: calc(82px + var(--safe-top));
+        left: 12px;
+        transform: none;
+        width: calc(100vw - 24px);
+        gap: 9px;
+    }
+    .map-category-chips button {
+        min-height: 47px;
+        padding: 0 18px;
+        font-size: 15px;
+    }
+    .map-layer-menu {
+        top: calc(145px + var(--safe-top));
+        right: 12px;
+        width: 58px;
+        padding: 5px;
+        border-radius: 18px;
+    }
+    .map-layer-menu button {
+        justify-content: center;
+        width: 48px;
+        min-height: 48px;
+        padding: 0;
+        font-size: 0;
+    }
+    .directions-panel {
+        top: auto;
+        bottom: 0;
+        width: 100%;
+        height: auto;
+        max-height: 48dvh;
+        padding: 15px 14px calc(15px + var(--safe-bottom));
+        border-right: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px 25px 0 0;
+    }
+    .floating-location-button {
+        right: 20px;
+        bottom: calc(175px + var(--safe-bottom));
+        width: 58px;
+        height: 58px;
+    }
+    .navigation-action {
+        right: 20px;
+        bottom: calc(95px + var(--safe-bottom));
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
+    }
+    .map-compass {
+        right: 20px;
+        bottom: calc(245px + var(--safe-bottom));
+        width: 58px;
+        height: 58px;
+    }
+    .local-vibe {
+        bottom: calc(76px + var(--safe-bottom));
+        min-height: 110px;
+        padding: 18px 20px;
+    }
+    .local-vibe h2 {
+        font-size: 23px;
+    }
+}
+
+
+/* =========================================================
+   SMALL PHONES
+   ========================================================= */
+
+@media (max-width: 430px) {
+    .lincoln-search {
+        height: 57px;
+        border-radius: 29px;
+    }
+    .lincoln-search-input {
+        height: 43px;
+        padding: 0 12px;
+        font-size: 18px;
+    }
+    .lincoln-search-button {
+        width: 43px;
+        height: 43px;
+    }
+    .map-category-chips button {
+        min-height: 44px;
+        padding: 0 16px;
+        font-size: 14px;
+    }
+    .directions-panel {
+        max-height: 52dvh;
+    }
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+        animation: none !important;
+    }
 }

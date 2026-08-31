@@ -1,10 +1,24 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Search, X, MapPin, Clock, Star, Navigation, Loader2 } from "lucide-react"
+import { Search, X, MapPin, Clock, Star, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { geocode, type GeocodeResult } from "@/lib/geocoding"
+
+/*
+ * PREVIOUSLY: this component called nominatim.openstreetmap.org
+ * directly from the browser (no identifying User-Agent, against
+ * Nominatim's usage policy), restricted every search to
+ * "&countrycodes=gh" (so nowhere outside Ghana could ever be
+ * found), and had no request cancellation — typing quickly could
+ * let an older, slower response overwrite a newer one on screen.
+ *
+ * NOW: search goes through our own /api/geocode proxy (via
+ * lib/geocoding.ts), Ghana is a ranking bias rather than a wall,
+ * and in-flight requests are cancelled when the query changes.
+ */
 
 interface SearchResult {
   id: string
@@ -40,12 +54,25 @@ const RECENT_SEARCHES: SearchResult[] = [
   { id: "r2", name: "Labadi Beach", address: "La, Accra", lat: 5.5567, lng: -0.1447, type: "Beach" },
 ]
 
+function toSearchResult(result: GeocodeResult): SearchResult {
+  return {
+    id: result.id,
+    name: result.name,
+    address: result.address,
+    lat: result.lat,
+    lng: result.lng,
+    type: result.type,
+  }
+}
+
 export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelProps) {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [showResults, setShowResults] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -54,47 +81,67 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
   }, [isOpen])
 
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (query.length >= 2) {
-        setIsSearching(true)
-        setShowResults(true)
-        
-        try {
-          // Search using Nominatim API (OpenStreetMap) focused on Ghana
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=gh&limit=10&addressdetails=1`
-          )
-          const data = await response.json()
-          
-          const searchResults: SearchResult[] = data.map((item: any, index: number) => ({
-            id: `search-${index}`,
-            name: item.name || item.display_name.split(",")[0],
-            address: item.display_name,
-            lat: parseFloat(item.lat),
-            lng: parseFloat(item.lon),
-            type: item.type || item.class,
-          }))
-          
-          setResults(searchResults)
-        } catch (error) {
-          console.log("[v0] Search error:", error)
-          // Fallback to local search
-          const localResults = POPULAR_PLACES.filter(
-            (place) =>
-              place.name.toLowerCase().includes(query.toLowerCase()) ||
-              place.address.toLowerCase().includes(query.toLowerCase())
-          )
-          setResults(localResults)
-        }
-        
-        setIsSearching(false)
-      } else {
-        setResults([])
-        setShowResults(false)
-      }
-    }, 300)
+    // Cancel whatever request is still in flight from a previous
+    // keystroke so a slow, stale response can't clobber a newer,
+    // faster one.
+    abortControllerRef.current?.abort()
 
-    return () => clearTimeout(timer)
+    if (query.trim().length < 2) {
+      setResults([])
+      setShowResults(false)
+      setError(null)
+      return
+    }
+
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true)
+      setShowResults(true)
+      setError(null)
+
+      try {
+        const geocoded = await geocode(query, {
+          limit: 10,
+          signal: controller.signal,
+        })
+
+        if (controller.signal.aborted) return
+
+        setResults(geocoded.map(toSearchResult))
+      } catch (err) {
+        if (controller.signal.aborted) return
+
+        console.error("Search error:", err)
+
+        // Fall back to the local popular-places list so search
+        // still does *something* useful if the geocoder is down.
+        const localResults = POPULAR_PLACES.filter(
+          (place) =>
+            place.name.toLowerCase().includes(query.toLowerCase()) ||
+            place.address.toLowerCase().includes(query.toLowerCase())
+        )
+
+        setResults(localResults)
+
+        if (localResults.length === 0) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Search is temporarily unavailable."
+          )
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsSearching(false)
+        }
+      }
+    }, 400)
+
+    return () => {
+      clearTimeout(timer)
+    }
   }, [query])
 
   const handleSelect = (result: SearchResult) => {
@@ -123,7 +170,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Search places in Ghana..."
+              placeholder="Search anywhere..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-10 bg-secondary border-0 focus-visible:ring-primary"
@@ -164,11 +211,13 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
             </div>
           )}
 
-          {/* No Results */}
+          {/* No Results / Error */}
           {showResults && results.length === 0 && !isSearching && query.length >= 2 && (
             <div className="text-center py-8">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No places found for &ldquo;{query}&rdquo;</p>
+              <p className="text-muted-foreground">
+                {error || `No places found for “${query}”`}
+              </p>
             </div>
           )}
 
