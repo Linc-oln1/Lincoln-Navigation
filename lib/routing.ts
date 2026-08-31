@@ -20,6 +20,8 @@
 export type TravelMode =
   | "driving"
   | "driving-traffic"
+  | "motorcycle"
+  | "bus"
   | "walking"
   | "cycling"
 
@@ -109,11 +111,21 @@ function getRoutingBaseUrl(): string {
  *
  * OSRM has no dedicated "traffic-aware" profile (that was a
  * Mapbox-only extension), so driving-traffic falls back to driving.
+ *
+ * OSRM's public server also has no dedicated "motorcycle" or "bus"
+ * profile — both route on the "driving" road network (the closest
+ * approximation available; a bus can't use a footpath or a
+ * motorcycle-only track anyway), and the real-world speed
+ * differences those vehicles actually have versus a car are applied
+ * separately as a duration multiplier in DURATION_MULTIPLIER below,
+ * rather than pretended away by silently reporting car timings.
  */
 function normalizeMode(mode: TravelMode): string {
   switch (mode) {
     case "driving":
     case "driving-traffic":
+    case "motorcycle":
+    case "bus":
       return "driving"
 
     case "walking":
@@ -125,6 +137,35 @@ function normalizeMode(mode: TravelMode): string {
     default:
       return "driving"
   }
+}
+
+/**
+ * Real-world average-speed adjustment applied on top of OSRM's
+ * reported duration, for the two modes that share OSRM's "driving"
+ * profile but don't actually move at car speed:
+ *
+ *  - motorcycle (< 1.0): in dense Accra traffic specifically,
+ *    motorcycles/okada routinely move faster than cars by filtering
+ *    between lanes — this is a deliberate, documented approximation
+ *    (OSRM has no lane-filtering model), not a claim of precision.
+ *  - bus (> 1.0): trotro/bus travel is slower than a direct car
+ *    route in practice — boarding stops, indirect routing to pick
+ *    up/drop off passengers, and waiting at stations.
+ *
+ * driving/driving-traffic/walking/cycling use OSRM's own profile
+ * directly and are left at 1.0 (no adjustment).
+ */
+const DURATION_MULTIPLIER: Record<TravelMode, number> = {
+  driving: 1,
+  "driving-traffic": 1,
+  motorcycle: 0.8,
+  bus: 1.35,
+  walking: 1,
+  cycling: 1,
+}
+
+function durationMultiplierFor(mode: TravelMode): number {
+  return DURATION_MULTIPLIER[mode] ?? 1
 }
 
 /**
@@ -473,6 +514,10 @@ export async function calculateRoute(
     )
   }
 
+  const durationMultiplier = durationMultiplierFor(
+    options.mode ?? "driving"
+  )
+
   const routes: Route[] = (
     data.routes ?? []
   ).map(
@@ -503,9 +548,9 @@ export async function calculateRoute(
               ) ?? 0,
 
             duration:
-              numberOrUndefined(
+              (numberOrUndefined(
                 step.duration
-              ) ?? 0,
+              ) ?? 0) * durationMultiplier,
 
             name:
               typeof step.name === "string"
@@ -574,9 +619,9 @@ export async function calculateRoute(
           ) ?? 0,
 
         duration:
-          numberOrUndefined(
+          (numberOrUndefined(
             route.duration
-          ) ?? 0,
+          ) ?? 0) * durationMultiplier,
 
         geometry: {
           type: "LineString",

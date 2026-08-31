@@ -8,6 +8,8 @@ import {
   Car,
   Footprints,
   Bike,
+  Bus,
+  Motorbike,
   ArrowRight,
   Loader2,
   LocateFixed,
@@ -72,7 +74,24 @@ interface DirectionsPanelProps {
   onNavigationStateChange?: (state: NavigationUpdate) => void
 }
 
-type TravelMode = "driving" | "walking" | "cycling"
+type TravelMode =
+  | "driving"
+  | "motorcycle"
+  | "bus"
+  | "walking"
+  | "cycling"
+
+const TRAVEL_MODES: {
+  mode: TravelMode
+  icon: typeof Car
+  label: string
+}[] = [
+  { mode: "driving", icon: Car, label: "Drive" },
+  { mode: "motorcycle", icon: Motorbike, label: "Motorcycle" },
+  { mode: "bus", icon: Bus, label: "Bus" },
+  { mode: "walking", icon: Footprints, label: "Walk" },
+  { mode: "cycling", icon: Bike, label: "Bike" },
+]
 
 interface RouteStepView {
   instruction: string
@@ -151,6 +170,8 @@ export function DirectionsPanel({
     position,
     currentStepIndex,
     distanceToDestination,
+    etaSeconds,
+    arrivalTime,
     navigationMessage,
     gpsError,
     startNavigation,
@@ -159,6 +180,7 @@ export function DirectionsPanel({
     steps: liveSteps,
     destination: liveDestination,
     enabled: isLiveNavigation,
+    travelMode,
   })
 
   /* =======================================================
@@ -482,12 +504,8 @@ export function DirectionsPanel({
         </div>
 
         {/* TRAVEL MODES */}
-        <div className="flex gap-2 mb-4">
-          {[
-            { mode: "driving" as const, icon: Car, label: "Drive" },
-            { mode: "walking" as const, icon: Footprints, label: "Walk" },
-            { mode: "cycling" as const, icon: Bike, label: "Bike" },
-          ].map(({ mode, icon: Icon, label }) => (
+        <div className="flex gap-1.5 mb-4">
+          {TRAVEL_MODES.map(({ mode, icon: Icon, label }) => (
             <button
               type="button"
               key={mode}
@@ -501,14 +519,14 @@ export function DirectionsPanel({
                 setError(null)
               }}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-colors",
+                "flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-colors",
                 travelMode === mode
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               )}
             >
               <Icon className="w-4 h-4" />
-              <span className="text-sm font-medium">{label}</span>
+              <span className="text-[11px] font-medium leading-none">{label}</span>
             </button>
           ))}
         </div>
@@ -641,12 +659,40 @@ export function DirectionsPanel({
                 </div>
               </div>
 
-              {distanceToDestination !== null && (
-                <div className="mt-3 text-sm opacity-90">
-                  {distanceToDestination <= 1000
-                    ? `${Math.round(distanceToDestination)} m`
-                    : `${(distanceToDestination / 1000).toFixed(1)} km`}{" "}
-                  to destination
+              {(distanceToDestination !== null || etaSeconds !== null) && (
+                <div className="mt-3 flex items-baseline gap-2 text-sm opacity-90">
+                  {distanceToDestination !== null && (
+                    <span>
+                      {distanceToDestination <= 1000
+                        ? `${Math.round(distanceToDestination)} m`
+                        : `${(distanceToDestination / 1000).toFixed(1)} km`}
+                    </span>
+                  )}
+
+                  {distanceToDestination !== null && etaSeconds !== null && (
+                    <span className="opacity-60">•</span>
+                  )}
+
+                  {/* Live, recalculated on every GPS update from the
+                      user's actual current speed (see
+                      hooks/use-live-navigation.ts) — not the static
+                      pre-navigation estimate shown before Start Live
+                      Navigation was pressed. */}
+                  {etaSeconds !== null && (
+                    <span className="font-medium">
+                      {formatRouteDuration(etaSeconds)}
+                    </span>
+                  )}
+
+                  {arrivalTime && (
+                    <span className="opacity-75">
+                      · arriving{" "}
+                      {arrivalTime.toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -675,18 +721,37 @@ export function DirectionsPanel({
             <div className="bg-secondary rounded-xl p-4 mb-4">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{routeInfo.duration}</p>
-                  <p className="text-muted-foreground">{routeInfo.distance}</p>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-0.5">
+                    {isNavigating && etaSeconds !== null ? "Live ETA" : "Estimated"}
+                  </p>
+                  <p className="text-2xl font-bold text-foreground">
+                    {isNavigating && etaSeconds !== null
+                      ? formatRouteDuration(etaSeconds)
+                      : routeInfo.duration}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {isNavigating && distanceToDestination !== null
+                      ? formatRouteDistance(distanceToDestination)
+                      : routeInfo.distance}
+                  </p>
+                  {isNavigating && arrivalTime && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Arriving{" "}
+                      {arrivalTime.toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  )}
                 </div>
 
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  {travelMode === "driving" ? (
-                    <Car className="w-6 h-6 text-primary" />
-                  ) : travelMode === "walking" ? (
-                    <Footprints className="w-6 h-6 text-primary" />
-                  ) : (
-                    <Bike className="w-6 h-6 text-primary" />
-                  )}
+                  {(() => {
+                    const ModeIcon =
+                      TRAVEL_MODES.find((m) => m.mode === travelMode)
+                        ?.icon ?? Car
+                    return <ModeIcon className="w-6 h-6 text-primary" />
+                  })()}
                 </div>
               </div>
             </div>

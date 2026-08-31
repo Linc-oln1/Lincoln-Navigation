@@ -7,6 +7,8 @@ import {
   useState,
 } from "react"
 
+import type { TravelMode } from "@/lib/routing"
+
 /* =========================================================
    TYPES
 ========================================================= */
@@ -22,6 +24,12 @@ interface UseLiveNavigationOptions {
   destination: [number, number] | null
   enabled?: boolean
   onRerouteNeeded?: () => void
+  // Which vehicle the live ETA's fallback speed (used whenever a
+  // fresh GPS speed reading isn't available — see
+  // DEFAULT_SPEEDS_METERS_PER_SECOND below) should assume. Defaults
+  // to "driving" so callers that don't pass this keep working
+  // exactly as before.
+  travelMode?: TravelMode
 }
 
 interface NavigationPosition {
@@ -73,6 +81,49 @@ const GPS_OPTIONS: PositionOptions = {
   timeout: 15000,
   maximumAge: 2000,
 }
+
+/*
+ * LIVE ETA
+ *
+ * The browser's GPS speed reading (position.coords.speed, m/s) is
+ * the best available signal for "how fast is this person actually
+ * moving right now" — but it's frequently null (many devices don't
+ * report it at all until the fix is very confident) or momentarily
+ * zero/noisy (stopped at a light, weak signal indoors). Falling
+ * back to 0 in either case would make the ETA either disappear or
+ * spike to infinity every few seconds, which is worse than useless.
+ *
+ * These are the fallback speeds used whenever a confident live
+ * reading isn't available, and are also the floor blended in via
+ * EMA smoothing below — realistic urban Ghana averages per mode,
+ * not open-road maximums.
+ */
+const DEFAULT_SPEEDS_METERS_PER_SECOND: Record<TravelMode, number> = {
+  driving: 10.5, // ~38 km/h — city driving with real traffic
+  "driving-traffic": 10.5,
+  motorcycle: 12.5, // ~45 km/h — okada/lane-filtering moves faster than cars
+  bus: 7, // ~25 km/h — trotro/bus stops, indirect routing
+  walking: 1.35, // ~4.9 km/h
+  cycling: 4.2, // ~15 km/h
+}
+
+/*
+ * A live GPS speed reading below this is treated as "not moving /
+ * not a confident reading" rather than blended into the smoothed
+ * speed — otherwise a momentary stop at every junction would drag
+ * the smoothed speed toward zero and make the ETA spike upward each
+ * time, even though the trip is clearly still progressing overall.
+ */
+const MIN_CONFIDENT_SPEED_MPS = 0.5
+
+/*
+ * Exponential-moving-average weight given to each new GPS speed
+ * reading. Low enough that a couple of noisy samples (a GPS glitch,
+ * a brief stop) don't swing the live ETA around, high enough that a
+ * genuine, sustained speed change (leaving a highway, hitting
+ * traffic) is reflected within a few update cycles.
+ */
+const SPEED_SMOOTHING_FACTOR = 0.3
 
 /* =========================================================
    GEO HELPERS
@@ -293,6 +344,134 @@ function distanceToRoute(
   return minimumDistance
 }
 
+/*
+ * Where along a segment the user's position actually projects to —
+ * the same math as distancePointToSegment above, but returning the
+ * point itself (interpolated in lng/lat) instead of just the
+ * distance to it. Used to measure the REMAINING distance from that
+ * projected point onward, rather than only how far off the route
+ * the user currently is.
+ */
+function closestPointOnSegment(
+  point: [number, number],
+  segmentStart: [number, number],
+  segmentEnd: [number, number]
+): [number, number] {
+  const referenceLatitude = point[1]
+
+  const p = projectToMeters(point, referenceLatitude)
+  const a = projectToMeters(segmentStart, referenceLatitude)
+  const b = projectToMeters(segmentEnd, referenceLatitude)
+
+  const dx = b[0] - a[0]
+  const dy = b[1] - a[1]
+
+  const segmentLengthSquared = dx * dx + dy * dy
+
+  if (segmentLengthSquared === 0) {
+    return segmentStart
+  }
+
+  const t =
+    ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) /
+    segmentLengthSquared
+
+  const clampedT = Math.max(0, Math.min(1, t))
+
+  return [
+    segmentStart[0] + clampedT * (segmentEnd[0] - segmentStart[0]),
+    segmentStart[1] + clampedT * (segmentEnd[1] - segmentStart[1]),
+  ]
+}
+
+/*
+ * Distance remaining ALONG THE ROAD from the user's current
+ * position to the end of the route — not the straight-line
+ * distance to the destination (which distanceToDestination
+ * computes, and which cuts straight through blocks/rivers/hills on
+ * anything but a dead-straight road). This is what a live ETA
+ * should actually be divided by: it finds where on the current
+ * step's polyline the user's position projects to, adds the
+ * distance from there to the end of that step, then adds the full
+ * length of every step after it.
+ */
+function remainingRouteDistanceMeters(
+  position: [number, number],
+  steps: LiveNavigationStep[],
+  stepIndex: number
+): number {
+  if (stepIndex >= steps.length) {
+    return 0
+  }
+
+  let remaining = 0
+
+  const currentStep = steps[stepIndex]
+  const coordinates = currentStep.coordinates
+
+  if (coordinates.length === 1) {
+    remaining += distanceBetween(position, coordinates[0])
+  } else if (coordinates.length > 1) {
+    let closestSegmentIndex = 0
+    let closestDistance = Infinity
+
+    for (let index = 0; index < coordinates.length - 1; index += 1) {
+      const distance = distancePointToSegment(
+        position,
+        coordinates[index],
+        coordinates[index + 1]
+      )
+
+      if (distance < closestDistance) {
+        closestDistance = distance
+        closestSegmentIndex = index
+      }
+    }
+
+    const closestPoint = closestPointOnSegment(
+      position,
+      coordinates[closestSegmentIndex],
+      coordinates[closestSegmentIndex + 1]
+    )
+
+    // From the projected point to the end of the segment it's on...
+    remaining += distanceBetween(
+      closestPoint,
+      coordinates[closestSegmentIndex + 1]
+    )
+
+    // ...plus every full segment remaining in this step.
+    for (
+      let index = closestSegmentIndex + 1;
+      index < coordinates.length - 1;
+      index += 1
+    ) {
+      remaining += distanceBetween(
+        coordinates[index],
+        coordinates[index + 1]
+      )
+    }
+  }
+
+  // Plus the full length of every step after the current one.
+  for (let step = stepIndex + 1; step < steps.length; step += 1) {
+    const stepCoordinates = steps[step].coordinates
+
+    for (
+      let index = 0;
+      index < stepCoordinates.length - 1;
+      index += 1
+    ) {
+      remaining += distanceBetween(
+        stepCoordinates[index],
+        stepCoordinates[index + 1]
+      )
+    }
+  }
+
+  return remaining
+}
+
 /* =========================================================
    BEARING
 ========================================================= */
@@ -474,6 +653,7 @@ export function useLiveNavigation({
   destination,
   enabled = false,
   onRerouteNeeded,
+  travelMode = "driving",
 }: UseLiveNavigationOptions) {
   /* =======================================================
      REFS
@@ -513,6 +693,18 @@ export function useLiveNavigation({
 
   const isStartingRef =
     useRef(false)
+
+  const travelModeRef =
+    useRef<TravelMode>(travelMode)
+
+  /*
+   * Smoothed (EMA) live GPS speed in meters/second, used for the
+   * live ETA. null until at least one confident reading has come
+   * in — see DEFAULT_SPEEDS_METERS_PER_SECOND above for what's used
+   * before that / whenever a reading isn't confident.
+   */
+  const smoothedSpeedRef =
+    useRef<number | null>(null)
 
   /*
    * Prevent repeated voice messages from being
@@ -570,9 +762,41 @@ export function useLiveNavigation({
       null
     )
 
+  /*
+   * LIVE ETA — seconds remaining at the current (or, absent a
+   * confident reading, mode-typical) speed, recalculated on every
+   * GPS update in processGpsPosition below. null until the first
+   * update after startNavigation().
+   */
+  const [
+    etaSeconds,
+    setEtaSeconds,
+  ] =
+    useState<number | null>(
+      null
+    )
+
+  /*
+   * Wall-clock estimated arrival time (Date.now() + etaSeconds),
+   * recomputed alongside etaSeconds. Exposed as a Date so callers
+   * can format it however they like (e.g. toLocaleTimeString).
+   */
+  const [
+    arrivalTime,
+    setArrivalTime,
+  ] =
+    useState<Date | null>(
+      null
+    )
+
   /* =======================================================
      SYNCHRONIZE REFS
   ======================================================= */
+
+  useEffect(() => {
+    travelModeRef.current =
+      travelMode
+  }, [travelMode])
 
   useEffect(() => {
     stepsRef.current =
@@ -675,6 +899,9 @@ export function useLiveNavigation({
 
       isStartingRef.current =
         false
+
+      smoothedSpeedRef.current =
+        null
 
       setIsNavigating(false)
 
@@ -839,6 +1066,68 @@ export function useLiveNavigation({
         ) {
           return
         }
+
+        /* ---------------------------------------------------
+           LIVE ETA
+
+           Recalculated on every GPS update from two live inputs:
+           how far is actually left to travel along the road (not
+           a straight line to the destination — see
+           remainingRouteDistanceMeters), and how fast the user is
+           actually moving right now (their own smoothed GPS speed
+           when it's a confident reading, otherwise a realistic
+           mode-typical average — see DEFAULT_SPEEDS_METERS_PER_SECOND
+           above for why a raw 0 or null speed is never divided by
+           directly).
+        --------------------------------------------------- */
+
+        const rawSpeed =
+          speed !== null && Number.isFinite(speed)
+            ? speed
+            : null
+
+        if (
+          rawSpeed !== null &&
+          rawSpeed >= MIN_CONFIDENT_SPEED_MPS
+        ) {
+          smoothedSpeedRef.current =
+            smoothedSpeedRef.current === null
+              ? rawSpeed
+              : smoothedSpeedRef.current *
+                  (1 - SPEED_SMOOTHING_FACTOR) +
+                rawSpeed * SPEED_SMOOTHING_FACTOR
+        }
+
+        const fallbackSpeed =
+          DEFAULT_SPEEDS_METERS_PER_SECOND[
+            travelModeRef.current
+          ] ?? DEFAULT_SPEEDS_METERS_PER_SECOND.driving
+
+        const effectiveSpeed =
+          smoothedSpeedRef.current !== null
+            ? Math.max(
+                smoothedSpeedRef.current,
+                MIN_CONFIDENT_SPEED_MPS
+              )
+            : fallbackSpeed
+
+        const remainingDistance =
+          remainingRouteDistanceMeters(
+            currentPosition,
+            routeSteps,
+            stepIndex
+          )
+
+        const nextEtaSeconds =
+          remainingDistance / effectiveSpeed
+
+        setEtaSeconds(nextEtaSeconds)
+
+        setArrivalTime(
+          new Date(
+            Date.now() + nextEtaSeconds * 1000
+          )
+        )
 
         /* ---------------------------------------------------
            MANEUVER POINT
@@ -1228,11 +1517,18 @@ export function useLiveNavigation({
       lastSpokenTimeRef.current =
         0
 
+      smoothedSpeedRef.current =
+        null
+
       setCurrentStepIndex(0)
 
       setDistanceToDestination(
         null
       )
+
+      setEtaSeconds(null)
+
+      setArrivalTime(null)
 
       setPosition(null)
 
@@ -1428,6 +1724,10 @@ export function useLiveNavigation({
         null
       )
 
+      setEtaSeconds(null)
+
+      setArrivalTime(null)
+
       return
     }
 
@@ -1490,6 +1790,17 @@ export function useLiveNavigation({
     currentStepIndex,
 
     distanceToDestination,
+
+    // Seconds remaining at the current live-GPS-derived speed
+    // (falling back to a mode-typical average — see
+    // DEFAULT_SPEEDS_METERS_PER_SECOND). Recalculated on every GPS
+    // update; null until navigation has produced its first fix.
+    etaSeconds,
+
+    // Wall-clock estimated arrival — Date.now() + etaSeconds,
+    // recomputed alongside it. Format with toLocaleTimeString() for
+    // display.
+    arrivalTime,
 
     navigationMessage,
 
