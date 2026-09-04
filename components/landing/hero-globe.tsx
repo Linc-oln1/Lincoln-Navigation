@@ -5,32 +5,6 @@ import { seeded } from "@/components/landing/destination-scene"
 interface HeroGlobeProps {
   size?: number
   className?: string
-  /* Overlays a handful of glowing great-circle flight paths across
-     the visible hemisphere, each with a traveling light pulse — the
-     same "route being computed" language as the intro's map-trail
-     act, so the globe reads as part of one system instead of a
-     separate decoration. */
-  trails?: boolean
-}
-
-/* Four waypoints on the visible disc (a 100x100 box centered on the
-   sphere) connected in a ring, each leg bowed outward from center
-   like a great-circle route rather than a straight line. */
-const GLOBE_TRAIL_NODES: [number, number][] = [
-  [28, 30],
-  [72, 24],
-  [66, 70],
-  [24, 64],
-]
-
-const GLOBE_TRAIL_COLORS = ["#4dd8ff", "#0a84ff", "#ffcf8a", "#34c759"]
-
-function globeTrailArc([x1, y1]: [number, number], [x2, y2]: [number, number]) {
-  const mx = (x1 + x2) / 2
-  const my = (y1 + y2) / 2
-  const cx = 50 + (mx - 50) * 1.55
-  const cy = 50 + (my - 50) * 1.55
-  return `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`
 }
 
 /* Sun-flare spikes: a handful of thin light rays at deterministic
@@ -76,7 +50,7 @@ const CITY_LIGHT_COUNT = 130
  * grazing the edge. Because it's DOM/SVG/CSS rather than a rendered
  * video frame, it's inherently crisp at any resolution.
  */
-export function HeroGlobe({ size = 340, className = "", trails = false }: HeroGlobeProps) {
+export function HeroGlobe({ size = 340, className = "" }: HeroGlobeProps) {
   const flareSize = size * 0.16
 
   return (
@@ -146,56 +120,6 @@ export function HeroGlobe({ size = 340, className = "", trails = false }: HeroGl
 
         <div className="landing-globe-rim" />
         <div className="landing-globe-shade" />
-
-        {trails && (
-          <svg
-            className="landing-globe-trails"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-          >
-            {GLOBE_TRAIL_NODES.map((from, i) => {
-              const to = GLOBE_TRAIL_NODES[(i + 1) % GLOBE_TRAIL_NODES.length]
-              const color = GLOBE_TRAIL_COLORS[i % GLOBE_TRAIL_COLORS.length]
-              const d = globeTrailArc(from, to)
-              return (
-                <g key={i}>
-                  <path
-                    d={d}
-                    fill="none"
-                    stroke={color}
-                    strokeWidth="0.35"
-                    strokeLinecap="round"
-                    opacity="0.5"
-                    pathLength={1}
-                    className="cine-draw"
-                    style={{ animationDelay: `${400 + i * 220}ms` }}
-                  />
-                  <path
-                    d={d}
-                    fill="none"
-                    stroke={color}
-                    strokeWidth="0.9"
-                    strokeLinecap="round"
-                    pathLength={1}
-                    className="cine-route-pulse"
-                    style={{ animationDelay: `${1200 + i * 340}ms`, animationDuration: "3.2s", color }}
-                  />
-                </g>
-              )
-            })}
-            {GLOBE_TRAIL_NODES.map(([x, y], i) => (
-              <circle
-                key={`node-${i}`}
-                cx={x}
-                cy={y}
-                r="0.9"
-                fill={GLOBE_TRAIL_COLORS[i % GLOBE_TRAIL_COLORS.length]}
-                className="cine-node-ping"
-                style={{ animationDelay: `${900 + i * 220}ms`, color: GLOBE_TRAIL_COLORS[i % GLOBE_TRAIL_COLORS.length] }}
-              />
-            ))}
-          </svg>
-        )}
       </div>
 
       {/* Lens-flare sun, grazing the globe's upper-left limb */}

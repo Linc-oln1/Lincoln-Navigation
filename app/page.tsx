@@ -17,7 +17,9 @@ import {
 } from "lucide-react"
 import { DestinationScene, seeded, type SceneVariant } from "@/components/landing/destination-scene"
 import { DestinationPhoto } from "@/components/landing/destination-photo"
-import { CinematicIntro } from "@/components/landing/cinematic-intro"
+import { LithosHero } from "@/components/landing/lithos-hero"
+import { LithosFeatures } from "@/components/landing/lithos-features"
+import { LithosStats } from "@/components/landing/lithos-stats"
 import { ProductShowcase } from "@/components/landing/product-showcase"
 
 /* =========================================================
@@ -203,37 +205,41 @@ export default function LandingPage() {
     <div className="landing-hero">
       <Starfield />
 
-      {/* ---- top nav ---- */}
-      <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 sm:px-10 py-5">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-            <Compass className="w-5 h-5 text-primary-foreground" />
+      {/* ---- top nav ----
+           Only shown in the destination phase — the hero below
+           brings its own full nav bar for the intro phase. */}
+      {phase === "destination" && (
+        <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 sm:px-10 py-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
+              <Compass className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <span className="font-bold tracking-tight text-white text-lg">
+              Lincoln Navigation
+            </span>
           </div>
-          <span className="font-bold tracking-tight text-white text-lg">
-            Lincoln Navigation
-          </span>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleLaunchMap}
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[#0b1118] text-sm font-semibold hover:bg-white/90 transition-colors"
-          >
-            Launch Map
-            <ArrowRight className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleLaunchMap}
-            aria-label="Launch map"
-            className="sm:hidden w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleLaunchMap}
+              className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[#0b1118] text-sm font-semibold hover:bg-white/90 transition-colors"
+            >
+              Launch Map
+              <ArrowRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleLaunchMap}
+              aria-label="Launch map"
+              className="sm:hidden w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+      )}
 
-      {/* ---- CINEMATIC INTRO ---- */}
-      {phase === "intro" && <CinematicIntro onComplete={handleIntroComplete} />}
+      {/* ---- HERO ---- */}
+      {phase === "intro" && <LithosHero onEnter={handleIntroComplete} />}
 
       {/* ---- DESTINATION PHASE ---- */}
       {phase === "destination" && current && (
@@ -390,7 +396,18 @@ export default function LandingPage() {
       )}
     </div>
 
-      <ProductShowcase />
+      {/* ---- LITHOS SECTIONS ----
+           Continue the hero's story while still in the intro phase;
+           once a visitor moves into the destination phase, this
+           gives way to the real Ghana-map product tour below. */}
+      {phase === "intro" && (
+        <>
+          <LithosFeatures />
+          <LithosStats onEnter={handleIntroComplete} />
+        </>
+      )}
+
+      {phase === "destination" && <ProductShowcase />}
     </main>
   )
 }
