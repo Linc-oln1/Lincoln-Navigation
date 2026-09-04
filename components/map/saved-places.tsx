@@ -1,10 +1,10 @@
 "use client"
 
-import { X, Star, Home, Briefcase, Heart, Plus, MapPin } from "lucide-react"
+import { X, Star, Home, Briefcase, Heart, Pencil } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Button } from "@/components/ui/button"
+import type { SavedPlaceEntry } from "@/hooks/use-saved-places"
 
-interface SavedPlace {
+interface SelectablePlace {
   id: string
   name: string
   address: string
@@ -16,56 +16,38 @@ interface SavedPlace {
 interface SavedPlacesPanelProps {
   isOpen: boolean
   onClose: () => void
-  onSelectPlace: (place: SavedPlace) => void
+  onSelectPlace: (place: SelectablePlace) => void
+  favorites: SavedPlaceEntry[]
+  home: SavedPlaceEntry | null
+  work: SavedPlaceEntry | null
+  onRemoveFavorite: (id: string) => void
+  onRequestSetHomeWork: (target: "home" | "work") => void
 }
 
-const ICONS = {
-  home: Home,
-  work: Briefcase,
-  favorite: Heart,
-}
-
-// Sample saved places - in a real app, these would come from a database
-const SAVED_PLACES: SavedPlace[] = [
-  {
-    id: "home",
-    name: "Home",
-    address: "Set your home address",
-    lat: 5.6037,
-    lng: -0.1870,
-    icon: "home",
-  },
-  {
-    id: "work",
-    name: "Work",
-    address: "Set your work address",
-    lat: 5.5560,
-    lng: -0.1969,
-    icon: "work",
-  },
-]
-
-const FAVORITES: SavedPlace[] = [
-  {
-    id: "fav1",
-    name: "Accra Mall",
-    address: "Spintex Road, Accra",
-    lat: 5.6207,
-    lng: -0.1174,
-    icon: "favorite",
-  },
-  {
-    id: "fav2",
-    name: "Labadi Beach",
-    address: "La, Accra",
-    lat: 5.5567,
-    lng: -0.1447,
-    icon: "favorite",
-  },
-]
-
-export function SavedPlacesPanel({ isOpen, onClose, onSelectPlace }: SavedPlacesPanelProps) {
+/**
+ * Home/Work/Favorites, all real and specific to this browser (see
+ * use-saved-places.ts) — replaces the previous hardcoded sample
+ * data (fake "Home"/"Work" pins at fixed coordinates, and a
+ * Labadi Beach/Accra Mall favorites list shown to every visitor,
+ * with an "Add" button and empty state that never actually did
+ * anything).
+ */
+export function SavedPlacesPanel({
+  isOpen,
+  onClose,
+  onSelectPlace,
+  favorites,
+  home,
+  work,
+  onRemoveFavorite,
+  onRequestSetHomeWork,
+}: SavedPlacesPanelProps) {
   if (!isOpen) return null
+
+  const quickAccess: { target: "home" | "work"; place: SavedPlaceEntry | null }[] = [
+    { target: "home", place: home },
+    { target: "work", place: work },
+  ]
 
   return (
     <div className="absolute top-0 left-0 h-full w-full md:w-[400px] bg-card/95 backdrop-blur-xl z-[1001] border-r border-border flex flex-col">
@@ -91,22 +73,39 @@ export function SavedPlacesPanel({ isOpen, onClose, onSelectPlace }: SavedPlaces
               Quick Access
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              {SAVED_PLACES.map((place) => {
-                const Icon = ICONS[place.icon]
+              {quickAccess.map(({ target, place }) => {
+                const Icon = target === "home" ? Home : Briefcase
+                const label = target === "home" ? "Home" : "Work"
                 return (
-                  <button
-                    key={place.id}
-                    onClick={() => onSelectPlace(place)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground">{place.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{place.address}</p>
-                    </div>
-                  </button>
+                  <div key={target} className="relative group">
+                    <button
+                      onClick={() =>
+                        place
+                          ? onSelectPlace({ ...place, icon: target })
+                          : onRequestSetHomeWork(target)
+                      }
+                      className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-left"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <Icon className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground">{label}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {place ? place.address : `Set your ${label.toLowerCase()} address`}
+                        </p>
+                      </div>
+                    </button>
+                    {place && (
+                      <button
+                        onClick={() => onRequestSetHomeWork(target)}
+                        aria-label={`Change ${label.toLowerCase()} address`}
+                        className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-card/80 opacity-0 group-hover:opacity-100 hover:bg-card transition-opacity"
+                      >
+                        <Pencil className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    )}
+                  </div>
                 )
               })}
             </div>
@@ -119,43 +118,43 @@ export function SavedPlacesPanel({ isOpen, onClose, onSelectPlace }: SavedPlaces
                 <Star className="w-3 h-3" />
                 Favorites
               </h3>
-              <Button variant="ghost" size="sm" className="h-8 px-2">
-                <Plus className="w-4 h-4 mr-1" />
-                Add
-              </Button>
             </div>
-            <div className="space-y-2">
-              {FAVORITES.map((place) => {
-                const Icon = ICONS[place.icon]
-                return (
-                  <button
-                    key={place.id}
-                    onClick={() => onSelectPlace(place)}
-                    className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-secondary transition-colors text-left"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0">
-                      <Heart className="w-4 h-4 text-destructive" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground">{place.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{place.address}</p>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
+            {favorites.length > 0 ? (
+              <div className="space-y-2">
+                {favorites.map((place) => (
+                  <div key={place.id} className="group flex items-center gap-1">
+                    <button
+                      onClick={() => onSelectPlace({ ...place, icon: "favorite" })}
+                      className="flex-1 min-w-0 flex items-start gap-3 p-3 rounded-lg hover:bg-secondary transition-colors text-left"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-destructive/20 flex items-center justify-center flex-shrink-0">
+                        <Heart className="w-4 h-4 text-destructive" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground">{place.name}</p>
+                        <p className="text-sm text-muted-foreground truncate">{place.address}</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => onRemoveFavorite(place.id)}
+                      aria-label={`Remove ${place.name} from favorites`}
+                      className="p-2 rounded-lg text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-secondary hover:text-destructive transition-colors flex-shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Star className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground">No saved places yet</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Tap the star icon on any place to save it here
+                </p>
+              </div>
+            )}
           </div>
-
-          {/* Empty State */}
-          {FAVORITES.length === 0 && (
-            <div className="text-center py-8">
-              <Star className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No saved places yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Star places to save them here
-              </p>
-            </div>
-          )}
         </div>
       </ScrollArea>
     </div>

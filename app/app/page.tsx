@@ -12,6 +12,7 @@ import { MapControls } from "@/components/map/map-controls"
 import { LocationDetails } from "@/components/map/location-details"
 import { MobileNav } from "@/components/map/mobile-nav"
 import { geocode } from "@/lib/geocoding"
+import { useSavedPlaces, type SavedPlaceInput } from "@/hooks/use-saved-places"
 
 const MapView = dynamic(
   () => import("@/components/map/map-view").then((mod) => mod.MapView),
@@ -89,6 +90,14 @@ function MapNavigator() {
 
   const [selectedLocation, setSelectedLocation] =
     useState<Location | null>(null)
+
+  const savedPlaces = useSavedPlaces()
+
+  // Set when the user taps an unset Home/Work card — the next place
+  // picked in search gets saved as that, instead of just being
+  // shown on the map like a normal search selection.
+  const [homeWorkTarget, setHomeWorkTarget] =
+    useState<"home" | "work" | null>(null)
 
   const [routePoints, setRoutePoints] =
     useState<[number, number][]>([])
@@ -211,9 +220,24 @@ function MapNavigator() {
         },
       ])
 
+      if (homeWorkTarget) {
+        const place: SavedPlaceInput = {
+          name: result.name,
+          address: result.address,
+          lat: result.lat,
+          lng: result.lng,
+        }
+        if (homeWorkTarget === "home") {
+          savedPlaces.setHome(place)
+        } else {
+          savedPlaces.setWork(place)
+        }
+        setHomeWorkTarget(null)
+      }
+
       setActivePanel(null)
     },
-    []
+    [homeWorkTarget, savedPlaces]
   )
 
   const handleSelectPlace = useCallback(
@@ -352,6 +376,14 @@ function MapNavigator() {
         isOpen={activePanel === "saved"}
         onClose={handleClosePanel}
         onSelectPlace={handleSelectSavedPlace}
+        favorites={savedPlaces.favorites}
+        home={savedPlaces.home}
+        work={savedPlaces.work}
+        onRemoveFavorite={savedPlaces.removeFavorite}
+        onRequestSetHomeWork={(target) => {
+          setHomeWorkTarget(target)
+          setActivePanel("search")
+        }}
       />
 
       {/* LOCATION DETAILS */}
@@ -359,6 +391,8 @@ function MapNavigator() {
         activePanel !== "directions" && (
           <LocationDetails
             location={selectedLocation}
+            isFavorite={savedPlaces.isFavorite(selectedLocation)}
+            onToggleFavorite={() => savedPlaces.toggleFavorite(selectedLocation)}
             onClose={() => {
               setSelectedLocation(null)
               setMarkers([])

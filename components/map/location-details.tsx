@@ -2,6 +2,7 @@
 
 import { X, Navigation, Share2, Star, MapPin, Phone, Globe, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface LocationDetailsProps {
   location: {
@@ -11,11 +12,19 @@ interface LocationDetailsProps {
     lng: number
     type?: string
   } | null
+  isFavorite?: boolean
+  onToggleFavorite?: () => void
   onClose: () => void
   onGetDirections: () => void
 }
 
-export function LocationDetails({ location, onClose, onGetDirections }: LocationDetailsProps) {
+export function LocationDetails({
+  location,
+  isFavorite = false,
+  onToggleFavorite,
+  onClose,
+  onGetDirections,
+}: LocationDetailsProps) {
   if (!location) return null
 
   const handleShare = async () => {
@@ -79,9 +88,12 @@ export function LocationDetails({ location, onClose, onGetDirections }: Location
           </Button>
           <Button
             variant="secondary"
+            onClick={onToggleFavorite}
+            aria-pressed={isFavorite}
+            aria-label={isFavorite ? "Remove from favorites" : "Save to favorites"}
             className="px-4"
           >
-            <Star className="w-4 h-4" />
+            <Star className={cn("w-4 h-4", isFavorite && "fill-current text-primary")} />
           </Button>
         </div>
       </div>
