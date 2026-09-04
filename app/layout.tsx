@@ -46,7 +46,7 @@ export default function RootLayout({
         one element's attributes.
       */}
       <body
-        className="font-sans antialiased overflow-hidden"
+        className="font-sans antialiased"
         suppressHydrationWarning
       >
         {children}

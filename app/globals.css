@@ -130,10 +130,16 @@
 html,
 body {
     width: 100%;
-    height: 100%;
+    min-height: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    /* NOTE: intentionally NOT overflow:hidden here anymore — the
+       /app map screen and the landing page's hero section each
+       pin their own height + overflow:hidden internally (see
+       app/app/page.tsx's <main> and .landing-hero below), so the
+       document itself is free to scroll where a page actually has
+       content taller than one screen (e.g. the landing page's
+       product-showcase section). */
     background: #080d13;
     color: var(--text);
     -webkit-font-smoothing: antialiased;
@@ -999,6 +1005,1006 @@ input {
     }
     .directions-panel {
         max-height: 52dvh;
+    }
+}
+
+
+/* =========================================================
+   LANDING PAGE
+
+   The marketing splash at "/" — a rotating-globe hero that
+   settles into "GHANA", then cycles through a handful of
+   real Ghanaian destinations with a live route-planning
+   widget. Everything below is hand-drawn CSS/SVG (gradients,
+   silhouettes) rather than photography, so it stays crisp,
+   license-free, and on-brand with the rest of the app.
+   ========================================================= */
+
+.landing-page {
+    position: relative;
+    width: 100vw;
+    background: #05080f;
+    color: var(--text);
+}
+
+/* the original one-screen splash (nav + intro + destination cycler)
+   now lives in its own pinned-height wrapper, so normal-flow
+   sections (like the product showcase) can follow it below. */
+.landing-hero {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* ---- starfield ---- */
+
+.landing-star {
+    position: absolute;
+    border-radius: 50%;
+    background: #ffffff;
+    animation: landing-twinkle 3.6s ease-in-out infinite;
+}
+
+@keyframes landing-twinkle {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.9; }
+}
+
+/* ---- rotating globe: night-side Earth, city lights, sun flare ---- */
+
+.landing-globe-atmosphere {
+    position: absolute;
+    inset: -16%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 28% 30%, rgba(120, 190, 255, 0.5), rgba(20, 90, 200, 0.14) 50%, transparent 70%);
+    filter: blur(8px);
+    pointer-events: none;
+}
+
+.landing-globe-sphere {
+    position: relative;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow:
+        inset -20px -26px 70px rgba(0, 0, 0, 0.75),
+        inset 10px 10px 34px rgba(120, 180, 255, 0.12),
+        0 30px 90px rgba(2, 10, 24, 0.75);
+}
+
+/* Near-black night hemisphere — the base every other layer sits on. */
+.landing-globe-nightside {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 30% 32%, #0b1830 0%, #060d1c 45%, #020509 100%);
+}
+
+/* City-light layer is now a real SVG (see hero-globe.tsx) — actual
+   simplified continent silhouettes with light clusters clipped to
+   just the landmass, not free-floating blobs. This class only
+   supplies position/animation/blend; the shapes live in the SVG. */
+.landing-globe-citylights {
+    position: absolute;
+    inset: -6% -50%;
+    width: 200%;
+    height: 112%;
+    animation: landing-globe-spin 30s linear infinite;
+    opacity: 0.95;
+    mix-blend-mode: screen;
+}
+
+/* Faint cloud layer, drifting at a different speed than the city
+   lights so the two read as separate depths (surface vs. atmosphere)
+   rather than one flat rotating texture. */
+.landing-globe-clouds {
+    position: absolute;
+    inset: -6% -50%;
+    width: 200%;
+    height: 112%;
+    animation: landing-globe-spin 42s linear infinite reverse;
+    opacity: 0.16;
+    mix-blend-mode: screen;
+}
+
+@keyframes landing-globe-spin {
+    from { transform: translateX(0%); }
+    to { transform: translateX(-50%); }
+}
+
+/* The bright blue atmospheric limb — Earth's rim lit edge-on by a
+   grazing sun, the signature of every "Earth from orbit" shot. */
+.landing-globe-rim {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 26% 22%, rgba(160, 210, 255, 0.95), rgba(70, 150, 255, 0.35) 22%, transparent 40%);
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+.landing-globe-shade {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 30% 26%, rgba(180, 215, 255, 0.16), transparent 32%),
+        radial-gradient(circle at 68% 76%, rgba(0, 0, 0, 0.6), transparent 58%);
+    pointer-events: none;
+}
+
+/* Flight-path route trails overlaid on the globe (HeroGlobe's
+   optional `trails` prop) — clipped to the sphere for free by its
+   parent's own border-radius:50%/overflow:hidden. */
+.landing-globe-trails {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    mix-blend-mode: screen;
+    pointer-events: none;
+}
+
+/* ---- lens-flare sun, grazing the globe's lit limb ---- */
+
+.landing-sunflare {
+    position: absolute;
+    pointer-events: none;
+}
+
+.landing-sunflare-core {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 0%, #cfe8ff 35%, rgba(140, 195, 255, 0.4) 65%, transparent 78%);
+    box-shadow: 0 0 40px 14px rgba(180, 220, 255, 0.55);
+    animation: landing-sun-pulse 4.5s ease-in-out infinite;
+}
+
+@keyframes landing-sun-pulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.18); }
+}
+
+.landing-sunflare-spike {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0 50%;
+    height: 1.5px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(180, 215, 255, 0.25) 40%, transparent 90%);
+}
+
+/* ---- destination scenes ---- */
+
+.landing-scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.landing-scene svg,
+.landing-scene img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    animation: landing-ken-burns 9s ease-out forwards;
+}
+
+@keyframes landing-ken-burns {
+    from { transform: scale(1.1); }
+    to { transform: scale(1.02); }
+}
+
+.landing-scene-vignette {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(0deg, rgba(3, 6, 12, 0.92) 0%, rgba(3, 6, 12, 0.35) 42%, rgba(3, 6, 12, 0.15) 65%, rgba(3, 6, 12, 0.55) 100%),
+        linear-gradient(100deg, rgba(3, 6, 12, 0.55) 0%, transparent 45%);
+}
+
+/* ---- motion helpers ---- */
+
+.landing-fade-up {
+    animation: landing-fade-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes landing-fade-up {
+    from { opacity: 0; transform: translateY(22px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.landing-fade-in {
+    animation: landing-fade-in 1.1s ease both;
+}
+
+@keyframes landing-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.landing-pin-pop {
+    animation: landing-pin-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes landing-pin-pop {
+    from { opacity: 0; transform: translateX(14px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* A slow continuous "camera push" — used on the GHANA title and on
+   each destination reveal so the intro reads as one unbroken zoom
+   (globe -> country -> place) rather than three separate slides. */
+.landing-zoom-in {
+    animation: landing-zoom-in 1.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes landing-zoom-in {
+    from { opacity: 0; transform: scale(1.22); filter: blur(6px); }
+    60% { filter: blur(0); }
+    to { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+
+.landing-globe-recede {
+    animation: landing-globe-recede 1.3s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes landing-globe-recede {
+    from { opacity: 0.95; transform: translate(-50%, -50%) scale(1.5); }
+    to { opacity: 0.65; transform: translate(-50%, -50%) scale(1); }
+}
+
+.landing-facts-panel {
+    animation: landing-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .landing-globe-landmass,
+    .landing-star,
+    .landing-scene svg,
+    .landing-fade-up,
+    .landing-fade-in,
+    .landing-pin-pop,
+    .landing-zoom-in,
+    .landing-globe-recede,
+    .landing-facts-panel {
+        animation: none !important;
+    }
+}
+
+
+/* =========================================================
+   CINEMATIC INTRO
+
+   The ~26s brand-story sequence that plays once when the landing
+   page first loads — a single step, growing into every transport
+   mode, into a road, into Ghana itself, into "FROM STEPS TO
+   MILES." Warmer, sunnier palette than the rest of the landing
+   page on purpose: sky blue, greens, caramel, beige, sun gold —
+   the destination-cycling scenes after it return to the cooler
+   night-map palette.
+   ========================================================= */
+
+.cine-root {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: #0d1420;
+}
+
+.cine-act {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.cine-act-enter {
+    animation: cine-act-enter 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cine-act-enter {
+    from { opacity: 0; transform: scale(1.05); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.cine-act-exit {
+    animation: cine-act-exit 0.6s cubic-bezier(0.7, 0, 0.84, 0) both;
+}
+
+@keyframes cine-act-exit {
+    from { opacity: 1; transform: scale(1); filter: blur(0); }
+    to { opacity: 0; transform: scale(1.03); filter: blur(6px); }
+}
+
+/* ---- kinetic typography: word-by-word rise ---- */
+
+.kinetic-word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(0.5em);
+    animation: kinetic-rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes kinetic-rise {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- generic SVG "draw-on" stroke, using pathLength=1 so every
+   path animates 0→1 regardless of its real geometry ---- */
+
+.cine-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: cine-draw 1.6s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@keyframes cine-draw {
+    to { stroke-dashoffset: 0; }
+}
+
+/* ---- Act 1: single step ---- */
+
+.cine-sky {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 50% 15%, rgba(255, 244, 214, 0.9), transparent 55%),
+        linear-gradient(180deg, #bfe0f5 0%, #dcecf3 38%, #f2e9d6 100%);
+}
+
+.cine-cloud {
+    position: absolute;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.75);
+    filter: blur(2px);
+    animation: cine-cloud-drift 26s linear infinite;
+}
+
+@keyframes cine-cloud-drift {
+    from { transform: translateX(-6%); }
+    to { transform: translateX(6%); }
+}
+
+.cine-searchpill {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 28px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 30px 70px rgba(40, 60, 40, 0.28), 0 4px 14px rgba(40, 60, 40, 0.14);
+    animation: cine-push-in 3.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cine-push-in {
+    from { transform: scale(0.9); }
+    to { transform: scale(1.14); }
+}
+
+/* ---- Act 2: transport swirl ---- */
+
+.cine-orbit-icon {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 14px 30px rgba(40, 60, 40, 0.25);
+    animation: cine-orbit-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes cine-orbit-pop {
+    from { opacity: 0; transform: scale(0.3); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.cine-orbit-spin {
+    animation: cine-orbit-spin 18s linear infinite;
+}
+
+@keyframes cine-orbit-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Act 3: flowing road ---- */
+
+.cine-road-highlight {
+    stroke-dasharray: 0.16 1;
+    animation: cine-road-travel 2.4s linear infinite;
+}
+
+@keyframes cine-road-travel {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+}
+
+/* ---- Act 4: planet rise ---- */
+
+.cine-planet-rise {
+    position: absolute;
+    left: 50%;
+    bottom: -14%;
+    transform: translateX(-50%) translateY(14%);
+    opacity: 0;
+    filter: drop-shadow(0 0 70px rgba(111, 179, 224, 0.35));
+    animation: cine-planet-rise-in 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+}
+
+@keyframes cine-planet-rise-in {
+    from { transform: translateX(-50%) translateY(14%); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0%); opacity: 1; }
+}
+
+.cine-headline-rule {
+    width: 64px;
+    height: 3px;
+    border-radius: 999px;
+    background: #6fb3e0;
+    margin-top: 18px;
+    opacity: 0;
+    animation: landing-fade-in 0.8s ease 1.6s forwards;
+}
+
+.cine-side-orb {
+    position: absolute;
+    top: 40%;
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    filter: blur(1.5px);
+    opacity: 0;
+    animation: cine-side-orb-in 1.4s ease 1s forwards;
+}
+
+.cine-side-orb-left {
+    left: 6%;
+    background: radial-gradient(circle at 35% 32%, #7d8896, #22262e 72%);
+}
+
+.cine-side-orb-right {
+    right: 7%;
+    top: 48%;
+    width: 64px;
+    height: 64px;
+    background: radial-gradient(circle at 35% 32%, #e08a4a, #6e3512 72%);
+}
+
+@keyframes cine-side-orb-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 0.55; transform: translateY(0); }
+}
+
+/* ---- Act 5 & 6: ribbon morph ---- */
+
+.cine-ribbon {
+    animation: cine-ribbon-drift 7s ease-in-out infinite alternate;
+}
+
+@keyframes cine-ribbon-drift {
+    from { transform: translateY(0) scaleX(1); }
+    to { transform: translateY(-2%) scaleX(1.03); }
+}
+
+.cine-ribbon-warm {
+    animation: cine-ribbon-drift 6s ease-in-out infinite alternate, cine-warm-fade 3.6s ease forwards;
+}
+
+@keyframes cine-warm-fade {
+    from { filter: hue-rotate(0deg) saturate(1); }
+    to { filter: hue-rotate(-18deg) saturate(1.25); }
+}
+
+/* ---- Act 7: hero shot ---- */
+
+.cine-float-pin {
+    animation: cine-float-bob 4.5s ease-in-out infinite;
+}
+
+@keyframes cine-float-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* ---- Act "route engine": map trails, HUD readouts ---- */
+
+.cine-map-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(77, 216, 255, 0.09) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(77, 216, 255, 0.09) 1px, transparent 1px);
+    background-size: 34px 34px;
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, #000 35%, transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 45%, #000 35%, transparent 85%);
+}
+
+.cine-scan-sweep {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 120px;
+    background: linear-gradient(180deg, transparent, rgba(77, 216, 255, 0.14), transparent);
+    mix-blend-mode: screen;
+    animation: cine-scan-sweep 4.5s ease-in-out infinite;
+}
+
+@keyframes cine-scan-sweep {
+    0% { top: -10%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+
+/* traveling light along a completed route/flight path — dash unit
+   is normalized via pathLength=1, so this drops onto any path
+   regardless of its real length */
+.cine-route-pulse {
+    stroke-dasharray: 0.05 1;
+    filter: drop-shadow(0 0 4px currentColor);
+    animation: cine-route-travel 2.6s linear infinite;
+}
+
+@keyframes cine-route-travel {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+}
+
+/* waypoint lock-on: a quick expanding ping, settling into a soft,
+   steady glow rather than looping forever (each act is only a few
+   seconds on screen) */
+.cine-node-ping {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    filter: drop-shadow(0 0 5px currentColor);
+    animation: cine-node-ping 2.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes cine-node-ping {
+    0% { transform: scale(0.3); opacity: 0; }
+    22% { transform: scale(2.2); opacity: 1; }
+    50% { transform: scale(1); opacity: 0.85; }
+    100% { transform: scale(1.2); opacity: 0.6; }
+}
+
+/* monospace HUD readout, top-left of the route-engine act */
+.cine-hud {
+    position: absolute;
+    top: 14%;
+    left: 6%;
+    z-index: 5;
+    max-width: min(340px, 82vw);
+    font-family: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
+}
+
+.cine-hud-eyebrow {
+    display: block;
+    color: #4dd8ff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    opacity: 0;
+    animation: landing-fade-in 0.6s ease 0.1s forwards;
+}
+
+.cine-hud-line {
+    margin: 0 0 6px;
+    color: rgba(180, 225, 255, 0.8);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    opacity: 0;
+    animation: cine-hud-line-in 0.5s ease forwards;
+}
+
+@keyframes cine-hud-line-in {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.cine-hud-caret {
+    color: #4dd8ff;
+    font-weight: 700;
+}
+
+/* ---- skip button ---- */
+
+.cine-skip {
+    animation: landing-fade-in 1s ease 1.4s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cine-act-enter,
+    .cine-act-exit,
+    .kinetic-word,
+    .cine-draw,
+    .cine-cloud,
+    .cine-searchpill,
+    .cine-orbit-icon,
+    .cine-orbit-spin,
+    .cine-road-highlight,
+    .cine-planet-rise,
+    .cine-side-orb,
+    .cine-headline-rule,
+    .cine-ribbon,
+    .cine-ribbon-warm,
+    .cine-float-pin,
+    .cine-route-pulse,
+    .cine-node-ping,
+    .cine-hud-eyebrow,
+    .cine-hud-line,
+    .landing-globe-trails .cine-draw,
+    .landing-globe-trails .cine-route-pulse,
+    .landing-globe-trails .cine-node-ping {
+        animation: none !important;
+        opacity: 1;
+    }
+
+    .cine-scan-sweep {
+        display: none;
+    }
+}
+
+
+/* =========================================================
+   PRODUCT SHOWCASE
+
+   A scroll-triggered "UI/UX product tour" section below the
+   hero: a floating tablet mockup of the app's own interface
+   (real HeroGlobe, no new globe design), tilted in 3D and
+   panning level as it scrolls into view, surrounded by floating
+   dark-glass feature cards with a blue/neon-cyan glow — matches
+   the site's existing accent color rather than introducing a
+   new palette.
+   ========================================================= */
+
+.showcase {
+    position: relative;
+    overflow: hidden;
+    padding: 7rem 1.5rem 8rem;
+    background: #05060a;
+}
+
+.showcase-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    pointer-events: none;
+}
+
+.showcase-glow-a {
+    width: 46vw;
+    height: 46vw;
+    top: -14%;
+    left: -10%;
+    background: radial-gradient(circle, rgba(10, 132, 255, 0.28), transparent 70%);
+}
+
+.showcase-glow-b {
+    width: 38vw;
+    height: 38vw;
+    bottom: -12%;
+    right: -8%;
+    background: radial-gradient(circle, rgba(77, 216, 255, 0.2), transparent 70%);
+}
+
+.showcase-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 80%);
+    pointer-events: none;
+}
+
+.showcase-copy {
+    position: relative;
+    z-index: 1;
+    max-width: 620px;
+    margin: 0 auto 4.5rem;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.showcase-copy.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.showcase-eyebrow {
+    display: inline-block;
+    color: #4dd8ff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 0.9rem;
+}
+
+.showcase-heading {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+}
+
+.showcase-sub {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+    margin-top: 1rem;
+    line-height: 1.6;
+}
+
+.showcase-stage {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+}
+
+.showcase-tilt {
+    position: relative;
+    width: clamp(280px, 46vw, 480px);
+    transform-style: preserve-3d;
+    will-change: transform;
+    opacity: 0;
+    transition: opacity 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+}
+
+.showcase-tilt.is-visible {
+    opacity: 1;
+}
+
+/* ---- the tablet ---- */
+
+.showcase-tablet {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 2.9;
+    border-radius: 22px;
+    background: linear-gradient(155deg, #14151b 0%, #0a0b10 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+        0 40px 90px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.02),
+        0 0 60px rgba(10, 132, 255, 0.18);
+    padding: clamp(10px, 1.6vw, 16px);
+    transition: box-shadow 0.4s ease;
+}
+
+.showcase-tablet:hover {
+    box-shadow:
+        0 40px 90px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(77, 216, 255, 0.18),
+        0 0 90px rgba(77, 216, 255, 0.3);
+}
+
+.showcase-tablet-cam {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.showcase-screen {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    overflow: hidden;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(10, 132, 255, 0.16), transparent 60%),
+        #060810;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: clamp(10px, 1.8vw, 18px) clamp(8px, 1.6vw, 16px);
+}
+
+.showcase-screen-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: clamp(9px, 1vw, 11px);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.showcase-screen-logo {
+    width: 16px;
+    height: 16px;
+    border-radius: 5px;
+    background: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.showcase-screen-globe {
+    margin-top: clamp(2px, 1vw, 8px);
+    transform: scale(0.34);
+    transform-origin: top center;
+    margin-bottom: -18%;
+}
+
+.showcase-screen-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: clamp(8px, 0.9vw, 10px);
+    z-index: 1;
+}
+
+.showcase-screen-chart {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: 10%;
+    height: 22%;
+    opacity: 0.8;
+}
+
+.showcase-screen-chart svg {
+    width: 100%;
+    height: 100%;
+}
+
+.showcase-tablet-sheen {
+    position: absolute;
+    inset: 0;
+    border-radius: 22px;
+    background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.08) 45%, transparent 60%);
+    background-size: 250% 250%;
+    background-position: -40% -40%;
+    pointer-events: none;
+    animation: showcase-sheen-sweep 6s ease-in-out infinite;
+}
+
+@keyframes showcase-sheen-sweep {
+    0%, 15% { background-position: -60% -60%; }
+    50% { background-position: 60% 60%; }
+    100%, 85% { background-position: -60% -60%; }
+}
+
+/* ---- floating feature cards ---- */
+
+.showcase-card {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(15, 18, 26, 0.75);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(77, 216, 255, 0.22);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45), 0 0 26px rgba(77, 216, 255, 0.12);
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    animation: showcase-card-float 5s ease-in-out infinite;
+}
+
+.showcase-card:hover {
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45), 0 0 40px rgba(77, 216, 255, 0.3);
+    border-color: rgba(77, 216, 255, 0.5);
+}
+
+.showcase-tilt.is-visible .showcase-card {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.showcase-card-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.showcase-card-value {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 1px 0 0;
+    white-space: nowrap;
+}
+
+.showcase-card-weather {
+    top: -6%;
+    left: -8%;
+    transition-delay: 0.15s;
+    animation-delay: 0.4s;
+}
+
+.showcase-card-route {
+    bottom: 6%;
+    right: -10%;
+    transition-delay: 0.3s;
+    animation-delay: 1.1s;
+}
+
+.showcase-card-route .showcase-card-spark {
+    width: 46px;
+    height: 18px;
+    margin-left: 2px;
+}
+
+.showcase-card-hover {
+    top: 32%;
+    right: -13%;
+    transition-delay: 0.45s;
+    animation-delay: 0.7s;
+}
+
+.showcase-card-hover svg {
+    animation: showcase-cursor-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes showcase-card-float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-8px) scale(1); }
+}
+
+.showcase-tilt:not(.is-visible) .showcase-card {
+    animation: none;
+}
+
+@keyframes showcase-cursor-pulse {
+    0%, 100% { opacity: 1; filter: drop-shadow(0 0 0 rgba(77, 216, 255, 0)); }
+    50% { opacity: 0.6; filter: drop-shadow(0 0 6px rgba(77, 216, 255, 0.7)); }
+}
+
+@media (max-width: 640px) {
+    .showcase-card {
+        padding: 8px 11px;
+        gap: 8px;
+    }
+    .showcase-card-weather { left: 0; top: -4%; }
+    .showcase-card-route { right: 0; bottom: 4%; }
+    .showcase-card-hover { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .showcase-copy,
+    .showcase-tilt,
+    .showcase-card,
+    .showcase-tablet-sheen,
+    .showcase-card-hover svg {
+        animation: none !important;
+        transition: opacity 0.4s ease, transform 0.4s ease !important;
+        opacity: 1 !important;
+        transform: none !important;
     }
 }
 

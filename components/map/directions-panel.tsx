@@ -70,11 +70,15 @@ interface DirectionsPanelProps {
   isOpen: boolean
   onClose: () => void
   initialDestination?: Location | null
+  // Lets a caller (e.g. the marketing landing page's "Plan a route"
+  // widget, which navigates here with ?mode=... in the URL) preset
+  // the transport mode before the user touches anything.
+  initialTravelMode?: TravelMode
   onRouteCalculated: (points: [number, number][]) => void
   onNavigationStateChange?: (state: NavigationUpdate) => void
 }
 
-type TravelMode =
+export type TravelMode =
   | "driving"
   | "motorcycle"
   | "bus"
@@ -114,6 +118,7 @@ export function DirectionsPanel({
   isOpen,
   onClose,
   initialDestination,
+  initialTravelMode,
   onRouteCalculated,
   onNavigationStateChange,
 }: DirectionsPanelProps) {
@@ -213,6 +218,15 @@ export function DirectionsPanel({
     setRouteInfo(null)
     setError(null)
   }, [initialDestination])
+
+  /* =======================================================
+     INITIAL TRAVEL MODE
+  ======================================================= */
+
+  useEffect(() => {
+    if (!initialTravelMode) return
+    setTravelMode(initialTravelMode)
+  }, [initialTravelMode])
 
   /* =======================================================
      CLOSE NAVIGATION WHEN PANEL CLOSES
