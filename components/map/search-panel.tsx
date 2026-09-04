@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { geocode, type GeocodeResult } from "@/lib/geocoding"
+import { useRecentSearches } from "@/hooks/use-recent-searches"
 
 /*
  * PREVIOUSLY: this component called nominatim.openstreetmap.org
@@ -49,11 +50,6 @@ const POPULAR_PLACES: SearchResult[] = [
   { id: "10", name: "Mole National Park", address: "Northern Region", lat: 9.2667, lng: -1.8500, type: "Nature" },
 ]
 
-const RECENT_SEARCHES: SearchResult[] = [
-  { id: "r1", name: "Osu Oxford Street", address: "Osu, Accra", lat: 5.5571, lng: -0.1818, type: "Street" },
-  { id: "r2", name: "Labadi Beach", address: "La, Accra", lat: 5.5567, lng: -0.1447, type: "Beach" },
-]
-
 function toSearchResult(result: GeocodeResult): SearchResult {
   return {
     id: result.id,
@@ -73,6 +69,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const { recentSearches, addRecentSearch } = useRecentSearches()
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
@@ -146,6 +143,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
 
   const handleSelect = (result: SearchResult) => {
     onSelectLocation(result)
+    addRecentSearch(result)
     setQuery("")
     setShowResults(false)
     onClose()
@@ -221,32 +219,36 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
             </div>
           )}
 
-          {/* Recent Searches */}
+          {/* Recent Searches — this browser's own history only,
+              stored in localStorage (see use-recent-searches.ts),
+              never shared with or visible to any other visitor. */}
           {!showResults && (
             <>
-              <div className="mb-6">
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Clock className="w-3 h-3" />
-                  Recent
-                </h3>
-                <div className="space-y-1">
-                  {RECENT_SEARCHES.map((place) => (
-                    <button
-                      key={place.id}
-                      onClick={() => handleSelect(place)}
-                      className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-secondary transition-colors text-left"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-foreground">{place.name}</p>
-                        <p className="text-sm text-muted-foreground">{place.address}</p>
-                      </div>
-                    </button>
-                  ))}
+              {recentSearches.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Clock className="w-3 h-3" />
+                    Recent
+                  </h3>
+                  <div className="space-y-1">
+                    {recentSearches.map((place) => (
+                      <button
+                        key={place.id}
+                        onClick={() => handleSelect(place)}
+                        className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-secondary transition-colors text-left"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground">{place.name}</p>
+                          <p className="text-sm text-muted-foreground">{place.address}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Popular Places */}
               <div>
