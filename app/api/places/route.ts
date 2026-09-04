@@ -182,16 +182,25 @@ function buildQuery(
   )
 }
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+// Kept well under typical serverless function time limits (Vercel's
+// Hobby-tier default is 10s). The old code tried each of the four
+// mirrors *sequentially*, up to two attempts each at a 15s timeout —
+// a worst case of two minutes-plus if Overpass was having a bad day,
+// which meant the platform would kill the function mid-retry-loop
+// before it ever sent a response. The client just saw the request
+// hang forever with no error, which is exactly what tapping any
+// category in "Explore Nearby" looked like in production.
+const OVERPASS_TIMEOUT_MS = 7000
 
 async function queryOverpassOnce(
   endpoint: string,
   query: string
 ): Promise<any> {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 15000)
+  const timeout = setTimeout(
+    () => controller.abort(),
+    OVERPASS_TIMEOUT_MS
+  )
 
   try {
     const response = await fetch(endpoint, {
@@ -205,11 +214,7 @@ async function queryOverpassOnce(
     })
 
     if (!response.ok) {
-      const error = new Error(
-        `Overpass request failed (${response.status})`
-      )
-      ;(error as any).status = response.status
-      throw error
+      throw new Error(`Overpass request failed (${response.status})`)
     }
 
     return await response.json()
@@ -218,42 +223,23 @@ async function queryOverpassOnce(
   }
 }
 
-// A 5xx from Overpass is almost always transient overload on that
-// particular free public instance, not a problem with our query —
-// worth one quick retry before writing the whole endpoint off and
-// moving to the next mirror. A 4xx means the query itself is bad,
-// which a retry (or a different mirror) won't fix.
-function isRetryableOverpassError(error: unknown): boolean {
-  const status = (error as any)?.status
-  if (typeof status === "number") return status >= 500
-  // Network errors / aborts from the timeout above have no status
-  // and are just as likely to be transient — worth retrying too.
-  return true
-}
-
+// Races every mirror in parallel and returns whichever answers
+// first, instead of working through them one at a time — the total
+// wait is now bounded by one timeout (~7s) no matter how many
+// mirrors are slow or down, rather than the sum of all of them.
 async function queryOverpass(query: string): Promise<any> {
-  let lastError: unknown = null
-
-  for (const endpoint of OVERPASS_ENDPOINTS) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        return await queryOverpassOnce(endpoint, query)
-      } catch (error) {
-        lastError = error
-
-        if (attempt === 0 && isRetryableOverpassError(error)) {
-          await sleep(400)
-          continue
-        }
-
-        break
-      }
-    }
+  try {
+    return await Promise.any(
+      OVERPASS_ENDPOINTS.map((endpoint) =>
+        queryOverpassOnce(endpoint, query)
+      )
+    )
+  } catch (aggregateError) {
+    const first = (aggregateError as AggregateError)?.errors?.[0]
+    throw first instanceof Error
+      ? first
+      : new Error("All Overpass mirrors failed.")
   }
-
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("All Overpass endpoints failed.")
 }
 
 function labelFor(category: string): string {
