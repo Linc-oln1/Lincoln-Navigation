@@ -77,7 +77,7 @@ export function SavedPlacesPanel({
                 const Icon = target === "home" ? Home : Briefcase
                 const label = target === "home" ? "Home" : "Work"
                 return (
-                  <div key={target} className="relative group">
+                  <div key={target} className="relative">
                     <button
                       onClick={() =>
                         place
@@ -89,20 +89,22 @@ export function SavedPlacesPanel({
                       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
                         <Icon className="w-5 h-5 text-primary" />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 pr-5">
                         <p className="font-medium text-foreground">{label}</p>
                         <p className="text-xs text-muted-foreground truncate">
                           {place ? place.address : `Set your ${label.toLowerCase()} address`}
                         </p>
                       </div>
                     </button>
+                    {/* Always visible (not hover-only) so it's reachable
+                        on touch devices, which have no hover state. */}
                     {place && (
                       <button
                         onClick={() => onRequestSetHomeWork(target)}
                         aria-label={`Change ${label.toLowerCase()} address`}
-                        className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-card/80 opacity-0 group-hover:opacity-100 hover:bg-card transition-opacity"
+                        className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-card/80 text-muted-foreground opacity-70 hover:opacity-100 hover:bg-card transition-opacity"
                       >
-                        <Pencil className="w-3 h-3 text-muted-foreground" />
+                        <Pencil className="w-3 h-3" />
                       </button>
                     )}
                   </div>
@@ -122,7 +124,7 @@ export function SavedPlacesPanel({
             {favorites.length > 0 ? (
               <div className="space-y-2">
                 {favorites.map((place) => (
-                  <div key={place.id} className="group flex items-center gap-1">
+                  <div key={place.id} className="flex items-center gap-1">
                     <button
                       onClick={() => onSelectPlace({ ...place, icon: "favorite" })}
                       className="flex-1 min-w-0 flex items-start gap-3 p-3 rounded-lg hover:bg-secondary transition-colors text-left"
@@ -135,10 +137,12 @@ export function SavedPlacesPanel({
                         <p className="text-sm text-muted-foreground truncate">{place.address}</p>
                       </div>
                     </button>
+                    {/* Always visible (not hover-only) so it's reachable
+                        on touch devices, which have no hover state. */}
                     <button
                       onClick={() => onRemoveFavorite(place.id)}
                       aria-label={`Remove ${place.name} from favorites`}
-                      className="p-2 rounded-lg text-muted-foreground opacity-0 group-hover:opacity-100 hover:bg-secondary hover:text-destructive transition-colors flex-shrink-0"
+                      className="p-2 rounded-lg text-muted-foreground opacity-70 hover:opacity-100 hover:bg-secondary hover:text-destructive transition-colors flex-shrink-0"
                     >
                       <X className="w-4 h-4" />
                     </button>
