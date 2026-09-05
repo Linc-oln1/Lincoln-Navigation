@@ -1,6 +1,7 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { RegisterServiceWorker } from '@/components/pwa/register-service-worker'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -9,7 +10,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: 'Lincoln Navigations - Ghana Maps',
   description: 'Navigate Ghana with precision. Your trusted map navigator for exploring Ghana.',
-  generator: 'v0.app',
+  manifest: '/manifest.webmanifest',
   icons: {
     icon: [
       {
@@ -23,6 +24,15 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Lincoln Navigation',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0b1118',
 }
 
 export default function RootLayout({
@@ -46,6 +56,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
+        <RegisterServiceWorker />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

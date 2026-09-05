@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Menu, X } from "lucide-react"
+import { InstallAppButton } from "@/components/pwa/install-app-button"
 
 interface LithosHeroProps {
   /* Called when a visitor chooses to move past the hero — there's no
@@ -145,6 +146,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
           </div>
 
           <div className="flex items-center gap-3">
+            <InstallAppButton className="hidden md:flex bg-white/10 hover:bg-white/20 border border-white/20 text-white" />
             <button
               type="button"
               onClick={goToApp}
@@ -198,6 +200,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
             >
               Launch Map
             </button>
+            <InstallAppButton className="mt-3 border border-white/20 text-white/90 hover:text-white text-base px-6 py-3" />
           </div>
         )}
 
