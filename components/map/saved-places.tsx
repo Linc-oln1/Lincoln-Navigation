@@ -66,7 +66,13 @@ export function SavedPlacesPanel({
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4">
+        {/* contain: inline-size stops Radix's Viewport (which sizes
+            itself like a table cell, shrink-to-fit) from stretching
+            to match this row's un-wrapped `truncate` text — without
+            it, a long address forces the whole panel wider than the
+            screen and clips Work/remove buttons off the right edge
+            on narrow viewports. */}
+        <div className="p-4" style={{ contain: "inline-size" }}>
           {/* Quick Access */}
           <div className="mb-6">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">

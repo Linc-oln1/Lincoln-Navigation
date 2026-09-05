@@ -182,7 +182,13 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
 
       {/* Content */}
       <ScrollArea className="flex-1">
-        <div className="p-4">
+        {/* contain: inline-size stops Radix's Viewport (which sizes
+            itself like a table cell, shrink-to-fit) from stretching
+            to match a result's un-wrapped `truncate` text — without
+            it, a long name/address forces the whole panel wider than
+            the screen and clips results off the right edge on
+            narrow viewports. */}
+        <div className="p-4" style={{ contain: "inline-size" }}>
           {/* Search Results */}
           {showResults && results.length > 0 && (
             <div className="mb-6">
