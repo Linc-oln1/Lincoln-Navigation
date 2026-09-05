@@ -14,6 +14,30 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
+/* The event fires (at most) ONCE per page load, well before most
+   people ever open the mobile hamburger menu — but that menu's
+   "Install App" entry doesn't exist in the DOM until it's opened,
+   so a hook-local listener on that instance would almost always
+   miss it. Capturing it here, at module scope, the moment the page
+   loads means every component using useInstallPrompt() below —
+   including ones that mount long after the event fired — can still
+   see it, instead of each keeping its own (usually empty) copy. */
+let capturedPrompt: BeforeInstallPromptEvent | null = null
+const subscribers = new Set<() => void>()
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault()
+    capturedPrompt = event as BeforeInstallPromptEvent
+    subscribers.forEach((notify) => notify())
+  })
+
+  window.addEventListener("appinstalled", () => {
+    capturedPrompt = null
+    subscribers.forEach((notify) => notify())
+  })
+}
+
 function isStandalone(): boolean {
   if (typeof window === "undefined") return false
 
@@ -32,51 +56,37 @@ function isIOS(): boolean {
 }
 
 export function useInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null)
+  const [, forceRender] = useState(0)
   const [installed, setInstalled] = useState(false)
 
   useEffect(() => {
     setInstalled(isStandalone())
 
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault()
-      setDeferredPrompt(event as BeforeInstallPromptEvent)
+    const notify = () => {
+      setInstalled(isStandalone())
+      forceRender((count) => count + 1)
     }
 
-    const handleAppInstalled = () => {
-      setDeferredPrompt(null)
-      setInstalled(true)
-    }
-
-    window.addEventListener(
-      "beforeinstallprompt",
-      handleBeforeInstallPrompt
-    )
-    window.addEventListener("appinstalled", handleAppInstalled)
-
+    subscribers.add(notify)
     return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt
-      )
-      window.removeEventListener("appinstalled", handleAppInstalled)
+      subscribers.delete(notify)
     }
   }, [])
 
   const promptInstall = useCallback(async () => {
-    if (!deferredPrompt) return false
+    if (!capturedPrompt) return false
 
-    await deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    setDeferredPrompt(null)
+    await capturedPrompt.prompt()
+    const { outcome } = await capturedPrompt.userChoice
+    capturedPrompt = null
+    subscribers.forEach((notify) => notify())
     return outcome === "accepted"
-  }, [deferredPrompt])
+  }, [])
 
   return {
     // True once Chrome/Edge/Android has confirmed the page is
     // installable and handed us a real prompt to trigger.
-    canPromptInstall: deferredPrompt !== null,
+    canPromptInstall: capturedPrompt !== null,
     // iOS never gets a native prompt — show manual instructions
     // instead, but only if it isn't already installed.
     showIOSInstructions: isIOS() && !installed,
