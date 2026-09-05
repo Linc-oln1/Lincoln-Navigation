@@ -460,6 +460,52 @@ export function formatDistance(
 }
 
 /**
+ * OpenRouteService has a real foot/bike routing graph, unlike the
+ * public OSRM demo server this file otherwise talks to (which only
+ * hosts a driving-network graph for this region and silently
+ * returns car timings for "/walking/" and "/cycling/" alike — see
+ * app/api/directions/route.ts for how that was found). Only called
+ * for those two modes; every other mode goes straight to OSRM as
+ * before. Returns null (never throws) so the caller can fall back
+ * to OSRM exactly as if this function didn't exist, whether that's
+ * because ORS_API_KEY isn't configured or the request just failed.
+ */
+async function tryOpenRouteService(
+  coordinates: Coordinate[],
+  mode: TravelMode
+): Promise<RoutingResult | null> {
+  if (mode !== "walking" && mode !== "cycling") {
+    return null
+  }
+
+  try {
+    const coordinateString = coordinates
+      .map(([lng, lat]) => `${lng},${lat}`)
+      .join(";")
+
+    const params = new URLSearchParams({
+      coordinates: coordinateString,
+      mode,
+    })
+
+    const response = await fetch(
+      `/api/directions?${params.toString()}`,
+      { cache: "no-store" }
+    )
+
+    if (!response.ok) return null
+
+    const data = (await response.json()) as RoutingResult
+
+    if (data.code !== "Ok" || !data.routes?.length) return null
+
+    return data
+  } catch {
+    return null
+  }
+}
+
+/**
  * Calculate a route between two or more points.
  *
  * Coordinates MUST be [longitude, latitude], e.g.:
@@ -471,6 +517,13 @@ export async function calculateRoute(
   coordinates: Coordinate[],
   options: RoutingOptions = {}
 ): Promise<RoutingResult> {
+  const orsResult = await tryOpenRouteService(
+    coordinates,
+    options.mode ?? "driving"
+  )
+
+  if (orsResult) return orsResult
+
   const url = buildDirectionsUrl(
     coordinates,
     options
