@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Compass, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 
 interface LithosHeroProps {
   /* Called when a visitor chooses to move past the hero — there's no
@@ -115,11 +115,13 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
         />
 
         <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between p-4 sm:p-5">
-          <div className="flex items-center gap-2">
-            <Compass className="w-6 h-6 text-white" aria-hidden="true" />
-            <span className="text-white text-lg sm:text-2xl font-playfair italic whitespace-nowrap">
-              Lincoln Navigation
-            </span>
+          <div className="flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo/lincoln-navigation-logo.webp"
+              alt="Lincoln Navigation"
+              className="h-10 sm:h-12 w-auto"
+            />
           </div>
 
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full px-2 py-2 items-center gap-1">

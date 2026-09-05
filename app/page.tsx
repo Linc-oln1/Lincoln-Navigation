@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
-  Compass,
   ArrowRight,
   Car,
   Bike,
@@ -210,13 +209,13 @@ export default function LandingPage() {
            brings its own full nav bar for the intro phase. */}
       {phase === "destination" && (
         <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-5 sm:px-10 py-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-              <Compass className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold tracking-tight text-white text-lg">
-              Lincoln Navigation
-            </span>
+          <div className="flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo/lincoln-navigation-logo.webp"
+              alt="Lincoln Navigation"
+              className="h-10 sm:h-12 w-auto"
+            />
           </div>
 
           <div className="flex items-center gap-3">

@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Navigation, MapPin, Menu, Compass, Layers } from "lucide-react"
+import { Search, Navigation, Layers } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface HeaderProps {
@@ -18,11 +18,13 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
         <div className="bg-card/90 backdrop-blur-xl rounded-2xl border border-border shadow-2xl overflow-hidden">
           <div className="flex items-center gap-3 p-3">
             {/* Logo */}
-            <div className="flex items-center gap-2 px-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Compass className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="font-bold text-foreground hidden sm:block">Lincoln</span>
+            <div className="flex items-center px-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo/lincoln-navigation-logo.webp"
+                alt="Lincoln Navigation"
+                className="h-8 sm:h-9 w-auto"
+              />
             </div>
 
             {/* Search Button */}
