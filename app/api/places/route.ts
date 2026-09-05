@@ -208,6 +208,12 @@ async function queryOverpassOnce(
       body: `data=${encodeURIComponent(query)}`,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        // Node's fetch() sends no User-Agent by default, and the
+        // Apache-fronted mirrors (overpass-api.de, lz4.overpass-api.de)
+        // reject headerless requests with a 406 — every production
+        // request was silently hitting this. Overpass's usage policy
+        // also asks for an identifying UA on top of that.
+        "User-Agent": "LincolnNavigation/1.0 (https://lincolnnavigation.com)",
       },
       signal: controller.signal,
       cache: "no-store",
