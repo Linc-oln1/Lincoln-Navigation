@@ -1550,16 +1550,17 @@ input {
    cursor. Falls back to a dark amber wash until the file is added. */
 .showcase-map-img {
     position: absolute;
-    inset: -6%;
-    background:
-        radial-gradient(circle at 30% 42%, rgba(245, 166, 35, 0.18), transparent 45%),
-        radial-gradient(circle at 62% 55%, rgba(245, 166, 35, 0.14), transparent 45%),
-        #05060a;
-    background-image: url("/showcase-worldmap.webp");
-    background-size: 118% auto;
+    inset: 0;
+    background-color: #05060a;
+    background-image:
+        radial-gradient(circle at 30% 42%, rgba(245, 166, 35, 0.16), transparent 45%),
+        radial-gradient(circle at 62% 55%, rgba(245, 166, 35, 0.12), transparent 45%),
+        url("/showcase-worldmap.webp");
+    background-size: auto, auto, 112% auto;
     background-position:
-        calc(50% + (var(--mx, 0.5) - 0.5) * -6%)
-        calc(46% + (var(--my, 0.5) - 0.5) * -6%);
+        center, center,
+        calc(50% + (var(--mx, 0.5) - 0.5) * -8%)
+        calc(50% + (var(--my, 0.5) - 0.5) * -8%);
     background-repeat: no-repeat;
     transition: background-position 0.25s ease-out;
 }

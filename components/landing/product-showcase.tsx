@@ -21,15 +21,15 @@ interface City {
   hub?: boolean
 }
 
-// Rough positions over the world-map art. Nudge once the real crop
-// is in view.
+// Positions over /public/showcase-worldmap.webp, as % of the
+// screen box (accounts for the 112% background zoom).
 const CITIES: City[] = [
-  { id: "accra", name: "Accra", hub: true, x: 48.5, y: 60 },
-  { id: "london", name: "London", x: 46.5, y: 32 },
-  { id: "newyork", name: "New York", x: 26, y: 38 },
-  { id: "dubai", name: "Dubai", x: 61, y: 47 },
-  { id: "joburg", name: "Johannesburg", x: 53, y: 82 },
-  { id: "nairobi", name: "Nairobi", x: 57.5, y: 66 },
+  { id: "accra", name: "Accra", hub: true, x: 50, y: 53.5 },
+  { id: "london", name: "London", x: 46.5, y: 27 },
+  { id: "newyork", name: "New York", x: 20, y: 33 },
+  { id: "dubai", name: "Dubai", x: 62, y: 42 },
+  { id: "joburg", name: "Johannesburg", x: 55.5, y: 77 },
+  { id: "nairobi", name: "Nairobi", x: 58, y: 58 },
 ]
 
 type CityId = string
