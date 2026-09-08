@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { getTierLimits } from "@/lib/premium"
 
 /* Favorites/Home/Work, like recent searches, live in this browser's
    own localStorage — there's no login system in this app, so this
@@ -58,8 +59,15 @@ function writeStored(state: StoredState) {
   }
 }
 
+/** Outcome of a toggleFavorite() call, so callers can react. */
+export type ToggleFavoriteResult = "added" | "removed" | "limit-reached"
+
 export function useSavedPlaces() {
   const [state, setState] = useState<StoredState>(EMPTY_STATE)
+  // Recomputed on each render; the entitlement cookie can change
+  // between renders (payment, expiry, focus refresh elsewhere).
+  const favoritesLimit = getTierLimits().savedPlaces
+  const atFavoritesLimit = state.favorites.length >= favoritesLimit
 
   // Client-only read on mount, same reasoning as useRecentSearches:
   // avoids an SSR/client hydration mismatch since localStorage
@@ -73,18 +81,33 @@ export function useSavedPlaces() {
     [state.favorites]
   )
 
-  const toggleFavorite = useCallback((place: SavedPlaceInput) => {
-    setState((prev) => {
+  const toggleFavorite = useCallback(
+    (place: SavedPlaceInput): ToggleFavoriteResult => {
       const id = placeId(place)
-      const already = prev.favorites.some((f) => f.id === id)
-      const favorites = already
-        ? prev.favorites.filter((f) => f.id !== id)
-        : [{ ...place, id }, ...prev.favorites]
-      const next = { ...prev, favorites }
-      writeStored(next)
-      return next
-    })
-  }, [])
+      const already = state.favorites.some((f) => f.id === id)
+
+      // Free tier is capped (see FREE_LIMITS.savedPlaces). Removing
+      // an existing favorite is always allowed; adding a new one
+      // past the limit is blocked and reported so the UI can offer
+      // an upgrade.
+      if (!already && state.favorites.length >= getTierLimits().savedPlaces) {
+        return "limit-reached"
+      }
+
+      setState((prev) => {
+        const exists = prev.favorites.some((f) => f.id === id)
+        const favorites = exists
+          ? prev.favorites.filter((f) => f.id !== id)
+          : [{ ...place, id }, ...prev.favorites]
+        const next = { ...prev, favorites }
+        writeStored(next)
+        return next
+      })
+
+      return already ? "removed" : "added"
+    },
+    [state.favorites],
+  )
 
   const removeFavorite = useCallback((id: string) => {
     setState((prev) => {
@@ -119,5 +142,9 @@ export function useSavedPlaces() {
     removeFavorite,
     setHome,
     setWork,
+    /** Max favorites for the current tier (Infinity for premium). */
+    favoritesLimit,
+    /** True when a free visitor can't add any more favorites. */
+    atFavoritesLimit,
   }
 }

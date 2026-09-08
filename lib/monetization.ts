@@ -71,12 +71,47 @@ export const PREMIUM_FEATURES: string[] = [
   "Priority routing with live traffic avoidance",
 ]
 
+/* --------------------- entitlement gates --------------------- */
+
+/**
+ * Named premium capabilities. Gate a feature by checking one of
+ * these against the entitlement (client: `usePremium().can(...)` or
+ * `hasActivePremium()` in lib/premium; server: `requirePremium()`
+ * in lib/premium-guard).
+ *
+ * Status:
+ *   voiceNavigation      — LIVE, gated (see directions-panel + use-live-navigation)
+ *   unlimitedSavedPlaces — LIVE, gated (see use-saved-places)
+ *   unlimitedTripHistory — LIVE, gated (see use-recent-searches)
+ *   offlineMaps          — not built yet
+ *   priorityRouting      — not built yet
+ */
+export type PremiumFeature =
+  | "voiceNavigation"
+  | "unlimitedSavedPlaces"
+  | "unlimitedTripHistory"
+  | "offlineMaps"
+  | "priorityRouting"
+
+/** Per-tier numeric limits. `Infinity` means no limit. */
+export const FREE_LIMITS = {
+  savedPlaces: 10,
+  tripHistory: 5,
+} as const
+
+export const PREMIUM_LIMITS = {
+  savedPlaces: Number.POSITIVE_INFINITY,
+  tripHistory: 50,
+} as const
+
+export type TierLimits = { savedPlaces: number; tripHistory: number }
+
 /** Feature list for the free tier — shown on /pricing. */
 export const FREE_FEATURES: string[] = [
   "Full Ghana map and search",
   "Driving, transit, cycling and walking directions",
   "Explore nearby places",
-  "Up to 10 saved places",
+  `Up to ${FREE_LIMITS.savedPlaces} saved places`,
 ]
 
 /* ------------------------ advertising ------------------------- */

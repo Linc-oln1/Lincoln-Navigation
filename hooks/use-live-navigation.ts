@@ -8,6 +8,7 @@ import {
 } from "react"
 
 import type { TravelMode } from "@/lib/routing"
+import { hasActivePremium } from "@/lib/premium"
 
 /* =========================================================
    TYPES
@@ -523,6 +524,13 @@ function speakNavigation(
     !text ||
     typeof window === "undefined"
   ) {
+    return
+  }
+
+  // Turn-by-turn voice guidance is a Premium feature (see /pricing).
+  // Free visitors still get the on-screen instructions and the GPS
+  // follow camera — just no spoken layer.
+  if (!hasActivePremium()) {
     return
   }
 

@@ -113,8 +113,35 @@ sign/verify), `hooks/use-premium.ts` (client UI state).
   Paystack **Plans + Subscriptions** and a webhook
   (`charge.success`, `subscription.disable`) to extend/revoke the
   entitlement.
-- **Gate the paid features.** `usePremium()` currently only hides
-  ads. Offline maps / voice nav / higher save limits still need to be
-  built and gated behind `verifyPremiumCookie()` on the server.
 - Add a Paystack webhook endpoint and verify its signature with
   `PAYSTACK_SECRET_KEY`.
+
+### What's gated today
+
+| Feature | Free | Premium | Where |
+| --- | --- | --- | --- |
+| Ads | shown | hidden | `<AdSlot>` via `usePremium()` |
+| Saved places | 10 | unlimited | `hooks/use-saved-places.ts` (`FREE_LIMITS.savedPlaces`) — 11th save shows an upgrade prompt |
+| Trip history | 5 | 50 | `hooks/use-recent-searches.ts` (`*_LIMITS.tripHistory`) |
+| Voice navigation | off (on-screen steps only) | on | `components/map/directions-panel.tsx` + `hooks/use-live-navigation.ts` (`speakNavigation`) |
+| Offline maps | — | — | not built |
+| Priority routing | — | — | not built |
+
+How to gate something:
+
+- **Client UI / limits** — `usePremium().isPremium` / `.can("feature")`
+  / `.limits`, or `hasActivePremium()` / `getTierLimits()` from
+  `lib/premium.ts` in non-hook code. Client checks read the cookie
+  payload only; treat them as UX, not security.
+- **A paid server endpoint** — `requirePremium(req)` from
+  `lib/premium-guard.ts` returns a `402` for non-subscribers (it
+  verifies the cookie's HMAC signature). Use this when offline map
+  packs or priority routing get real endpoints.
+- Add the capability name to `PremiumFeature` in
+  `lib/monetization.ts` and update the table above.
+
+Client gates are cookie-based and per-device — the same caveat as
+the "No accounts yet" limitation. Someone editing `localStorage` or
+the cookie can lift a client limit; that's acceptable for
+save-count UX, but anything with real cost must use
+`requirePremium()` server-side.

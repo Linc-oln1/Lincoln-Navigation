@@ -18,6 +18,8 @@ interface SavedPlacesPanelProps {
   onClose: () => void
   onSelectPlace: (place: SelectablePlace) => void
   favorites: SavedPlaceEntry[]
+  /** Max favorites for this tier — Infinity for Premium. */
+  favoritesLimit: number
   home: SavedPlaceEntry | null
   work: SavedPlaceEntry | null
   onRemoveFavorite: (id: string) => void
@@ -37,12 +39,16 @@ export function SavedPlacesPanel({
   onClose,
   onSelectPlace,
   favorites,
+  favoritesLimit,
   home,
   work,
   onRemoveFavorite,
   onRequestSetHomeWork,
 }: SavedPlacesPanelProps) {
   if (!isOpen) return null
+
+  const capped = Number.isFinite(favoritesLimit)
+  const atLimit = favorites.length >= favoritesLimit
 
   const quickAccess: { target: "home" | "work"; place: SavedPlaceEntry | null }[] = [
     { target: "home", place: home },
@@ -126,7 +132,28 @@ export function SavedPlacesPanel({
                 <Star className="w-3 h-3" />
                 Favorites
               </h3>
+              {capped && (
+                <span
+                  className={
+                    atLimit
+                      ? "text-xs font-medium text-primary"
+                      : "text-xs text-muted-foreground"
+                  }
+                >
+                  {favorites.length} / {favoritesLimit}
+                </span>
+              )}
             </div>
+            {capped && atLimit && (
+              <a
+                href="/pricing"
+                className="mb-3 flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/[0.06] px-3 py-2 text-xs text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Star className="w-3.5 h-3.5 flex-shrink-0" />
+                You&rsquo;ve hit the free limit — go Premium for unlimited saved
+                places →
+              </a>
+            )}
             {favorites.length > 0 ? (
               <div className="space-y-2">
                 {favorites.map((place) => (
