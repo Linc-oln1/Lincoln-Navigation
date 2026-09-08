@@ -1335,13 +1335,19 @@ input {
     background: #05060a;
 }
 
-/* Earth-from-space section background — no overlay/scrim on top.
+/* Full-bleed section background video — no overlay/scrim on top.
    Its own layer so it can parallax to the cursor; the -6% inset
    gives the translate room to bleed past the edges. */
 .showcase-bg {
     position: absolute;
     inset: -6%;
-    background: #05060a url("/showcase-section-bg.webp") center 24% / cover no-repeat;
+    /* override Tailwind preflight's `video { max-width: 100% }` */
+    width: 112%;
+    max-width: 112%;
+    height: 112%;
+    object-fit: cover;
+    display: block;
+    background: #05060a;
     transform: translate3d(
         calc((var(--sbx, 0.5) - 0.5) * -34px),
         calc((var(--sby, 0.5) - 0.5) * -34px),
