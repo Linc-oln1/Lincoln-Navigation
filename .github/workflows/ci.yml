@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same ref (e.g. quick successive pushes).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Type-check & build
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # next build has typescript.ignoreBuildErrors=true, so type
+      # errors are only caught here.
+      - name: Type-check
+        run: pnpm exec tsc --noEmit
+
+      # Catches Next build/prerender failures (e.g. useSearchParams
+      # outside a Suspense boundary) that tsc does not.
+      - name: Build
+        run: pnpm build
