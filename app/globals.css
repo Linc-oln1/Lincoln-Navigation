@@ -1537,6 +1537,163 @@ input {
     height: 100%;
 }
 
+/* ===== interactive world-map screen ===== */
+
+.showcase-screen--map {
+    padding: clamp(8px, 1.4vw, 14px);
+    background:
+        radial-gradient(ellipse 70% 50% at 50% 40%, rgba(245, 166, 35, 0.10), transparent 65%),
+        #05060a;
+}
+
+/* the map art itself — a separate layer so it can parallax to the
+   cursor. Falls back to a dark amber wash until the file is added. */
+.showcase-map-img {
+    position: absolute;
+    inset: 0;
+    background-color: #05060a;
+    background-image:
+        radial-gradient(circle at 30% 42%, rgba(245, 166, 35, 0.16), transparent 45%),
+        radial-gradient(circle at 62% 55%, rgba(245, 166, 35, 0.12), transparent 45%),
+        url("/showcase-worldmap.webp");
+    background-size: auto, auto, 112% auto;
+    background-position:
+        center, center,
+        calc(50% + (var(--mx, 0.5) - 0.5) * -8%)
+        calc(50% + (var(--my, 0.5) - 0.5) * -8%);
+    background-repeat: no-repeat;
+    transition: background-position 0.25s ease-out;
+}
+
+.showcase-map-spotlight {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    background: radial-gradient(
+        circle 26% at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+        rgba(255, 190, 90, 0.16),
+        transparent 70%
+    );
+}
+
+.showcase-screen--map:hover .showcase-map-spotlight {
+    opacity: 1;
+}
+
+.showcase-screen--map .showcase-screen-nav {
+    position: relative;
+    z-index: 3;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+.showcase-map-routes {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 2;
+    overflow: visible;
+}
+
+.showcase-route {
+    fill: none;
+    stroke: rgba(245, 166, 35, 0.55);
+    stroke-width: 0.5;
+    stroke-linecap: round;
+    stroke-dasharray: 3 4;
+    animation: showcase-route-flow 1.4s linear infinite;
+    opacity: 0.5;
+    transition: opacity 0.25s ease, stroke 0.25s ease;
+    vector-effect: non-scaling-stroke;
+}
+
+.showcase-route.is-active {
+    stroke: rgba(255, 200, 110, 0.95);
+    opacity: 1;
+    stroke-width: 0.9;
+}
+
+@keyframes showcase-route-flow {
+    to { stroke-dashoffset: -7; }
+}
+
+.showcase-node {
+    position: absolute;
+    z-index: 3;
+    transform: translate(-50%, -50%);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+    line-height: 0;
+}
+
+.showcase-node-dot {
+    display: block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #ffcf8a;
+    box-shadow: 0 0 0 0 rgba(255, 190, 90, 0.55);
+    animation: showcase-node-pulse 2.6s ease-out infinite;
+}
+
+.showcase-node.is-hub .showcase-node-dot {
+    width: 9px;
+    height: 9px;
+    background: #4dd8ff;
+    box-shadow: 0 0 10px rgba(77, 216, 255, 0.7);
+    animation-duration: 2s;
+}
+
+.showcase-node.is-active .showcase-node-dot {
+    background: #fff;
+    box-shadow: 0 0 12px rgba(255, 200, 120, 0.9);
+}
+
+@keyframes showcase-node-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 190, 90, 0.5); }
+    70% { box-shadow: 0 0 0 9px rgba(255, 190, 90, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 190, 90, 0); }
+}
+
+.showcase-node-label {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 6px);
+    transform: translateX(-50%) translateY(4px);
+    white-space: nowrap;
+    font-size: clamp(8px, 0.85vw, 10px);
+    font-weight: 600;
+    line-height: 1;
+    padding: 3px 7px;
+    border-radius: 6px;
+    background: rgba(8, 10, 16, 0.9);
+    border: 1px solid rgba(255, 190, 90, 0.3);
+    color: #ffdca8;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.showcase-node.is-hub .showcase-node-label {
+    border-color: rgba(77, 216, 255, 0.35);
+    color: #bfefff;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.showcase-node:hover .showcase-node-label,
+.showcase-node:focus-visible .showcase-node-label,
+.showcase-node.is-active .showcase-node-label {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
 .showcase-tablet-sheen {
     position: absolute;
     inset: 0;
@@ -1665,6 +1822,13 @@ input {
         transition: opacity 0.4s ease, transform 0.4s ease !important;
         opacity: 1 !important;
         transform: none !important;
+    }
+    .showcase-route,
+    .showcase-node-dot {
+        animation: none !important;
+    }
+    .showcase-map-img {
+        transition: none !important;
     }
 }
 
