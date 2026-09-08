@@ -36,19 +36,17 @@ export interface SponsoredPlace {
 }
 
 export const SPONSORED_PLACES: SponsoredPlace[] = [
-  // Example of the shape (commented out — not a real advertiser):
-  //
-  // {
-  //   id: "sponsor-akwaaba-grill",
-  //   name: "Akwaaba Grill",
-  //   address: "Oxford St, Osu, Accra",
-  //   lat: 5.5571,
-  //   lng: -0.1826,
-  //   category: "restaurant",
-  //   tagline: "Charcoal-grilled tilapia & banku — 10% off with code MAPS",
-  //   url: "https://example.com",
-  //   radiusKm: 8,
-  // },
+  {
+    id: "sponsor-franchman-enterprise",
+    name: "Franchman Enterprise",
+    address: "Blofonyo Ln, Abossey Okai, Accra · GA-216-6164",
+    // Geocoded from "Blofonyo Lane, Abossey Okai, Accra" — the
+    // business itself isn't mapped in OpenStreetMap yet.
+    lat: 5.5605857,
+    lng: -0.231748,
+    category: "shop",
+    radiusKm: 8,
+  },
 ]
 
 const EARTH_RADIUS_KM = 6371
