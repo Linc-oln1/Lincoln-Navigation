@@ -1335,37 +1335,20 @@ input {
     background: #05060a;
 }
 
-.showcase-glow {
+/* Earth-from-space section background — no overlay/scrim on top.
+   Its own layer so it can parallax to the cursor; the -6% inset
+   gives the translate room to bleed past the edges. */
+.showcase-bg {
     position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    pointer-events: none;
-}
-
-.showcase-glow-a {
-    width: 46vw;
-    height: 46vw;
-    top: -14%;
-    left: -10%;
-    background: radial-gradient(circle, rgba(10, 132, 255, 0.28), transparent 70%);
-}
-
-.showcase-glow-b {
-    width: 38vw;
-    height: 38vw;
-    bottom: -12%;
-    right: -8%;
-    background: radial-gradient(circle, rgba(77, 216, 255, 0.2), transparent 70%);
-}
-
-.showcase-grid {
-    position: absolute;
-    inset: 0;
-    background-image:
-        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-    background-size: 42px 42px;
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 80%);
+    inset: -6%;
+    background: #05060a url("/showcase-section-bg.webp") center 24% / cover no-repeat;
+    transform: translate3d(
+        calc((var(--sbx, 0.5) - 0.5) * -34px),
+        calc((var(--sby, 0.5) - 0.5) * -34px),
+        0
+    );
+    transition: transform 0.5s ease-out;
+    will-change: transform;
     pointer-events: none;
 }
 
@@ -1387,12 +1370,13 @@ input {
 
 .showcase-eyebrow {
     display: inline-block;
-    color: #4dd8ff;
+    color: #6fe0ff;
     font-size: 0.75rem;
     font-weight: 600;
     letter-spacing: 0.3em;
     text-transform: uppercase;
     margin-bottom: 0.9rem;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.7);
 }
 
 .showcase-heading {
@@ -1401,13 +1385,15 @@ input {
     font-size: clamp(1.75rem, 4vw, 2.75rem);
     line-height: 1.15;
     letter-spacing: -0.01em;
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.75), 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .showcase-sub {
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.9);
     font-size: clamp(0.95rem, 1.4vw, 1.05rem);
     margin-top: 1rem;
     line-height: 1.6;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 2px 20px rgba(0, 0, 0, 0.85);
 }
 
 .showcase-stage {
@@ -1827,8 +1813,12 @@ input {
     .showcase-node-dot {
         animation: none !important;
     }
-    .showcase-map-img {
+    .showcase-map-img,
+    .showcase-bg {
         transition: none !important;
+    }
+    .showcase-bg {
+        transform: none !important;
     }
 }
 

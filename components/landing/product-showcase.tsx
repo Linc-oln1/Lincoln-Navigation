@@ -118,11 +118,31 @@ export function ProductShowcase() {
     setActiveCity(null)
   }
 
+  // cursor parallax on the section's Earth-from-space background
+  const handleSectionMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = sectionRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    el.style.setProperty("--sbx", ((e.clientX - r.left) / r.width).toFixed(3))
+    el.style.setProperty("--sby", ((e.clientY - r.top) / r.height).toFixed(3))
+  }
+
+  const resetSection = () => {
+    const el = sectionRef.current
+    if (!el) return
+    el.style.setProperty("--sbx", "0.5")
+    el.style.setProperty("--sby", "0.5")
+  }
+
   return (
-    <section ref={sectionRef} className="showcase">
-      <div className="showcase-glow showcase-glow-a" />
-      <div className="showcase-glow showcase-glow-b" />
-      <div className="showcase-grid" />
+    <section
+      ref={sectionRef}
+      className="showcase"
+      style={{ ["--sbx" as string]: "0.5", ["--sby" as string]: "0.5" }}
+      onMouseMove={handleSectionMove}
+      onMouseLeave={resetSection}
+    >
+      <div className="showcase-bg" aria-hidden="true" />
 
       <div className={`showcase-copy ${visible ? "is-visible" : ""}`}>
         <span className="showcase-eyebrow">Product tour</span>
