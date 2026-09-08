@@ -1,7 +1,9 @@
 "use client"
 
-import { Search, Navigation, Layers } from "lucide-react"
+import Link from "next/link"
+import { Search, Navigation, Layers, User } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useSession } from "@/hooks/use-session"
 
 interface HeaderProps {
   onSearchClick: () => void
@@ -11,6 +13,7 @@ interface HeaderProps {
 }
 
 export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, activePanel }: HeaderProps) {
+  const { user, authEnabled } = useSession()
   return (
     <header className="absolute top-0 left-0 right-0 z-[1000] p-4">
       <div className="max-w-2xl mx-auto">
@@ -67,6 +70,25 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
               >
                 <Layers className="w-5 h-5" />
               </button>
+
+              {authEnabled &&
+                (user ? (
+                  <Link
+                    href="/account"
+                    title={user.email ?? "Account"}
+                    className="w-9 h-9 rounded-xl bg-primary/20 text-primary flex items-center justify-center text-sm font-semibold uppercase hover:bg-primary/30 transition-colors"
+                  >
+                    {(user.email ?? "?").charAt(0)}
+                  </Link>
+                ) : (
+                  <Link
+                    href="/login"
+                    title="Sign in"
+                    className="p-2.5 rounded-xl hover:bg-secondary text-foreground transition-colors"
+                  >
+                    <User className="w-5 h-5" />
+                  </Link>
+                ))}
             </div>
           </div>
         </div>

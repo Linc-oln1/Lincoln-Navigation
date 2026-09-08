@@ -1,6 +1,10 @@
 # User accounts — design spec
 
-**Status:** proposed, not started.
+**Status:** Phase 1 (auth shell) built — inert until a Supabase
+project is connected, see [SUPABASE_SETUP.md](./SUPABASE_SETUP.md).
+Phases 2–4 not started.
+**Decisions locked:** Supabase; magic link + Google; subscriptions
+only (no one-off charge).
 **Why:** premium entitlement is currently a signed cookie on one
 device (see [MONETIZATION.md](./MONETIZATION.md) "Known limitations").
 A paying customer loses access on a new device, and the cap-style
@@ -131,7 +135,9 @@ Subscriptions**:
 - `@supabase/ssr` client (browser + server variants).
 - `middleware.ts` — refreshes the Supabase session cookie on every
   request (standard Supabase Next.js pattern). This is the app's
-  first middleware.
+  first middleware. (Next 16.2 logs a notice asking to rename this
+  to `proxy.ts`, but its Turbopack dev server fails to load a
+  `proxy.ts` export as of 16.2 — revisit when that's fixed.)
 - Server components / route handlers read the user via the server
   client; no user id is ever trusted from the request body.
 
@@ -180,7 +186,7 @@ mark localStorage as migrated (keep it as cache).
 
 | Phase | Scope | Ships value |
 | --- | --- | --- |
-| **1. Auth shell** | Supabase project, `profiles`, middleware, `/login`, `/auth/callback`, header entry, `/account` (sign out only) | People can create accounts |
+| **1. Auth shell** ✅ built | Supabase clients, `middleware.ts` session refresh, `/login` (magic link + Google), `/auth/callback`, `/auth/signout`, `/account`, header entry, `supabase/migrations/0001_profiles.sql` | People can create accounts |
 | **2. Synced data** | `saved_places` + `recent_searches` tables + RLS, `use-account-data`, hook split, localStorage import | Saved places follow you across devices |
 | **3. Real subscriptions** | Paystack Plan, webhook, `subscriptions` table, entitlement from DB, `/account` manage/cancel | Premium survives device changes; recurring revenue |
 | **4. Cleanup** | make `requirePremium` async everywhere, drop cookie-only assumptions, docs | — |
