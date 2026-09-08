@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { ArrowLeft, Check, Loader2, Sparkles } from "lucide-react"
@@ -13,6 +13,16 @@ import {
 import { usePremium } from "@/hooks/use-premium"
 
 export default function PricingPage() {
+  return (
+    <Suspense
+      fallback={<main className="min-h-screen bg-background" />}
+    >
+      <PricingContent />
+    </Suspense>
+  )
+}
+
+function PricingContent() {
   const params = useSearchParams()
   const { isPremium, expiresAt } = usePremium()
   const [email, setEmail] = useState("")
