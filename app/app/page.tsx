@@ -11,6 +11,7 @@ import { SavedPlacesPanel } from "@/components/map/saved-places"
 import { MapControls } from "@/components/map/map-controls"
 import { LocationDetails } from "@/components/map/location-details"
 import { MobileNav } from "@/components/map/mobile-nav"
+import { WeatherWidget } from "@/components/map/weather-widget"
 import { geocode } from "@/lib/geocoding"
 import { useSavedPlaces, type SavedPlaceInput } from "@/hooks/use-saved-places"
 import { X as CloseIcon, Sparkles } from "lucide-react"
@@ -89,6 +90,13 @@ function MapNavigator() {
 
   const [mapCenter, setMapCenter] =
     useState<[number, number]>(GHANA_CENTER)
+
+  // Where the weather widget reads from. Tracks the map center as
+  // the user pans (via MapView's onCenterChange) without feeding
+  // back into MapView's own `center` prop — that would fight the
+  // camera. Falls back to mapCenter until the first user pan.
+  const [weatherCenter, setWeatherCenter] =
+    useState<[number, number] | null>(null)
 
   // Device theme is the default
   const [mapStyle, setMapStyle] = useState<MapStyle>("device")
@@ -309,6 +317,10 @@ function MapNavigator() {
     setActivePanel("directions")
   }, [])
 
+  const handleCenterChange = useCallback((lat: number, lng: number) => {
+    setWeatherCenter([lat, lng])
+  }, [])
+
   const handleRouteCalculated = useCallback(
     (points: [number, number][]) => {
       setRoutePoints(points)
@@ -341,6 +353,7 @@ function MapNavigator() {
         routePoints={routePoints}
         mapStyle={mapStyle}
         onMapClick={handleMapClick}
+        onCenterChange={handleCenterChange}
         liveNavigation={navigationState}
       />
 
@@ -357,6 +370,9 @@ function MapNavigator() {
         currentStyle={mapStyle}
         onStyleChange={setMapStyle}
       />
+
+      {/* WEATHER */}
+      <WeatherWidget center={weatherCenter ?? mapCenter} />
 
       {/* SEARCH */}
       <SearchPanel
