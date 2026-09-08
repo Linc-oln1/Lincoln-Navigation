@@ -13,14 +13,20 @@ interface LithosHeroProps {
 
 const NAV_LINKS = ["Features", "Live Map", "About", "Contact"]
 
-/* "Features", "About", and "Contact" all live in the mission section
-   below — scroll-margin on their targets (see lithos-features.tsx)
-   keeps the fixed nav from covering whatever they scroll to.
-   "Contact" lands on the "We're listening" card, which carries the
-   actual mailto: link. */
+/* "Live Map" opens the app; "About" opens the dedicated /about
+   page. */
+const NAV_ROUTES: Record<string, string> = {
+  "Live Map": "/app",
+  About: "/about",
+}
+
+/* "Features" and "Contact" live in the mission section below —
+   scroll-margin on their targets (see lithos-features.tsx) keeps
+   the fixed nav from covering whatever they scroll to. "Contact"
+   lands on the "We're listening" card, which carries the actual
+   mailto: link. */
 const NAV_SCROLL_TARGETS: Record<string, string> = {
   Features: "features",
-  About: "about",
   Contact: "contact",
 }
 
@@ -135,8 +141,13 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
               Explore
             </button>
             {NAV_LINKS.map((label) => {
+              const route = NAV_ROUTES[label]
               const targetId = NAV_SCROLL_TARGETS[label]
-              const onClick = label === "Live Map" ? goToApp : targetId ? () => scrollToId(targetId) : undefined
+              const onClick = route
+                ? () => router.push(route)
+                : targetId
+                  ? () => scrollToId(targetId)
+                  : undefined
               return (
                 <button
                   key={label}
@@ -185,8 +196,13 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
               Explore
             </button>
             {NAV_LINKS.map((label) => {
+              const route = NAV_ROUTES[label]
               const targetId = NAV_SCROLL_TARGETS[label]
-              const action = label === "Live Map" ? goToApp : targetId ? () => scrollToId(targetId) : undefined
+              const action = route
+                ? () => router.push(route)
+                : targetId
+                  ? () => scrollToId(targetId)
+                  : undefined
               return (
                 <button
                   key={label}
