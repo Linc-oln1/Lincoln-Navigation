@@ -4,12 +4,15 @@ import { useEffect, useRef, useState } from "react"
 import { Compass, CloudSun, Route, MousePointerClick } from "lucide-react"
 
 /**
- * Scroll-triggered "product tour" section for the landing page: a
- * floating tablet mockup whose screen is an interactive world map
- * (the /public/showcase-worldmap.webp art) — the map parallaxes to
- * the cursor, a spotlight follows it, and glowing city nodes light
- * up on hover with routes flowing back to Accra. Surrounded by the
- * site's blue/neon-cyan glass feature cards. All DOM/CSS/SVG.
+ * Scroll-triggered "product tour" section for the landing page.
+ *
+ * - Full-bleed background video (showcase-bg.mp4), no scrim, that
+ *   parallaxes to the cursor.
+ * - On top: a floating tablet mockup whose screen is an interactive
+ *   world map (showcase-worldmap.webp) — the map parallaxes to the
+ *   cursor, a spotlight follows it, and glowing city nodes light up
+ *   on hover with routes flowing back to Accra.
+ * - Blue/neon-cyan glass feature cards around the tablet.
  */
 
 interface City {
@@ -43,6 +46,7 @@ export function ProductShowcase() {
   const sectionRef = useRef<HTMLElement>(null)
   const tiltRef = useRef<HTMLDivElement>(null)
   const screenRef = useRef<HTMLDivElement>(null)
+  const bgVideoRef = useRef<HTMLVideoElement>(null)
   const [visible, setVisible] = useState(false)
   const [activeCity, setActiveCity] = useState<CityId | null>(null)
 
@@ -61,6 +65,17 @@ export function ProductShowcase() {
     )
     observer.observe(el)
     return () => observer.disconnect()
+  }, [])
+
+  // Respect reduced-motion: hold the background video on its first
+  // frame instead of looping.
+  useEffect(() => {
+    const v = bgVideoRef.current
+    if (!v) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      v.autoplay = false
+      v.pause()
+    }
   }, [])
 
   // scroll-linked "camera pan": the tablet starts tilted away and
@@ -118,11 +133,42 @@ export function ProductShowcase() {
     setActiveCity(null)
   }
 
+  // cursor parallax on the section's Earth-from-space background
+  const handleSectionMove = (e: React.MouseEvent<HTMLElement>) => {
+    const el = sectionRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    el.style.setProperty("--sbx", ((e.clientX - r.left) / r.width).toFixed(3))
+    el.style.setProperty("--sby", ((e.clientY - r.top) / r.height).toFixed(3))
+  }
+
+  const resetSection = () => {
+    const el = sectionRef.current
+    if (!el) return
+    el.style.setProperty("--sbx", "0.5")
+    el.style.setProperty("--sby", "0.5")
+  }
+
   return (
-    <section ref={sectionRef} className="showcase">
-      <div className="showcase-glow showcase-glow-a" />
-      <div className="showcase-glow showcase-glow-b" />
-      <div className="showcase-grid" />
+    <section
+      ref={sectionRef}
+      className="showcase"
+      style={{ ["--sbx" as string]: "0.5", ["--sby" as string]: "0.5" }}
+      onMouseMove={handleSectionMove}
+      onMouseLeave={resetSection}
+    >
+      <video
+        ref={bgVideoRef}
+        className="showcase-bg"
+        src="/landing/video/showcase-bg.mp4"
+        poster="/showcase-section-bg.webp"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      />
 
       <div className={`showcase-copy ${visible ? "is-visible" : ""}`}>
         <span className="showcase-eyebrow">Product tour</span>
