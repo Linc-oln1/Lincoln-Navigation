@@ -11,6 +11,8 @@ interface LocationDetailsProps {
     lat: number
     lng: number
     type?: string
+    sponsored?: boolean
+    url?: string
   } | null
   isFavorite?: boolean
   onToggleFavorite?: () => void
@@ -51,7 +53,14 @@ export function LocationDetails({
       <div className="p-4 border-b border-border">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-bold text-foreground truncate">{location.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-foreground truncate">{location.name}</h2>
+              {location.sponsored && (
+                <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider text-primary border border-primary/40 rounded px-1 py-0.5">
+                  Sponsored
+                </span>
+              )}
+            </div>
             <p className="text-sm text-muted-foreground mt-1">{location.address}</p>
             {location.type && (
               <span className="inline-block mt-2 px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full capitalize">
@@ -104,6 +113,17 @@ export function LocationDetails({
           <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <span className="text-foreground">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</span>
         </div>
+        {location.url && (
+          <a
+            href={location.url}
+            target="_blank"
+            rel="noopener noreferrer nofollow sponsored"
+            className="flex items-center gap-3 text-sm text-primary hover:underline"
+          >
+            <Globe className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">Visit website</span>
+          </a>
+        )}
       </div>
 
       {/* Quick info */}

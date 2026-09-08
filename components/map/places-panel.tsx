@@ -24,10 +24,14 @@ import {
   Dumbbell,
   Plane,
   Star,
+  Megaphone,
 } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { searchNearbyPlaces, type Place } from "@/lib/geocoding"
+import { getSponsoredPlaces } from "@/lib/sponsored-places"
+import { AdSlot } from "@/components/ads/ad-slot"
+import { HOUSE_PROMO, HOUSE_PROMO_ENABLED } from "@/lib/monetization"
 
 /*
  * PREVIOUSLY: this panel queried the Overpass API directly from
@@ -136,6 +140,13 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
     }
   }
 
+  // Paid placements for the current category, pinned above organic
+  // results. Empty unless a real advertiser is in range (see
+  // lib/sponsored-places.ts).
+  const sponsored = selectedCategory
+    ? getSponsoredPlaces(selectedCategory, mapCenter)
+    : []
+
   if (!isOpen) return null
 
   return (
@@ -189,7 +200,49 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
             </div>
           )}
 
-          {!isLoading && selectedCategory && places.length === 0 && (
+          {/* Sponsored placements — pinned above organic results,
+              clearly labelled. Renders only when a paying advertiser
+              is active and in range. */}
+          {!isLoading && sponsored.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {sponsored.map((place) => (
+                <button
+                  key={place.id}
+                  onClick={() => onSelectPlace(place)}
+                  className="w-full flex items-start gap-3 p-3 rounded-lg border border-primary/30 bg-primary/[0.06] hover:bg-primary/10 transition-colors text-left"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    {(() => {
+                      const IconComponent =
+                        CATEGORIES.find((c) => c.id === place.type)?.icon ??
+                        MapPin
+                      return <IconComponent className="w-5 h-5 text-primary" />
+                    })()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-foreground truncate">
+                        {place.name}
+                      </p>
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary border border-primary/40 rounded px-1 py-0.5 flex-shrink-0">
+                        Sponsored
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {place.address}
+                    </p>
+                    {place.tagline && (
+                      <p className="text-xs text-primary/90 mt-0.5 truncate">
+                        {place.tagline}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!isLoading && selectedCategory && places.length === 0 && sponsored.length === 0 && (
             <div className="text-center py-12">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">
@@ -245,6 +298,43 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
               <p className="text-muted-foreground">Select a category to find places nearby</p>
             </div>
           )}
+
+          {/* House promo — our own ad for the advertising programme.
+              Shows for any category with no paid sponsor, so real
+              advertisers always take the slot first. Clearly from
+              Lincoln Navigation, not labelled "Sponsored". */}
+          {!isLoading &&
+            selectedCategory &&
+            sponsored.length === 0 &&
+            HOUSE_PROMO_ENABLED && (
+              <a
+                href={HOUSE_PROMO.href}
+                className="mt-6 flex items-start gap-3 p-3 rounded-lg border border-dashed border-border hover:border-primary/50 hover:bg-secondary/50 transition-colors"
+              >
+                <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                  <Megaphone className="w-5 h-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-foreground">
+                      {HOUSE_PROMO.headline}
+                    </p>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground border border-border rounded px-1 py-0.5 flex-shrink-0">
+                      Ad
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {HOUSE_PROMO.body}
+                  </p>
+                  <p className="text-xs font-semibold text-primary mt-1.5">
+                    {HOUSE_PROMO.ctaLabel} →
+                  </p>
+                </div>
+              </a>
+            )}
+
+          {/* AdSense unit — parked; renders nothing until configured. */}
+          <AdSlot name="placesFooter" className="mt-6" />
         </div>
       </ScrollArea>
     </div>

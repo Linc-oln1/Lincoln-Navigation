@@ -46,6 +46,10 @@ interface Location {
   lat: number
   lng: number
   type?: string
+  // Set for paid placements picked from the Explore Nearby panel —
+  // drives the "Sponsored" tag + advertiser link in LocationDetails.
+  sponsored?: boolean
+  url?: string
 }
 
 interface LiveNavigationState {
@@ -248,6 +252,8 @@ function MapNavigator() {
       lat: number
       lng: number
       type?: string
+      sponsored?: boolean
+      url?: string
     }) => {
       setMapCenter([place.lat, place.lng])
 
@@ -257,6 +263,8 @@ function MapNavigator() {
         lat: place.lat,
         lng: place.lng,
         type: place.type,
+        sponsored: place.sponsored,
+        url: place.url,
       })
 
       setMarkers([

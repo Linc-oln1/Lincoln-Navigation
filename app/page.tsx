@@ -20,6 +20,7 @@ import { LithosHero } from "@/components/landing/lithos-hero"
 import { LithosFeatures } from "@/components/landing/lithos-features"
 import { LithosStats } from "@/components/landing/lithos-stats"
 import { ProductShowcase } from "@/components/landing/product-showcase"
+import { AdSlot } from "@/components/ads/ad-slot"
 
 /* =========================================================
    LANDING PAGE
@@ -402,11 +403,26 @@ export default function LandingPage() {
       {phase === "intro" && (
         <>
           <LithosFeatures />
+          <div className="bg-background px-6 py-10">
+            <AdSlot name="landingInline" />
+          </div>
           <LithosStats onEnter={handleIntroComplete} />
         </>
       )}
 
       {phase === "destination" && <ProductShowcase />}
+
+      {/* ---- footer ---- */}
+      <footer className="bg-background border-t border-border px-6 py-8 text-sm text-muted-foreground">
+        <div className="mx-auto max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span>© {new Date().getFullYear()} LincolnNavigation.com</span>
+          <nav className="flex items-center gap-5">
+            <a href="/app" className="hover:text-foreground transition-colors">Open map</a>
+            <a href="/pricing" className="hover:text-foreground transition-colors">Pricing</a>
+            <a href="/advertise" className="hover:text-foreground transition-colors">Advertise</a>
+          </nav>
+        </div>
+      </footer>
     </main>
   )
 }
