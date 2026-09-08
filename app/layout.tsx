@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { RegisterServiceWorker } from '@/components/pwa/register-service-worker'
+import { AdSenseScript } from '@/components/ads/adsense-script'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -57,6 +58,7 @@ export default function RootLayout({
       >
         {children}
         <RegisterServiceWorker />
+        <AdSenseScript />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

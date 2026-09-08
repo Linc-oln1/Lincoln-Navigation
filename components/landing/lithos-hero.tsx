@@ -65,10 +65,15 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
 
     const update = () => {
       ticking = false
-      if (!video.duration || Number.isNaN(video.duration)) return
+      // duration can be 0, NaN (metadata not ready) or Infinity
+      // (stream / unknown length) — all of which make the line
+      // below throw "non-finite value" on currentTime.
+      if (!Number.isFinite(video.duration) || video.duration <= 0) return
       const rect = section.getBoundingClientRect()
       const progress = Math.min(1, Math.max(0, -rect.top / rect.height))
-      video.currentTime = progress * video.duration
+      const t = progress * video.duration
+      if (!Number.isFinite(t)) return
+      video.currentTime = t
     }
 
     const onScroll = () => {

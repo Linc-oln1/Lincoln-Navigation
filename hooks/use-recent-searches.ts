@@ -1,13 +1,17 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { getTierLimits } from "@/lib/premium"
 
 /* Recent searches are stored in this browser's own localStorage —
    there's no login system in this app, so "per user" here means
    per device: nothing written here is ever visible to anyone else,
    and nothing from anyone else's device shows up here. */
 const STORAGE_KEY = "lincoln-nav:recent-searches"
-const MAX_RECENT = 5
+// Free tier keeps a short trip history; premium keeps far more
+// ("Unlimited saved places and trip history" on /pricing). See
+// FREE_LIMITS / PREMIUM_LIMITS.tripHistory.
+const HARD_CAP = 50
 
 export interface RecentSearchEntry {
   id: string
@@ -42,7 +46,8 @@ export function useRecentSearches() {
 
   const addRecentSearch = useCallback((entry: RecentSearchEntry) => {
     setRecentSearches((prev) => {
-      const next = [entry, ...prev.filter((p) => p.id !== entry.id)].slice(0, MAX_RECENT)
+      const limit = Math.min(getTierLimits().tripHistory, HARD_CAP)
+      const next = [entry, ...prev.filter((p) => p.id !== entry.id)].slice(0, limit)
       try {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
       } catch {

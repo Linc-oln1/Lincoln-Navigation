@@ -13,6 +13,7 @@ import { LocationDetails } from "@/components/map/location-details"
 import { MobileNav } from "@/components/map/mobile-nav"
 import { geocode } from "@/lib/geocoding"
 import { useSavedPlaces, type SavedPlaceInput } from "@/hooks/use-saved-places"
+import { X as CloseIcon, Sparkles } from "lucide-react"
 
 const MapView = dynamic(
   () => import("@/components/map/map-view").then((mod) => mod.MapView),
@@ -46,6 +47,10 @@ interface Location {
   lat: number
   lng: number
   type?: string
+  // Set for paid placements picked from the Explore Nearby panel —
+  // drives the "Sponsored" tag + advertiser link in LocationDetails.
+  sponsored?: boolean
+  url?: string
 }
 
 interface LiveNavigationState {
@@ -90,6 +95,9 @@ function MapNavigator() {
 
   const [selectedLocation, setSelectedLocation] =
     useState<Location | null>(null)
+
+  // Shown when a free visitor tries to save past FREE_LIMITS.savedPlaces.
+  const [savedLimitHit, setSavedLimitHit] = useState(false)
 
   const savedPlaces = useSavedPlaces()
 
@@ -248,6 +256,8 @@ function MapNavigator() {
       lat: number
       lng: number
       type?: string
+      sponsored?: boolean
+      url?: string
     }) => {
       setMapCenter([place.lat, place.lng])
 
@@ -257,6 +267,8 @@ function MapNavigator() {
         lat: place.lat,
         lng: place.lng,
         type: place.type,
+        sponsored: place.sponsored,
+        url: place.url,
       })
 
       setMarkers([
@@ -377,6 +389,7 @@ function MapNavigator() {
         onClose={handleClosePanel}
         onSelectPlace={handleSelectSavedPlace}
         favorites={savedPlaces.favorites}
+        favoritesLimit={savedPlaces.favoritesLimit}
         home={savedPlaces.home}
         work={savedPlaces.work}
         onRemoveFavorite={savedPlaces.removeFavorite}
@@ -392,7 +405,13 @@ function MapNavigator() {
           <LocationDetails
             location={selectedLocation}
             isFavorite={savedPlaces.isFavorite(selectedLocation)}
-            onToggleFavorite={() => savedPlaces.toggleFavorite(selectedLocation)}
+            onToggleFavorite={() => {
+              if (
+                savedPlaces.toggleFavorite(selectedLocation) === "limit-reached"
+              ) {
+                setSavedLimitHit(true)
+              }
+            }}
             onClose={() => {
               setSelectedLocation(null)
               setMarkers([])
@@ -418,6 +437,33 @@ function MapNavigator() {
           </p>
         </div>
       </div>
+
+      {/* SAVED-PLACES LIMIT → UPGRADE PROMPT */}
+      {savedLimitHit && (
+        <div className="absolute inset-x-4 bottom-24 md:inset-x-auto md:right-4 md:bottom-4 md:w-[360px] z-[1002] bg-card border border-primary/40 rounded-2xl shadow-2xl p-4">
+          <button
+            onClick={() => setSavedLimitHit(false)}
+            aria-label="Dismiss"
+            className="absolute top-2.5 right-2.5 p-1.5 rounded-lg hover:bg-secondary transition-colors"
+          >
+            <CloseIcon className="w-4 h-4" />
+          </button>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <p className="font-semibold text-sm">Saved-places limit reached</p>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1.5">
+            Free accounts can save up to {savedPlaces.favoritesLimit} places.
+            Premium gives you unlimited saved places and trip history.
+          </p>
+          <a
+            href="/pricing"
+            className="mt-3 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:brightness-110 transition"
+          >
+            See Premium
+          </a>
+        </div>
+      )}
 
     </main>
   )

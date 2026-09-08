@@ -15,6 +15,7 @@ import {
   LocateFixed,
   Volume2,
   VolumeX,
+  Lock,
   Square,
 } from "lucide-react"
 
@@ -24,6 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
 import { useLiveNavigation } from "@/hooks/use-live-navigation"
+import { usePremium } from "@/hooks/use-premium"
 import {
   calculateRoute,
   formatDistance as formatRouteDistance,
@@ -149,9 +151,15 @@ export function DirectionsPanel({
 
   /* -------------------------------------------------------
      VOICE
+
+     Turn-by-turn voice guidance is a Premium feature (see
+     /pricing). Free visitors keep the on-screen step list; the
+     spoken layer is gated on the entitlement.
   ------------------------------------------------------- */
 
-  const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const { isPremium: hasVoice } = usePremium()
+  const [voiceWanted, setVoiceWanted] = useState(true)
+  const voiceEnabled = voiceWanted && hasVoice
 
   /* -------------------------------------------------------
      LIVE NAVIGATION
@@ -463,6 +471,11 @@ export function DirectionsPanel({
   ======================================================= */
 
   const handleVoiceStep = (step: RouteStepView) => {
+    // Reading a step aloud is part of the Premium voice feature.
+    if (!hasVoice) {
+      window.location.href = "/pricing"
+      return
+    }
     speak(step.voiceInstruction || step.instruction)
   }
 
@@ -492,19 +505,33 @@ export function DirectionsPanel({
           <h2 className="text-lg font-semibold">Directions</h2>
 
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setVoiceEnabled((value) => !value)}
-              className="p-2 hover:bg-secondary rounded-lg transition-colors"
-              aria-label={voiceEnabled ? "Disable voice directions" : "Enable voice directions"}
-              title={voiceEnabled ? "Disable voice directions" : "Enable voice directions"}
-            >
-              {voiceEnabled ? (
-                <Volume2 className="w-5 h-5" />
-              ) : (
-                <VolumeX className="w-5 h-5" />
-              )}
-            </button>
+            {hasVoice ? (
+              <button
+                type="button"
+                onClick={() => setVoiceWanted((value) => !value)}
+                className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                aria-label={voiceEnabled ? "Disable voice directions" : "Enable voice directions"}
+                title={voiceEnabled ? "Disable voice directions" : "Enable voice directions"}
+              >
+                {voiceEnabled ? (
+                  <Volume2 className="w-5 h-5" />
+                ) : (
+                  <VolumeX className="w-5 h-5" />
+                )}
+              </button>
+            ) : (
+              <a
+                href="/pricing"
+                className="p-2 hover:bg-secondary rounded-lg transition-colors flex items-center"
+                title="Turn-by-turn voice navigation is a Premium feature"
+                aria-label="Unlock voice navigation with Premium"
+              >
+                <span className="relative">
+                  <VolumeX className="w-5 h-5 text-muted-foreground" />
+                  <Lock className="w-2.5 h-2.5 absolute -right-1 -top-1 text-primary" />
+                </span>
+              </a>
+            )}
 
             <button
               type="button"
@@ -800,13 +827,26 @@ export function DirectionsPanel({
                     </div>
                   </div>
 
-                  <Volume2 className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+                  {hasVoice ? (
+                    <Volume2 className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-1" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-1" />
+                  )}
                 </button>
               ))}
             </div>
 
             <p className="text-xs text-muted-foreground text-center mt-5">
-              Tap a direction to hear it aloud.
+              {hasVoice ? (
+                "Tap a direction to hear it aloud."
+              ) : (
+                <>
+                  <a href="/pricing" className="text-primary font-medium hover:underline">
+                    Upgrade to Premium
+                  </a>{" "}
+                  for turn-by-turn voice navigation.
+                </>
+              )}
             </p>
           </div>
         </ScrollArea>
