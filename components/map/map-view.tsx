@@ -114,6 +114,11 @@ interface MapViewProps {
 
   onMapClick?: (lat: number, lng: number) => void
 
+  // Fires after the user finishes panning/zooming, with the new
+  // map center as [lat, lng]. Used by the weather widget to show
+  // conditions for wherever the map is currently looking.
+  onCenterChange?: (lat: number, lng: number) => void
+
   mapStyle?: MapStyle
 
   liveNavigation?: LiveNavigationState
@@ -1219,6 +1224,7 @@ export function MapView({
   routePoints = [],
   showUserLocation = true,
   onMapClick,
+  onCenterChange,
   mapStyle = "device",
   liveNavigation,
 }: MapViewProps) {
@@ -1384,6 +1390,16 @@ export function MapView({
 
       map.on("click", (event: maplibregl.MapMouseEvent) => {
         onMapClick?.(event.lngLat.lat, event.lngLat.lng)
+      })
+
+      // Only user-initiated moves carry `originalEvent`; programmatic
+      // flyTo/easeTo calls (search selection, route fitting) don't,
+      // so this reports the map center only when the user themselves
+      // panned or zoomed there.
+      map.on("moveend", (event: any) => {
+        if (!event?.originalEvent) return
+        const c = map.getCenter()
+        onCenterChange?.(c.lat, c.lng)
       })
 
       // Defensive resize handling: MapLibre sizes its WebGL canvas
