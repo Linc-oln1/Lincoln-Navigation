@@ -1,29 +1,55 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Compass, Search, CloudSun, Route, MousePointerClick } from "lucide-react"
-import { HeroGlobe } from "@/components/landing/hero-globe"
+import { Compass, CloudSun, Route, MousePointerClick } from "lucide-react"
 
 /**
- * A scroll-triggered "product tour" section for the landing page:
- * a floating tablet mockup of the app's own interface (the real
- * HeroGlobe, not a new design), tilted in 3D and leveling out as
- * the section scrolls into view, surrounded by floating glass
- * feature cards (weather, a live-route chart, an interactive-UI
- * hint) with the site's existing blue/neon-cyan accent — no video,
- * no external asset, just DOM/CSS/SVG like the rest of the page.
+ * Scroll-triggered "product tour" section for the landing page: a
+ * floating tablet mockup whose screen is an interactive world map
+ * (the /public/showcase-worldmap.webp art) — the map parallaxes to
+ * the cursor, a spotlight follows it, and glowing city nodes light
+ * up on hover with routes flowing back to Accra. Surrounded by the
+ * site's blue/neon-cyan glass feature cards. All DOM/CSS/SVG.
  */
+
+interface City {
+  id: string
+  name: string
+  /** % of the screen box */
+  x: number
+  y: number
+  hub?: boolean
+}
+
+// Rough positions over the world-map art. Nudge once the real crop
+// is in view.
+const CITIES: City[] = [
+  { id: "accra", name: "Accra", hub: true, x: 48.5, y: 60 },
+  { id: "london", name: "London", x: 46.5, y: 32 },
+  { id: "newyork", name: "New York", x: 26, y: 38 },
+  { id: "dubai", name: "Dubai", x: 61, y: 47 },
+  { id: "joburg", name: "Johannesburg", x: 53, y: 82 },
+  { id: "nairobi", name: "Nairobi", x: 57.5, y: 66 },
+]
+
+type CityId = string
+
+const cityById = (id: CityId) => CITIES.find((c) => c.id === id)!
+
+// Every spoke runs to the Accra hub.
+const ROUTES = ["london", "newyork", "dubai", "joburg", "nairobi"]
+
 export function ProductShowcase() {
   const sectionRef = useRef<HTMLElement>(null)
   const tiltRef = useRef<HTMLDivElement>(null)
+  const screenRef = useRef<HTMLDivElement>(null)
   const [visible, setVisible] = useState(false)
+  const [activeCity, setActiveCity] = useState<CityId | null>(null)
 
-  // one-time reveal, triggered once the section is meaningfully
-  // in view (staggered fade/slide for copy, tablet, and cards)
+  // one-time staggered reveal once the section is in view
   useEffect(() => {
     const el = sectionRef.current
     if (!el) return
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -31,44 +57,39 @@ export function ProductShowcase() {
           observer.disconnect()
         }
       },
-      { threshold: 0.2 }
+      { threshold: 0.2 },
     )
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
 
-  // continuous scroll-linked "camera pan": the tablet starts
-  // tilted away in 3D and levels out as the section crosses the
-  // viewport. Mutates the ref's style directly (no React state)
-  // so this stays smooth on every scroll tick.
+  // scroll-linked "camera pan": the tablet starts tilted away and
+  // levels out as the section crosses the viewport
   useEffect(() => {
     const section = sectionRef.current
     const tilt = tiltRef.current
     if (!section || !tilt) return
 
     let ticking = false
-
     const update = () => {
       ticking = false
       const rect = section.getBoundingClientRect()
       const vh = window.innerHeight || 1
-      const raw = (vh - rect.top) / (vh + rect.height)
-      const progress = Math.min(1, Math.max(0, raw))
-
+      const progress = Math.min(
+        1,
+        Math.max(0, (vh - rect.top) / (vh + rect.height)),
+      )
       const rotateY = -16 + progress * 16
       const rotateX = 7 - progress * 7
       const translateY = (1 - progress) * 36
-
       tilt.style.transform = `perspective(1400px) rotateY(${rotateY}deg) rotateX(${rotateX}deg) translateY(${translateY}px)`
     }
-
     const onScroll = () => {
       if (!ticking) {
         ticking = true
         requestAnimationFrame(update)
       }
     }
-
     update()
     window.addEventListener("scroll", onScroll, { passive: true })
     window.addEventListener("resize", onScroll)
@@ -77,6 +98,25 @@ export function ProductShowcase() {
       window.removeEventListener("resize", onScroll)
     }
   }, [])
+
+  // cursor parallax + spotlight on the map screen
+  const handleScreenMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = screenRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const mx = (e.clientX - r.left) / r.width
+    const my = (e.clientY - r.top) / r.height
+    el.style.setProperty("--mx", mx.toFixed(3))
+    el.style.setProperty("--my", my.toFixed(3))
+  }
+
+  const resetScreen = () => {
+    const el = screenRef.current
+    if (!el) return
+    el.style.setProperty("--mx", "0.5")
+    el.style.setProperty("--my", "0.5")
+    setActiveCity(null)
+  }
 
   return (
     <section ref={sectionRef} className="showcase">
@@ -90,8 +130,9 @@ export function ProductShowcase() {
           Built like software you&apos;d actually want to use.
         </h2>
         <p className="showcase-sub">
-          Live weather, mapped routes, and a globe that actually rotates —
-          all in a dark, glass interface designed around Ghana&apos;s roads.
+          Live weather, mapped routes, and a world that lights up as you
+          explore it — all in a dark, glass interface designed around
+          Ghana&apos;s roads.
         </p>
       </div>
 
@@ -102,7 +143,17 @@ export function ProductShowcase() {
         >
           <div className="showcase-tablet">
             <div className="showcase-tablet-cam" />
-            <div className="showcase-screen">
+
+            <div
+              ref={screenRef}
+              className="showcase-screen showcase-screen--map"
+              style={{ ["--mx" as string]: "0.5", ["--my" as string]: "0.5" }}
+              onMouseMove={handleScreenMove}
+              onMouseLeave={resetScreen}
+            >
+              <div className="showcase-map-img" aria-hidden="true" />
+              <div className="showcase-map-spotlight" aria-hidden="true" />
+
               <div className="showcase-screen-nav">
                 <span className="showcase-screen-logo">
                   <Compass className="w-2.5 h-2.5 text-white" />
@@ -110,26 +161,48 @@ export function ProductShowcase() {
                 Lincoln Navigation
               </div>
 
-              <div className="showcase-screen-globe">
-                <HeroGlobe size={130} />
-              </div>
+              {/* route spokes to Accra */}
+              <svg
+                className="showcase-map-routes"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {ROUTES.map((id) => {
+                  const a = cityById("accra")
+                  const b = cityById(id)
+                  const mx = (a.x + b.x) / 2
+                  const my = Math.min(a.y, b.y) - 12
+                  const on = activeCity === id
+                  return (
+                    <path
+                      key={id}
+                      className={`showcase-route ${on ? "is-active" : ""}`}
+                      d={`M ${b.x} ${b.y} Q ${mx} ${my} ${a.x} ${a.y}`}
+                    />
+                  )
+                })}
+              </svg>
 
-              <div className="showcase-screen-pill">
-                <Search className="w-2.5 h-2.5" />
-                Where to...
-              </div>
-
-              <div className="showcase-screen-chart" aria-hidden="true">
-                <svg viewBox="0 0 200 40" preserveAspectRatio="none">
-                  <path
-                    d="M0 30 L20 22 L40 26 L60 12 L80 18 L100 8 L120 16 L140 6 L160 14 L180 4 L200 10"
-                    fill="none"
-                    stroke="#4dd8ff"
-                    strokeWidth="2"
-                  />
-                </svg>
-              </div>
+              {/* city nodes */}
+              {CITIES.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`showcase-node ${c.hub ? "is-hub" : ""} ${
+                    activeCity === c.id ? "is-active" : ""
+                  }`}
+                  style={{ left: `${c.x}%`, top: `${c.y}%` }}
+                  onMouseEnter={() => !c.hub && setActiveCity(c.id)}
+                  onFocus={() => !c.hub && setActiveCity(c.id)}
+                  aria-label={c.name}
+                >
+                  <span className="showcase-node-dot" />
+                  <span className="showcase-node-label">{c.name}</span>
+                </button>
+              ))}
             </div>
+
             <div className="showcase-tablet-sheen" />
           </div>
 
@@ -147,8 +220,18 @@ export function ProductShowcase() {
               <p className="showcase-card-label">Live route</p>
               <p className="showcase-card-value">ETA 24 min</p>
             </div>
-            <svg className="showcase-card-spark" viewBox="0 0 60 20" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M0 16 L10 12 L20 14 L30 6 L40 10 L50 3 L60 7" fill="none" stroke="#4dd8ff" strokeWidth="1.5" />
+            <svg
+              className="showcase-card-spark"
+              viewBox="0 0 60 20"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M0 16 L10 12 L20 14 L30 6 L40 10 L50 3 L60 7"
+                fill="none"
+                stroke="#4dd8ff"
+                strokeWidth="1.5"
+              />
             </svg>
           </div>
 
@@ -156,7 +239,7 @@ export function ProductShowcase() {
             <MousePointerClick className="w-4 h-4 text-[#4dd8ff] flex-shrink-0" />
             <div>
               <p className="showcase-card-label">Interactive UI</p>
-              <p className="showcase-card-value">Hover to explore</p>
+              <p className="showcase-card-value">Hover the map</p>
             </div>
           </div>
         </div>
