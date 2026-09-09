@@ -172,6 +172,7 @@ export function DirectionsPanel({
   const [routeCoords, setRouteCoords] =
     useState<[number, number][] | null>(null)
   const [candidateHazards, setCandidateHazards] = useState<Hazard[]>([])
+  const [activeRoute, setActiveRoute] = useState<Route | null>(null)
 
   // A materially safer alternative to offer, if one exists.
   const [saferAlt, setSaferAlt] = useState<{
@@ -180,6 +181,10 @@ export function DirectionsPanel({
     avoidedCount: number
   } | null>(null)
   const [saferDismissed, setSaferDismissed] = useState(false)
+
+  // "Route around it" — an engine-computed detour past the hazards.
+  const [routeAroundBusy, setRouteAroundBusy] = useState(false)
+  const [routeAroundError, setRouteAroundError] = useState<string | null>(null)
 
   // Guards against a stale hazard fetch landing after a newer
   // route calculation.
@@ -196,8 +201,11 @@ export function DirectionsPanel({
   const clearRouteExtras = () => {
     setRouteCoords(null)
     setCandidateHazards([])
+    setActiveRoute(null)
     setSaferAlt(null)
     setSaferDismissed(false)
+    setRouteAroundBusy(false)
+    setRouteAroundError(null)
     hazardFetchIdRef.current++
     onAlternativeRoute?.([])
   }
@@ -409,6 +417,7 @@ export function DirectionsPanel({
     const coords = toLatLng(route)
     onRouteCalculated(coords)
     setRouteCoords(coords)
+    setActiveRoute(route)
 
     const steps: RouteStepView[] = route.steps.map((step) => ({
       instruction: step.instruction,
@@ -518,6 +527,75 @@ export function DirectionsPanel({
   const handleDismissSafer = () => {
     setSaferDismissed(true)
     onAlternativeRoute?.([])
+  }
+
+  /* =======================================================
+     ROUTE AROUND IT — ask a routing engine (ORS) for a route
+     that actually excludes the roads near the hazards. Only
+     offered when there's a hazard on the route and no plain
+     alternative already avoids it.
+  ======================================================= */
+
+  const handleRouteAround = async () => {
+    if (
+      routeAroundBusy ||
+      routeHazards.length === 0 ||
+      !originCoordinates ||
+      !destinationCoordinates
+    ) {
+      return
+    }
+
+    setRouteAroundBusy(true)
+    setRouteAroundError(null)
+
+    const targets = routeHazards.map((h) => h.hazard)
+    const avoidAreas = targets.map((h) => ({
+      lat: h.location.lat,
+      lng: h.location.lng,
+      radiusM: 170,
+    }))
+
+    try {
+      const result = await calculateRoute(
+        [originCoordinates, destinationCoordinates],
+        { mode: travelMode, avoidAreas, steps: true }
+      )
+
+      const route = result.routes?.[0]
+      if (result.code !== "Ok" || !route || !route.geometry.coordinates.length) {
+        throw new Error("no-route")
+      }
+
+      const newCoords = toLatLng(route)
+
+      // Did it actually get clear of them?
+      const stillOn = hazardsOnRoute(newCoords, targets, { thresholdM: 140 })
+      if (stillOn.length > 0) {
+        throw new Error("still-on")
+      }
+
+      // Reject a detour that's wildly longer than the current route.
+      const currentSeconds = activeRoute?.duration ?? route.duration
+      if (route.duration > currentSeconds * 2.5 + 300) {
+        throw new Error("too-long")
+      }
+
+      applyRoute(route)
+      setSaferAlt(null)
+      onAlternativeRoute?.([])
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : ""
+      setRouteAroundError(
+        reason === "too-long"
+          ? "The only way around is much too long."
+          : reason === "still-on"
+            ? "Couldn't find a route that clears it."
+            : "Couldn't find a way around right now."
+      )
+    } finally {
+      setRouteAroundBusy(false)
+    }
   }
 
   /* =======================================================
@@ -992,6 +1070,11 @@ export function DirectionsPanel({
               }
               onUseSaferRoute={handleUseSaferRoute}
               onDismissSafer={handleDismissSafer}
+              onRouteAround={
+                !isNavigating ? handleRouteAround : undefined
+              }
+              routeAroundBusy={routeAroundBusy}
+              routeAroundError={routeAroundError}
             />
 
             <div className="bg-secondary rounded-xl p-4 mb-4">

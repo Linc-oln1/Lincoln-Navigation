@@ -12,6 +12,7 @@ import {
 import { reporterHash } from "@/lib/hazard-identity"
 import { HAZARD_SEED } from "@/lib/geo-intelligence/route-intelligence"
 import { haversineMeters } from "@/lib/geo-intelligence/confidence"
+import { getForecastFloodHazards } from "@/lib/hazard-feeds/forecast-flood"
 
 /* =========================================================
    COMMUNITY HAZARD REPORTS
@@ -56,8 +57,11 @@ function centroid(points: { lat: number; lng: number }[]): {
   return { lat: sum.lat / points.length, lng: sum.lng / points.length }
 }
 
-function seedHazards(): Hazard[] {
-  return HAZARD_SEED.map((zone) => ({
+// Non-flood seed zones stay static. Flood zones are handled by
+// getForecastFloodHazards() instead — they only appear while the
+// rain forecast for them is bad (Phase 3b).
+function staticSeedHazards(): Hazard[] {
+  return HAZARD_SEED.filter((zone) => zone.kind !== "flood").map((zone) => ({
     id: zone.id,
     kind: zone.kind,
     location: centroid(zone.polygonOrLine),
@@ -70,6 +74,11 @@ function seedHazards(): Hazard[] {
     severity: zone.severity,
     status: "active",
   }))
+}
+
+async function baseHazards(): Promise<Hazard[]> {
+  const forecast = await getForecastFloodHazards().catch(() => [])
+  return [...staticSeedHazards(), ...forecast]
 }
 
 function parseBBox(raw: string | null): BBox | null {
@@ -107,11 +116,12 @@ export async function GET(request: NextRequest) {
   }
 
   const store = getHazardStore()
-  const seeds = seedHazards().filter((h) => inBBox(h, bbox))
+  const seeds = (await baseHazards()).filter((h) => inBBox(h, bbox))
 
   if (!store) {
-    // No shared store — still surface the static seed zones so the
-    // feature isn't completely invisible, but say it's not fully on.
+    // No shared store — still surface the static seed + forecast
+    // zones so the feature isn't completely invisible, but say it's
+    // not fully on.
     return NextResponse.json(
       { hazards: seeds, configured: false },
       { headers: { "Cache-Control": "public, s-maxage=60" } }

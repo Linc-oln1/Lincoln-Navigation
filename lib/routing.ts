@@ -33,6 +33,11 @@ export interface RoutingOptions {
   alternatives?: boolean
   steps?: boolean
   overview?: "full" | "simplified" | "false"
+  // Circles the route should skip (Phase 3a "route around it").
+  // When set, routing goes through /api/directions (ORS) so the
+  // exclusion is actually honoured; without ORS_API_KEY the caller
+  // gets a normal route and should check whether it dodged them.
+  avoidAreas?: Array<{ lat: number; lng: number; radiusM?: number }>
 }
 
 export interface RouteStep {
@@ -472,9 +477,15 @@ export function formatDistance(
  */
 async function tryOpenRouteService(
   coordinates: Coordinate[],
-  mode: TravelMode
+  options: RoutingOptions
 ): Promise<RoutingResult | null> {
-  if (mode !== "walking" && mode !== "cycling") {
+  const mode = options.mode ?? "driving"
+  const avoidAreas = options.avoidAreas ?? []
+
+  // ORS is used for walking/cycling (real foot/bike graph) and for
+  // any mode when an avoid area is requested (OSRM can't exclude
+  // arbitrary areas). Everything else stays on OSRM.
+  if (mode !== "walking" && mode !== "cycling" && avoidAreas.length === 0) {
     return null
   }
 
@@ -487,6 +498,10 @@ async function tryOpenRouteService(
       coordinates: coordinateString,
       mode,
     })
+
+    if (avoidAreas.length > 0) {
+      params.set("avoid", JSON.stringify(avoidAreas))
+    }
 
     const response = await fetch(
       `/api/directions?${params.toString()}`,
@@ -517,10 +532,7 @@ export async function calculateRoute(
   coordinates: Coordinate[],
   options: RoutingOptions = {}
 ): Promise<RoutingResult> {
-  const orsResult = await tryOpenRouteService(
-    coordinates,
-    options.mode ?? "driving"
-  )
+  const orsResult = await tryOpenRouteService(coordinates, options)
 
   if (orsResult) return orsResult
 
