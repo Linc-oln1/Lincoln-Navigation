@@ -347,6 +347,13 @@ function MapNavigator() {
     setActivePanel(null)
   }, [])
 
+  // From the directions panel's "hazards on this route" list — keep
+  // the panel open, just highlight the hazard and bring it into view.
+  const handleFocusHazard = useCallback((hazard: Hazard) => {
+    setSelectedHazard(hazard)
+    setMapCenter([hazard.location.lat, hazard.location.lng])
+  }, [])
+
   const handleRouteCalculated = useCallback(
     (points: [number, number][]) => {
       setRoutePoints(points)
@@ -435,6 +442,7 @@ function MapNavigator() {
         initialTravelMode={initialTravelMode}
         onRouteCalculated={handleRouteCalculated}
         onNavigationStateChange={setNavigationState}
+        onFocusHazard={handleFocusHazard}
       />
 
       {/* PLACES */}

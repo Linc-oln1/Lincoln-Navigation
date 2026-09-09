@@ -18,10 +18,30 @@ anonymous and expire on their own.
 | [`components/map/hazard-layer.tsx`](../components/map/hazard-layer.tsx) | Plots hazards as tappable MapLibre markers (map-prop pattern, like `LocationMarker`). |
 | [`components/map/report-hazard-sheet.tsx`](../components/map/report-hazard-sheet.tsx) | The "Report a hazard" bottom sheet (kind picker, location, optional note). |
 | [`components/map/hazard-details.tsx`](../components/map/hazard-details.tsx) | Detail card with "Still there" / "Cleared" votes. |
+| [`lib/hazard-geometry.ts`](../lib/hazard-geometry.ts) | Client-safe: `routeBBox`, `hazardsOnRoute` (point-to-segment proximity + distance-along-route), `alongRouteLabel`. |
+| [`hooks/use-route-hazards.ts`](../hooks/use-route-hazards.ts) | Given a calculated route, fetches `/api/hazards` for its bbox once and filters to the ones on the line. |
+| [`components/map/route-hazard-warning.tsx`](../components/map/route-hazard-warning.tsx) | Collapsible "N hazards on this route" banner in the directions panel. |
 
 `MapView` gained `onBoundsChange`, `hazards`, `selectedHazardId`,
 `onHazardSelect` and `onUserLocationChange`; `app/app/page.tsx`
 wires the layer, the FAB, the sheet and the details card.
+
+## Phase 2a — hazards on a route
+
+After the directions panel calculates a route it runs
+`useRouteHazards` on the polyline and shows `RouteHazardWarning`
+above the turn-by-turn list — each hazard with its kind, report
+age and distance along the route. Red when a `closure` or a
+severity ≥ 0.7 hazard is on the line, amber otherwise. Tapping a
+row calls `onFocusHazard` → `app/app/page.tsx` highlights the
+marker and recenters the map (the directions panel stays open, so
+the full `HazardDetails` card doesn't show — the row already
+carries the summary).
+
+No routing-logic changes: the route still comes from
+`calculateRoute` (OSRM), and the warning is advisory only. The
+hook keys on the route's endpoints, so a hazard reported *after* a
+route is calculated only shows once the route is recalculated.
 
 ## Storage
 
@@ -68,11 +88,19 @@ Confirm votes nudge severity up (+0.05), clear votes down (−0.15);
   seed/official zones render dashed and carry a "not a live
   confirmation" note. Aggressive auto-expiry throughout.
 
-## Not in this phase
+## Not yet built
 
-Route-crossing warnings in the directions panel + merging crowd
-reports into `scoreRoutes()` (the `detectHazards` / `HAZARD_SEED`
-path in `lib/geo-intelligence/route-intelligence.ts` is still only
-reachable via `/api/geo/route-plan`, which the UI doesn't call
-yet). Live-nav voice alerts. An official NADMO / Hydrological
-Services feed adapter.
+- **Phase 2b** — offer a safer alternative route: `calculateRoute`
+  with `alternatives: true`, score each against the hazards
+  (extract `scoreRoutes` from `route-intelligence.ts` into a
+  client-safe module), and prompt "a route avoiding X is N min
+  longer". Default stays the fastest route. Also merge
+  `getHazardStore().listActive()` into `/api/geo/route-plan` so
+  that endpoint scores against live crowd data.
+- **Phase 2c** — live-navigation "hazard ahead" detection in
+  `use-live-navigation.ts`: on-screen strip (free) + spoken alert
+  (Premium, via the existing `speakNavigation`).
+- **Phase 3** — real avoidance re-routing (needs Valhalla
+  `exclude_locations` / GraphHopper `block_area`; engine classes
+  exist but are env-gated). Official NADMO / Hydrological Services
+  feed adapter behind the same store interface.
