@@ -1722,6 +1722,11 @@ export function MapView({
       return
     }
 
+    // Fit the whole route into view — but not during live
+    // navigation, where a mid-trip reroute would otherwise yank the
+    // camera off the driver (NavigationCamera owns the view then).
+    if (liveNavigation?.isNavigating) return
+
     const lngs = geojson.geometry.coordinates.map((c) => c[0])
     const lats = geojson.geometry.coordinates.map((c) => c[1])
 
@@ -1732,7 +1737,7 @@ export function MapView({
       ],
       { padding: 64, duration: 800 }
     )
-  }, [routePoints])
+  }, [routePoints, liveNavigation?.isNavigating])
 
   /* =======================================================
      ALTERNATIVE ("safer") ROUTE PREVIEW

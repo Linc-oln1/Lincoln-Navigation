@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import {
   X,
@@ -34,6 +34,7 @@ import {
   type OnRouteHazard,
 } from "@/lib/hazard-geometry"
 import { countTurns, pickSaferRoute } from "@/lib/route-scoring"
+import type { AvoidCircle } from "@/lib/geo/avoid-polygon"
 import {
   calculateRoute,
   formatDistance as formatRouteDistance,
@@ -239,6 +240,22 @@ export function DirectionsPanel({
   const [liveDestination, setLiveDestination] =
     useState<[number, number] | null>(null)
 
+  // Mid-navigation reroute plumbing (see handleReroute below).
+  const [rerouteBusy, setRerouteBusy] = useState(false)
+  const [rerouteError, setRerouteError] = useState<string | null>(null)
+  const rerouteInFlightRef = useRef(false)
+  const rerouteCooldownRef = useRef(0)
+  // The hook's onRerouteNeeded fires from a GPS callback captured
+  // once at nav start, so it must be stable — it reaches the latest
+  // reroute logic + position through these refs.
+  const rerouteFnRef = useRef<(from: [number, number]) => void>(() => {})
+  const livePositionRef = useRef<{ lat: number; lng: number } | null>(null)
+
+  const handleAutoReroute = useCallback(() => {
+    const p = livePositionRef.current
+    if (p) rerouteFnRef.current([p.lng, p.lat])
+  }, [])
+
   const {
     isNavigating,
     position,
@@ -258,7 +275,19 @@ export function DirectionsPanel({
     travelMode,
     routePath: routeCoords ?? [],
     hazards: candidateHazards,
+    onRerouteNeeded: handleAutoReroute,
   })
+
+  livePositionRef.current = position
+    ? { lat: position.latitude, lng: position.longitude }
+    : null
+
+  useEffect(() => {
+    if (!isNavigating) {
+      setRerouteError(null)
+      setRerouteBusy(false)
+    }
+  }, [isNavigating])
 
   /* =======================================================
      BUBBLE LIVE POSITION UP TO THE MAP
@@ -596,6 +625,92 @@ export function DirectionsPanel({
     } finally {
       setRouteAroundBusy(false)
     }
+  }
+
+  /* =======================================================
+     MID-NAVIGATION REROUTE
+
+     Two callers: an automatic recalculation when the hook reports
+     the driver has drifted off the line (avoid = []), and a
+     "Reroute" tap when a closure is reported ahead (avoid = a
+     circle around it). Both recompute from the CURRENT GPS
+     position to the same destination and swap the live route in
+     place — the hook restarts step tracking on the new steps.
+  ======================================================= */
+
+  const rerouteFrom = async (
+    from: [number, number],
+    avoidHazards: Hazard[]
+  ) => {
+    if (
+      rerouteInFlightRef.current ||
+      !liveDestination ||
+      Date.now() - rerouteCooldownRef.current < 8000
+    ) {
+      return
+    }
+
+    rerouteInFlightRef.current = true
+    rerouteCooldownRef.current = Date.now()
+    setRerouteBusy(true)
+    setRerouteError(null)
+
+    const avoidAreas: AvoidCircle[] = avoidHazards.map((h) => ({
+      lat: h.location.lat,
+      lng: h.location.lng,
+      radiusM: 180,
+    }))
+
+    try {
+      const result = await calculateRoute([from, liveDestination], {
+        mode: travelMode,
+        avoidAreas: avoidAreas.length > 0 ? avoidAreas : undefined,
+        steps: true,
+      })
+
+      const route = result.routes?.[0]
+      if (
+        result.code !== "Ok" ||
+        !route ||
+        route.geometry.coordinates.length < 2 ||
+        route.steps.length === 0
+      ) {
+        throw new Error("no-route")
+      }
+
+      if (avoidHazards.length > 0) {
+        const stillOn = hazardsOnRoute(toLatLng(route), avoidHazards, {
+          thresholdM: 140,
+        })
+        if (stillOn.length > 0) throw new Error("still-on")
+      }
+
+      applyRoute(route)
+      setRerouteError(null)
+      if (voiceEnabled) speak("New route.")
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : ""
+      setRerouteError(
+        reason === "still-on"
+          ? "Couldn't find a way around — it may block the only road."
+          : avoidHazards.length > 0
+            ? "Couldn't reroute right now."
+            : null // silent off-route retry — no banner, try again next tick
+      )
+    } finally {
+      rerouteInFlightRef.current = false
+      setRerouteBusy(false)
+    }
+  }
+
+  rerouteFnRef.current = (from) => {
+    void rerouteFrom(from, [])
+  }
+
+  const handleRerouteAroundHazard = () => {
+    const p = livePositionRef.current
+    if (!p || !hazardAhead) return
+    void rerouteFrom([p.lng, p.lat], [hazardAhead.hazard])
   }
 
   /* =======================================================
@@ -1035,18 +1150,35 @@ export function DirectionsPanel({
                   <span className="text-lg leading-none" aria-hidden>
                     {hazardKindMeta(hazardAhead.hazard.kind).emoji}
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-red-600">
                       {hazardAhead.hazard.source === "crowd_report"
                         ? `Reported ${hazardKindMeta(hazardAhead.hazard.kind).label.toLowerCase()}`
                         : `${hazardKindMeta(hazardAhead.hazard.kind).label} area`}
                     </p>
                     <p className="text-xs text-neutral-600">
-                      {hazardAhead.distanceM <= 60
-                        ? "right ahead"
-                        : `${Math.round(hazardAhead.distanceM / 50) * 50} m ahead`}
+                      {rerouteError
+                        ? rerouteError
+                        : hazardAhead.distanceM <= 60
+                          ? "right ahead"
+                          : `${Math.round(hazardAhead.distanceM / 50) * 50} m ahead`}
                     </p>
                   </div>
+                  {hazardAhead.hazard.kind === "closure" &&
+                    hazardAhead.distanceM >= 150 &&
+                    !rerouteError && (
+                      <button
+                        type="button"
+                        onClick={handleRerouteAroundHazard}
+                        disabled={rerouteBusy}
+                        className="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-neutral-900 text-white hover:opacity-90 transition-opacity disabled:opacity-60 inline-flex items-center gap-1.5"
+                      >
+                        {rerouteBusy && (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        )}
+                        Reroute
+                      </button>
+                    )}
                 </div>
               )}
 

@@ -167,12 +167,30 @@ Confirm votes nudge severity up (+0.05), clear votes down (−0.15);
   seed/official zones render dashed and carry a "not a live
   confirmation" note. Aggressive auto-expiry throughout.
 
+### Mid-navigation reroute
+
+`directions-panel.tsx`'s `rerouteFrom(currentPos, avoidHazards)`
+recomputes from the driver's live GPS position to the same
+destination and swaps the route in place — `applyRoute` sets the
+new `liveSteps`, and the hook's `[steps]` effect (already built for
+this) restarts step tracking from where the driver is. `MapView`
+skips its route `fitBounds` while `isNavigating` so the camera
+stays on the driver.
+
+- **Off-route** (driver > 80 m off the line for 15 s): the hook's
+  `onRerouteNeeded` — previously just a message — now fires
+  `rerouteFrom(pos, [])` (plain recompute, no avoid). Silent; the
+  hook's cooldown plus an 8 s local guard limit retries.
+- **Closure ahead:** when `hazardAhead.hazard.kind === "closure"`
+  and it's ≥ 150 m off, the 2c strip shows a **Reroute** button →
+  `rerouteFrom(pos, [that hazard])` (avoid circle around it). Only
+  applied if the result clears it; else "Couldn't find a way
+  around — it may block the only road." Needs `ORS_API_KEY` like
+  3a; without it the OSRM fallback can't dodge the closure and the
+  check reports that.
+
 ## Not yet built
 
-- Mid-navigation re-routing — a `closure` detected ahead during
-  live nav (2c) could trigger "route around it" and rebuild the
-  step list from the driver's current position. `onRerouteNeeded`
-  is wired for the message but not the reroute itself.
 - A real official feed — GDACS / NADMO / GMet — behind a
   `HazardFeed` interface alongside `forecast-flood.ts`.
 - `/api/geo/route-plan`: upgrade its vertex-only `detectHazards` to
