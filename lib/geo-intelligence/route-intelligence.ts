@@ -11,6 +11,7 @@
 // SERVER-ONLY.
 
 import { calculateRoute, type Coordinate } from "../routing"
+import { scoreCandidates } from "../route-scoring"
 import { haversineMeters } from "./confidence"
 import type { HazardZone, LatLng, RouteCandidate, ScoredRoute, VehicleType } from "./types"
 
@@ -283,46 +284,29 @@ export function scoreRoutes(
     hazardsCrossed: detectHazards(c.geometry, hazards),
   }))
 
-  const fastest = Math.min(...withHazards.map((c) => c.durationSeconds))
-  const slowest = Math.max(...withHazards.map((c) => c.durationSeconds))
-  const maxTurns = Math.max(1, ...withHazards.map((c) => c.turnCount))
-
-  // Vehicle-specific weighting: a motorcycle can thread through
-  // congestion a bus can't, so ETA matters relatively more and turn
-  // density relatively less for it; a bus should avoid hazard-prone
-  // and turn-heavy routes more aggressively. These are, again,
-  // explicit and meant to be tuned against real outcomes.
-  const WEIGHT_PROFILES: Record<VehicleType, { eta: number; turns: number; hazard: number }> = {
-    car: { eta: 0.45, turns: 0.2, hazard: 0.35 },
-    motorcycle: { eta: 0.55, turns: 0.1, hazard: 0.35 },
-    bus: { eta: 0.3, turns: 0.3, hazard: 0.4 },
-    walking: { eta: 0.6, turns: 0.1, hazard: 0.3 },
-    cycling: { eta: 0.5, turns: 0.15, hazard: 0.35 },
-  }
-  const weights = WEIGHT_PROFILES[options.vehicle]
+  // The weighted ETA / turns / hazard formula lives in
+  // lib/route-scoring.ts so the directions panel can score OSRM
+  // routes with the exact same maths (see Phase 2b).
+  const scored = scoreCandidates(
+    withHazards.map((c) => {
+      const severities = c.hazardsCrossed.map((h) => h.severity)
+      return {
+        id: c.id,
+        durationSeconds: c.durationSeconds,
+        turnCount: c.turnCount,
+        hazardSeverityTotal: severities.reduce((s, v) => s + v, 0),
+        hazardCount: severities.length,
+        hazardMaxSeverity: severities.reduce((m, v) => Math.max(m, v), 0),
+      }
+    }),
+    options.vehicle
+  )
+  const scoreById = new Map(scored.map((s) => [s.id, s]))
 
   return withHazards
     .map((candidate): ScoredRoute => {
-      const etaScore =
-        slowest === fastest ? 1 : 1 - (candidate.durationSeconds - fastest) / (slowest - fastest)
-
-      const turnComplexityScore = 1 - candidate.turnCount / maxTurns
-
-      const hazardSeverity = candidate.hazardsCrossed.reduce(
-        (sum, h) => sum + h.severity,
-        0
-      )
-      const hazardScore = Math.max(0, 1 - hazardSeverity)
-
-      // "Road quality" isn't independently observable from free
-      // data at this layer, so it's approximated as a function of
-      // turn density (proxy for minor/unpaved-road-heavy routing)
-      // until a real road-surface dataset is wired in — flagged
-      // explicitly rather than silently faked as a real signal.
-      const roadQualityScore = turnComplexityScore
-
-      const overall =
-        etaScore * weights.eta + hazardScore * weights.hazard + turnComplexityScore * weights.turns
+      const s = scoreById.get(candidate.id)!
+      const { etaScore, turnComplexityScore, hazardScore } = s.breakdown
 
       const reasoning: string[] = [
         `ETA ${Math.round(candidate.durationSeconds / 60)} min via ${candidate.engine} (${Math.round(etaScore * 100)}% of best-in-batch).`,
@@ -338,8 +322,17 @@ export function scoreRoutes(
 
       return {
         ...candidate,
-        score: overall,
-        scoreBreakdown: { etaScore, roadQualityScore, hazardScore, turnComplexityScore },
+        score: s.score,
+        scoreBreakdown: {
+          etaScore,
+          // "Road quality" isn't independently observable from free
+          // data at this layer, so it's approximated by turn density
+          // (proxy for minor/unpaved-road-heavy routing) — flagged
+          // explicitly rather than silently faked as a real signal.
+          roadQualityScore: turnComplexityScore,
+          hazardScore,
+          turnComplexityScore,
+        },
         reasoning,
       }
     })
@@ -355,7 +348,8 @@ export function scoreRoutes(
 export async function planRoutes(
   origin: LatLng,
   destination: LatLng,
-  vehicle: VehicleType = "car"
+  vehicle: VehicleType = "car",
+  hazards?: HazardZone[]
 ): Promise<ScoredRoute[]> {
   const engines = ENGINES.filter((e) => e.isConfigured())
 
@@ -372,5 +366,5 @@ export async function planRoutes(
     }
   })
 
-  return scoreRoutes(candidates, { vehicle })
+  return scoreRoutes(candidates, { vehicle, hazards })
 }

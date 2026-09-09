@@ -1,22 +1,51 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, TriangleAlert } from "lucide-react"
+import { ChevronDown, TriangleAlert, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { alongRouteLabel, type OnRouteHazard } from "@/lib/hazard-geometry"
 import { hazardKindMeta, relativeTime, type Hazard } from "@/lib/hazards"
 
+interface SaferRoute {
+  /** Extra time vs. the fastest route, in seconds. */
+  extraSeconds: number
+  /** Hazards on the fastest route that the safer one avoids. */
+  avoidedCount: number
+}
+
 interface RouteHazardWarningProps {
   items: OnRouteHazard[]
   /** Tapping a row asks the app to highlight that hazard on the map. */
   onFocus?: (hazard: Hazard) => void
+  /** A materially safer alternative to offer, or null. */
+  saferRoute?: SaferRoute | null
+  onUseSaferRoute?: () => void
+  onDismissSafer?: () => void
 }
 
-export function RouteHazardWarning({ items, onFocus }: RouteHazardWarningProps) {
+function saferLabel(safer: SaferRoute): string {
+  const mins = Math.round(safer.extraSeconds / 60)
+  const what =
+    safer.avoidedCount >= 2
+      ? `${safer.avoidedCount} hazards`
+      : safer.avoidedCount === 1
+        ? "it"
+        : "fewer hazards"
+  if (mins <= 0) return `A route avoiding ${what} takes about the same time`
+  return `A route avoiding ${what} adds ${mins} min`
+}
+
+export function RouteHazardWarning({
+  items,
+  onFocus,
+  saferRoute,
+  onUseSaferRoute,
+  onDismissSafer,
+}: RouteHazardWarningProps) {
   const [open, setOpen] = useState(false)
 
-  if (items.length === 0) return null
+  if (items.length === 0 && !saferRoute) return null
 
   const severe = items.some(
     ({ hazard }) => hazard.kind === "closure" || hazard.severity >= 0.7
@@ -53,7 +82,7 @@ export function RouteHazardWarning({ items, onFocus }: RouteHazardWarningProps) 
         />
       </button>
 
-      {open && (
+      {open && items.length > 0 && (
         <ul className="border-t border-border/50 divide-y divide-border/50">
           {items.map(({ hazard, metresAlongRoute }) => {
             const meta = hazardKindMeta(hazard.kind)
@@ -84,6 +113,29 @@ export function RouteHazardWarning({ items, onFocus }: RouteHazardWarningProps) 
             )
           })}
         </ul>
+      )}
+
+      {saferRoute && (
+        <div className="border-t border-border/50 p-3 flex items-center gap-2">
+          <span className="flex-1 text-xs text-muted-foreground">
+            {saferLabel(saferRoute)}
+          </span>
+          <button
+            type="button"
+            onClick={onUseSaferRoute}
+            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity"
+          >
+            Use it
+          </button>
+          <button
+            type="button"
+            onClick={onDismissSafer}
+            aria-label="Keep the fastest route"
+            className="p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+          >
+            <X className="w-3.5 h-3.5 text-muted-foreground" />
+          </button>
+        </div>
       )}
     </div>
   )

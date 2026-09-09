@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { planRoutes } from "@/lib/geo-intelligence/route-intelligence"
-import type { VehicleType } from "@/lib/geo-intelligence/types"
+import { planRoutes, HAZARD_SEED } from "@/lib/geo-intelligence/route-intelligence"
+import type { HazardZone, VehicleType } from "@/lib/geo-intelligence/types"
+import { getHazardStore } from "@/lib/hazard-store"
 
 /* =========================================================
    ROUTE PLANNING — the "ROUTE INTEL" + scoring stage. Queries
@@ -37,10 +38,43 @@ export async function GET(request: NextRequest) {
   const vehicle = VALID_VEHICLES.includes(vehicleParam) ? vehicleParam : "car"
 
   try {
+    // Score against the static seed corridors PLUS any live
+    // community reports in the origin–destination box.
+    const pad = 0.05
+    let hazards: HazardZone[] = HAZARD_SEED
+    try {
+      const store = getHazardStore()
+      if (store) {
+        const crowd = await store.listActive({
+          minLat: Math.min(originLat, destLat) - pad,
+          maxLat: Math.max(originLat, destLat) + pad,
+          minLng: Math.min(originLng, destLng) - pad,
+          maxLng: Math.max(originLng, destLng) + pad,
+        })
+        hazards = [
+          ...HAZARD_SEED,
+          ...crowd.map(
+            (h): HazardZone => ({
+              id: h.id,
+              kind: h.kind,
+              description: h.note ?? h.kind,
+              polygonOrLine: [h.location],
+              severity: h.severity,
+              source: "crowd_report",
+              reportedAt: h.createdAt,
+            })
+          ),
+        ]
+      }
+    } catch (error) {
+      console.error("[geo/route-plan] hazard store lookup failed:", error)
+    }
+
     const routes = await planRoutes(
       { lat: originLat, lng: originLng },
       { lat: destLat, lng: destLng },
-      vehicle
+      vehicle,
+      hazards
     )
 
     if (routes.length === 0) {
