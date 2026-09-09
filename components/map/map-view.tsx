@@ -112,6 +112,10 @@ interface MapViewProps {
 
   routePoints?: [number, number][]
 
+  // A faint dashed "safer alternative" line shown while the
+  // directions panel is offering a route around a hazard.
+  alternativeRoutePoints?: [number, number][]
+
   showUserLocation?: boolean
 
   onMapClick?: (lat: number, lng: number) => void
@@ -1132,9 +1136,32 @@ function enhanceVectorStyle(map: maplibregl.Map, theme: ThemeMode) {
 ========================================================= */
 
 const ROUTE_SOURCE_ID = "lincoln-route"
+const ALT_ROUTE_SOURCE_ID = "lincoln-route-alt"
 
 function ensureRouteLayers(map: maplibregl.Map) {
   if (map.getSource(ROUTE_SOURCE_ID)) return
+
+  const emptyLine = {
+    type: "Feature" as const,
+    properties: {},
+    geometry: { type: "LineString" as const, coordinates: [] },
+  }
+
+  // Faint dashed "safer alternative" line, drawn under the main
+  // route so the active route always reads on top.
+  map.addSource(ALT_ROUTE_SOURCE_ID, { type: "geojson", data: emptyLine })
+  map.addLayer({
+    id: "lincoln-route-alt-line",
+    type: "line",
+    source: ALT_ROUTE_SOURCE_ID,
+    layout: { "line-cap": "round", "line-join": "round" },
+    paint: {
+      "line-color": "#8b8b93",
+      "line-width": 4,
+      "line-opacity": 0.75,
+      "line-dasharray": [1.5, 1.5],
+    },
+  })
 
   map.addSource(ROUTE_SOURCE_ID, {
     type: "geojson",
@@ -1237,6 +1264,7 @@ export function MapView({
   zoom = 7,
   markers = [],
   routePoints = [],
+  alternativeRoutePoints = [],
   showUserLocation = true,
   onMapClick,
   onCenterChange,
@@ -1253,6 +1281,7 @@ export function MapView({
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
   const markerObjectsRef = useRef<maplibregl.Marker[]>([])
   const lastRoutePointsRef = useRef<[number, number][]>([])
+  const lastAltRoutePointsRef = useRef<[number, number][]>([])
   const currentStyleKindRef = useRef<MapStyle>("light")
   // Recoloring/fetching a style is async now, so a fast style
   // toggle (or an unmount) can outrace an earlier request — this
@@ -1391,6 +1420,16 @@ export function MapView({
 
           source?.setData(
             routePointsToGeoJSON(lastRoutePointsRef.current)
+          )
+        }
+
+        if (lastAltRoutePointsRef.current.length >= 2) {
+          const altSource = map.getSource(
+            ALT_ROUTE_SOURCE_ID
+          ) as maplibregl.GeoJSONSource | undefined
+
+          altSource?.setData(
+            routePointsToGeoJSON(lastAltRoutePointsRef.current)
           )
         }
 
@@ -1694,6 +1733,31 @@ export function MapView({
       { padding: 64, duration: 800 }
     )
   }, [routePoints])
+
+  /* =======================================================
+     ALTERNATIVE ("safer") ROUTE PREVIEW
+  ======================================================= */
+
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    if (!map) return
+
+    lastAltRoutePointsRef.current = alternativeRoutePoints
+
+    const source = map.getSource(
+      ALT_ROUTE_SOURCE_ID
+    ) as maplibregl.GeoJSONSource | undefined
+
+    source?.setData(
+      alternativeRoutePoints.length >= 2
+        ? routePointsToGeoJSON(alternativeRoutePoints)
+        : {
+            type: "Feature",
+            properties: {},
+            geometry: { type: "LineString", coordinates: [] },
+          }
+    )
+  }, [alternativeRoutePoints])
 
   /* =======================================================
      AMBIENT USER LOCATION (continuous watch, not one-shot)

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   X,
@@ -26,14 +26,21 @@ import { cn } from "@/lib/utils"
 
 import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
-import { useRouteHazards } from "@/hooks/use-route-hazards"
 import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
 import type { Hazard } from "@/lib/hazards"
+import { fetchHazards } from "@/lib/hazards"
+import {
+  hazardsOnRoute,
+  routeBBox,
+  type OnRouteHazard,
+} from "@/lib/hazard-geometry"
+import { countTurns, pickSaferRoute } from "@/lib/route-scoring"
 import {
   calculateRoute,
   formatDistance as formatRouteDistance,
   formatDuration as formatRouteDuration,
   type Coordinate,
+  type Route,
 } from "@/lib/routing"
 import {
   geocodeToCoordinates,
@@ -84,6 +91,9 @@ interface DirectionsPanelProps {
   // Tapping a hazard in the "hazards on this route" list asks the
   // app to highlight it on the map.
   onFocusHazard?: (hazard: Hazard) => void
+  // A safer alternative route to preview as a faint line, or []
+  // to clear it.
+  onAlternativeRoute?: (points: [number, number][]) => void
 }
 
 export type TravelMode =
@@ -130,6 +140,7 @@ export function DirectionsPanel({
   onRouteCalculated,
   onNavigationStateChange,
   onFocusHazard,
+  onAlternativeRoute,
 }: DirectionsPanelProps) {
   /* -------------------------------------------------------
      LOCATION STATE
@@ -156,11 +167,41 @@ export function DirectionsPanel({
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // The calculated route as [lat, lng] points — kept so we can
-  // check which community hazards it passes near.
+  // The active route as [lat, lng] points, plus the community
+  // hazards fetched for this calculation's area — used to warn
+  // about hazards on the route and to score alternatives.
   const [routeCoords, setRouteCoords] =
     useState<[number, number][] | null>(null)
-  const routeHazards = useRouteHazards(routeCoords)
+  const [candidateHazards, setCandidateHazards] = useState<Hazard[]>([])
+
+  // A materially safer alternative to offer, if one exists.
+  const [saferAlt, setSaferAlt] = useState<{
+    route: Route
+    extraSeconds: number
+    avoidedCount: number
+  } | null>(null)
+  const [saferDismissed, setSaferDismissed] = useState(false)
+
+  // Guards against a stale hazard fetch landing after a newer
+  // route calculation.
+  const hazardFetchIdRef = useRef(0)
+
+  const routeHazards: OnRouteHazard[] = useMemo(
+    () =>
+      routeCoords && candidateHazards.length > 0
+        ? hazardsOnRoute(routeCoords, candidateHazards)
+        : [],
+    [routeCoords, candidateHazards]
+  )
+
+  const clearRouteExtras = () => {
+    setRouteCoords(null)
+    setCandidateHazards([])
+    setSaferAlt(null)
+    setSaferDismissed(false)
+    hazardFetchIdRef.current++
+    onAlternativeRoute?.([])
+  }
 
   /* -------------------------------------------------------
      VOICE
@@ -257,8 +298,9 @@ export function DirectionsPanel({
     if (!isOpen) {
       stopNavigation()
       setIsLiveNavigation(false)
+      onAlternativeRoute?.([])
     }
-  }, [isOpen, stopNavigation])
+  }, [isOpen, stopNavigation, onAlternativeRoute])
 
   /* =======================================================
      VOICE
@@ -320,6 +362,133 @@ export function DirectionsPanel({
   }
 
   /* =======================================================
+     APPLYING A ROUTE (fastest, or a swapped-in alternative)
+  ======================================================= */
+
+  const toLatLng = (route: Route): [number, number][] =>
+    route.geometry.coordinates.map(
+      ([lng, lat]) => [lat, lng] as [number, number]
+    )
+
+  const applyRoute = (
+    route: Route,
+    opts: { speakFirst?: boolean } = {}
+  ) => {
+    const coords = toLatLng(route)
+    onRouteCalculated(coords)
+    setRouteCoords(coords)
+
+    const steps: RouteStepView[] = route.steps.map((step) => ({
+      instruction: step.instruction,
+      distance: formatRouteDistance(step.distance),
+      duration: formatRouteDuration(step.duration),
+      voiceInstruction: step.voiceInstruction,
+    }))
+
+    setLiveSteps(
+      route.steps
+        .filter((s) => s.geometry && s.geometry.coordinates.length > 0)
+        .map((s) => ({
+          instruction: s.instruction,
+          voiceInstruction: s.voiceInstruction,
+          coordinates: s.geometry!.coordinates,
+        }))
+    )
+
+    setRouteInfo({
+      distance: formatRouteDistance(route.distance),
+      duration: formatRouteDuration(route.duration),
+      steps: steps.slice(0, 40),
+    })
+
+    if (opts.speakFirst && voiceEnabled && steps[0]?.voiceInstruction) {
+      speak(steps[0].voiceInstruction)
+    }
+  }
+
+  /* =======================================================
+     COMMUNITY HAZARDS ON THE ROUTE + SAFER-ROUTE OFFER
+  ======================================================= */
+
+  const loadRouteHazards = async (routes: Route[], fastestId: string) => {
+    const fetchId = ++hazardFetchIdRef.current
+
+    const allPoints = routes.flatMap(toLatLng)
+    let hazards: Hazard[] = []
+    try {
+      const res = await fetchHazards(routeBBox(allPoints))
+      hazards = res.hazards
+    } catch {
+      hazards = []
+    }
+    if (hazardFetchIdRef.current !== fetchId) return // superseded
+
+    setCandidateHazards(hazards)
+
+    if (routes.length < 2 || hazards.length === 0) {
+      setSaferAlt(null)
+      onAlternativeRoute?.([])
+      return
+    }
+
+    const perRoute = routes.map((route) => {
+      const onRoute = hazardsOnRoute(toLatLng(route), hazards)
+      const severities = onRoute.map((o) => o.hazard.severity)
+      return {
+        route,
+        onRoute,
+        input: {
+          id: route.id,
+          durationSeconds: route.duration,
+          turnCount: countTurns(route.steps),
+          hazardSeverityTotal: severities.reduce((s, v) => s + v, 0),
+          hazardCount: severities.length,
+          hazardMaxSeverity: severities.reduce((m, v) => Math.max(m, v), 0),
+        },
+      }
+    })
+
+    const pick = pickSaferRoute(
+      perRoute.map((p) => p.input),
+      fastestId
+    )
+    if (!pick) {
+      setSaferAlt(null)
+      onAlternativeRoute?.([])
+      return
+    }
+
+    const safer = perRoute.find((p) => p.route.id === pick.saferId)
+    const fastest = perRoute.find((p) => p.route.id === fastestId)
+    if (!safer || !fastest) return
+
+    const saferIds = new Set(safer.onRoute.map((o) => o.hazard.id))
+    const avoidedCount = fastest.onRoute.filter(
+      (o) => !saferIds.has(o.hazard.id)
+    ).length
+
+    setSaferAlt({
+      route: safer.route,
+      extraSeconds: pick.extraSeconds,
+      avoidedCount,
+    })
+    onAlternativeRoute?.(toLatLng(safer.route))
+  }
+
+  const handleUseSaferRoute = () => {
+    if (!saferAlt) return
+    applyRoute(saferAlt.route)
+    setSaferAlt(null)
+    setSaferDismissed(false)
+    onAlternativeRoute?.([])
+  }
+
+  const handleDismissSafer = () => {
+    setSaferDismissed(true)
+    onAlternativeRoute?.([])
+  }
+
+  /* =======================================================
      CALCULATE ROUTE
   ======================================================= */
 
@@ -335,7 +504,7 @@ export function DirectionsPanel({
     setIsLoading(true)
     setError(null)
     setRouteInfo(null)
-    setRouteCoords(null)
+    clearRouteExtras()
 
     try {
       const originCoords =
@@ -368,7 +537,7 @@ export function DirectionsPanel({
 
       const result = await calculateRoute(
         [originCoords, destinationCoords],
-        { mode: travelMode, alternatives: false, steps: true }
+        { mode: travelMode, alternatives: true, steps: true }
       )
 
       if (result.code !== "Ok" || result.routes.length === 0) {
@@ -378,48 +547,26 @@ export function DirectionsPanel({
         )
       }
 
-      const route = result.routes[0]
-
-      if (!route.geometry.coordinates.length) {
+      const usable = result.routes.filter(
+        (r) => r.geometry.coordinates.length > 0
+      )
+      if (usable.length === 0) {
         throw new Error(
           "The route was found, but no route geometry was returned."
         )
       }
 
-      // Route geometry is [lng, lat]; the map expects [lat, lng].
-      const routeCoordinates = route.geometry.coordinates.map(
-        ([lng, lat]) => [lat, lng] as [number, number]
+      // OSRM doesn't guarantee the routes come back fastest-first.
+      const fastest = usable.reduce((a, b) =>
+        b.duration < a.duration ? b : a
       )
 
-      onRouteCalculated(routeCoordinates)
-      setRouteCoords(routeCoordinates)
+      applyRoute(fastest, { speakFirst: true })
 
-      const steps: RouteStepView[] = route.steps.map((step) => ({
-        instruction: step.instruction,
-        distance: formatRouteDistance(step.distance),
-        duration: formatRouteDuration(step.duration),
-        voiceInstruction: step.voiceInstruction,
-      }))
-
-      const navigationSteps = route.steps
-        .filter((step) => step.geometry && step.geometry.coordinates.length > 0)
-        .map((step) => ({
-          instruction: step.instruction,
-          voiceInstruction: step.voiceInstruction,
-          coordinates: step.geometry!.coordinates,
-        }))
-
-      setLiveSteps(navigationSteps)
-
-      setRouteInfo({
-        distance: formatRouteDistance(route.distance),
-        duration: formatRouteDuration(route.duration),
-        steps: steps.slice(0, 40),
-      })
-
-      if (voiceEnabled && steps[0]?.voiceInstruction) {
-        speak(steps[0].voiceInstruction)
-      }
+      // Score the fastest route + any alternatives against the
+      // community hazards for this area — off the critical path, so
+      // the route shows immediately and the warning/offer follows.
+      void loadRouteHazards(usable, fastest.id)
     } catch (err) {
       console.error("Lincoln Navigation route calculation error:", err)
       setError(
@@ -447,6 +594,10 @@ export function DirectionsPanel({
       return
     }
 
+    // Lock in the current route for navigation — no swapping mid-trip.
+    setSaferAlt(null)
+    onAlternativeRoute?.([])
+
     setIsLiveNavigation(true)
 
     window.setTimeout(() => {
@@ -473,7 +624,7 @@ export function DirectionsPanel({
     setDestinationCoordinates(previousOriginCoordinates)
 
     setRouteInfo(null)
-    setRouteCoords(null)
+    clearRouteExtras()
     setLiveSteps([])
     setLiveDestination(null)
 
@@ -569,7 +720,7 @@ export function DirectionsPanel({
               onClick={() => {
                 setTravelMode(mode)
                 setRouteInfo(null)
-                setRouteCoords(null)
+                clearRouteExtras()
                 setLiveSteps([])
                 setLiveDestination(null)
                 stopNavigation()
@@ -777,8 +928,18 @@ export function DirectionsPanel({
 
           <div className="p-4">
             <RouteHazardWarning
-              items={routeHazards.hazards}
+              items={routeHazards}
               onFocus={(hazard) => onFocusHazard?.(hazard)}
+              saferRoute={
+                saferAlt && !saferDismissed && !isNavigating
+                  ? {
+                      extraSeconds: saferAlt.extraSeconds,
+                      avoidedCount: saferAlt.avoidedCount,
+                    }
+                  : null
+              }
+              onUseSaferRoute={handleUseSaferRoute}
+              onDismissSafer={handleDismissSafer}
             />
 
             <div className="bg-secondary rounded-xl p-4 mb-4">

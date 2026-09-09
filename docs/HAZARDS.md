@@ -19,29 +19,54 @@ anonymous and expire on their own.
 | [`components/map/report-hazard-sheet.tsx`](../components/map/report-hazard-sheet.tsx) | The "Report a hazard" bottom sheet (kind picker, location, optional note). |
 | [`components/map/hazard-details.tsx`](../components/map/hazard-details.tsx) | Detail card with "Still there" / "Cleared" votes. |
 | [`lib/hazard-geometry.ts`](../lib/hazard-geometry.ts) | Client-safe: `routeBBox`, `hazardsOnRoute` (point-to-segment proximity + distance-along-route), `alongRouteLabel`. |
-| [`hooks/use-route-hazards.ts`](../hooks/use-route-hazards.ts) | Given a calculated route, fetches `/api/hazards` for its bbox once and filters to the ones on the line. |
-| [`components/map/route-hazard-warning.tsx`](../components/map/route-hazard-warning.tsx) | Collapsible "N hazards on this route" banner in the directions panel. |
+| [`lib/route-scoring.ts`](../lib/route-scoring.ts) | Client-safe: `countTurns`, `scoreCandidates` (the ETA/turns/hazard formula, extracted once), `pickSaferRoute`. |
+| [`components/map/route-hazard-warning.tsx`](../components/map/route-hazard-warning.tsx) | Collapsible "N hazards on this route" banner + the "safer route" offer in the directions panel. |
 
 `MapView` gained `onBoundsChange`, `hazards`, `selectedHazardId`,
 `onHazardSelect` and `onUserLocationChange`; `app/app/page.tsx`
 wires the layer, the FAB, the sheet and the details card.
 
-## Phase 2a — hazards on a route
+## Phase 2 — hazards in routing
 
-After the directions panel calculates a route it runs
-`useRouteHazards` on the polyline and shows `RouteHazardWarning`
-above the turn-by-turn list — each hazard with its kind, report
-age and distance along the route. Red when a `closure` or a
-severity ≥ 0.7 hazard is on the line, amber otherwise. Tapping a
-row calls `onFocusHazard` → `app/app/page.tsx` highlights the
-marker and recenters the map (the directions panel stays open, so
-the full `HazardDetails` card doesn't show — the row already
-carries the summary).
+### 2a — hazards on a route
 
-No routing-logic changes: the route still comes from
-`calculateRoute` (OSRM), and the warning is advisory only. The
-hook keys on the route's endpoints, so a hazard reported *after* a
-route is calculated only shows once the route is recalculated.
+After the directions panel calculates a route it fetches
+`/api/hazards` once for the bounding box of all candidate routes,
+runs `hazardsOnRoute` on the active one, and shows
+`RouteHazardWarning` above the turn-by-turn list — each hazard with
+its kind, report age and distance along the route. Red when a
+`closure` or a severity ≥ 0.7 hazard is on the line, amber
+otherwise. Tapping a row calls `onFocusHazard` → `page.tsx`
+highlights the marker and recenters the map (the directions panel
+stays open, so the full `HazardDetails` card doesn't show — the row
+already carries the summary).
+
+### 2b — offer a safer route
+
+`calculateRoute` now requests `alternatives: true`. The fastest
+route (min duration, not necessarily OSRM's first) is shown as
+always. Each candidate is scored with `scoreCandidates`; if
+`pickSaferRoute` finds one that is materially safer — strictly
+fewer hazards or ≥ 0.3 lower total severity, no worse single
+hazard, at most `max(4 min, 30 %)` slower — the warning card gets a
+"A route avoiding … adds N min · [Use it]" footer. **Use it** swaps
+geometry + steps + live-nav data to the alternative; dismiss keeps
+the fastest. While the offer is up, the alternative is drawn as a
+faint dashed line (`MapView` `alternativeRoutePoints` →
+`lincoln-route-alt`). The offer clears on recalc, mode change,
+swap, dismiss, accept, panel close, or starting live navigation.
+
+`/api/geo/route-plan` merges `getHazardStore().listActive()` for
+the O–D box with `HAZARD_SEED`, so that endpoint scores against
+live crowd data too — though its `detectHazards` still matches on
+route *vertices* (coarser than the panel's segment-distance) and no
+UI calls it yet.
+
+The route still comes from OSRM and everything here is advisory —
+no `exclude`-style re-routing (that needs Valhalla/GraphHopper,
+Phase 3). The OSRM demo server returns alternatives for relatively
+few origin–destination pairs, so the offer appears less often than
+the warning.
 
 ## Storage
 
@@ -90,13 +115,6 @@ Confirm votes nudge severity up (+0.05), clear votes down (−0.15);
 
 ## Not yet built
 
-- **Phase 2b** — offer a safer alternative route: `calculateRoute`
-  with `alternatives: true`, score each against the hazards
-  (extract `scoreRoutes` from `route-intelligence.ts` into a
-  client-safe module), and prompt "a route avoiding X is N min
-  longer". Default stays the fastest route. Also merge
-  `getHazardStore().listActive()` into `/api/geo/route-plan` so
-  that endpoint scores against live crowd data.
 - **Phase 2c** — live-navigation "hazard ahead" detection in
   `use-live-navigation.ts`: on-screen strip (free) + spoken alert
   (Premium, via the existing `speakNavigation`).

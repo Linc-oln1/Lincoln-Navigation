@@ -130,6 +130,11 @@ function MapNavigator() {
   const [routePoints, setRoutePoints] =
     useState<[number, number][]>([])
 
+  // A faint "safer alternative" line shown while the directions
+  // panel is offering a route around a hazard.
+  const [alternativeRoutePoints, setAlternativeRoutePoints] =
+    useState<[number, number][]>([])
+
   const [markers, setMarkers] = useState<
     Array<{
       position: [number, number]
@@ -388,6 +393,7 @@ function MapNavigator() {
         zoom={8}
         markers={markers}
         routePoints={routePoints}
+        alternativeRoutePoints={alternativeRoutePoints}
         mapStyle={mapStyle}
         onMapClick={handleMapClick}
         onCenterChange={handleCenterChange}
@@ -443,6 +449,7 @@ function MapNavigator() {
         onRouteCalculated={handleRouteCalculated}
         onNavigationStateChange={setNavigationState}
         onFocusHazard={handleFocusHazard}
+        onAlternativeRoute={setAlternativeRoutePoints}
       />
 
       {/* PLACES */}
