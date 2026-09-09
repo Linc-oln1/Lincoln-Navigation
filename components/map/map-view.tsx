@@ -10,6 +10,8 @@ import "maplibre-gl/dist/maplibre-gl.css"
 import { Navigation2, Plus, Minus } from "lucide-react"
 import { LocationMarker } from "./location-marker"
 import { NavigationCamera } from "./navigation-camera"
+import { HazardLayer } from "./hazard-layer"
+import type { BBox, Hazard } from "@/lib/hazards"
 
 /* =========================================================
    ROOT CAUSE OF THE BLANK MAP (found via direct WebGL/console
@@ -118,6 +120,19 @@ interface MapViewProps {
   // map center as [lat, lng]. Used by the weather widget to show
   // conditions for wherever the map is currently looking.
   onCenterChange?: (lat: number, lng: number) => void
+
+  // Fires (on load + after every move) with the visible bounds.
+  // Used to load community hazard reports for the current view.
+  onBoundsChange?: (bbox: BBox) => void
+
+  // Community hazard reports to plot on the map.
+  hazards?: Hazard[]
+  selectedHazardId?: string | null
+  onHazardSelect?: (hazard: Hazard) => void
+
+  // Ambient GPS position, surfaced for features outside the map
+  // (e.g. "report a hazard at my location").
+  onUserLocationChange?: (lat: number, lng: number) => void
 
   mapStyle?: MapStyle
 
@@ -1225,6 +1240,11 @@ export function MapView({
   showUserLocation = true,
   onMapClick,
   onCenterChange,
+  onBoundsChange,
+  hazards = [],
+  selectedHazardId,
+  onHazardSelect,
+  onUserLocationChange,
   mapStyle = "device",
   liveNavigation,
 }: MapViewProps) {
@@ -1392,15 +1412,32 @@ export function MapView({
         onMapClick?.(event.lngLat.lat, event.lngLat.lng)
       })
 
-      // Only user-initiated moves carry `originalEvent`; programmatic
-      // flyTo/easeTo calls (search selection, route fitting) don't,
-      // so this reports the map center only when the user themselves
-      // panned or zoomed there.
+      const emitBounds = () => {
+        if (!onBoundsChange) return
+        const b = map.getBounds()
+        onBoundsChange({
+          minLng: b.getWest(),
+          minLat: b.getSouth(),
+          maxLng: b.getEast(),
+          maxLat: b.getNorth(),
+        })
+      }
+
       map.on("moveend", (event: any) => {
-        if (!event?.originalEvent) return
-        const c = map.getCenter()
-        onCenterChange?.(c.lat, c.lng)
+        // Bounds fire for any move (hazards should load wherever the
+        // map ends up, however it got there).
+        emitBounds()
+
+        // Center only for user-initiated moves — programmatic
+        // flyTo/easeTo (search selection, route fitting) don't carry
+        // `originalEvent`, and the weather widget shouldn't chase them.
+        if (event?.originalEvent) {
+          const c = map.getCenter()
+          onCenterChange?.(c.lat, c.lng)
+        }
       })
+
+      map.on("load", emitBounds)
 
       // Defensive resize handling: MapLibre sizes its WebGL canvas
       // from the container's dimensions AT CONSTRUCTION TIME. In a
@@ -1674,6 +1711,10 @@ export function MapView({
           position.coords.longitude,
         ])
         setUserAccuracy(position.coords.accuracy)
+        onUserLocationChange?.(
+          position.coords.latitude,
+          position.coords.longitude
+        )
       },
       (error) => {
         console.log("Geolocation error:", error.message)
@@ -1770,6 +1811,14 @@ export function MapView({
           navigating={Boolean(liveNavigation?.isNavigating)}
         />
       )}
+
+      {/* COMMUNITY HAZARD REPORTS */}
+      <HazardLayer
+        map={mapInstance}
+        hazards={hazards}
+        selectedId={selectedHazardId}
+        onSelect={(h) => onHazardSelect?.(h)}
+      />
 
       {/* NAVIGATION FOLLOW CAMERA */}
       <NavigationCamera

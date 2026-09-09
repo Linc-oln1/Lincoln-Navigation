@@ -12,9 +12,13 @@ import { MapControls } from "@/components/map/map-controls"
 import { LocationDetails } from "@/components/map/location-details"
 import { MobileNav } from "@/components/map/mobile-nav"
 import { WeatherWidget } from "@/components/map/weather-widget"
+import { HazardDetails } from "@/components/map/hazard-details"
+import { ReportHazardSheet } from "@/components/map/report-hazard-sheet"
 import { geocode } from "@/lib/geocoding"
 import { useSavedPlaces, type SavedPlaceInput } from "@/hooks/use-saved-places"
-import { X as CloseIcon, Sparkles } from "lucide-react"
+import { useHazards } from "@/hooks/use-hazards"
+import type { BBox, Hazard } from "@/lib/hazards"
+import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
 const MapView = dynamic(
   () => import("@/components/map/map-view").then((mod) => mod.MapView),
@@ -96,6 +100,14 @@ function MapNavigator() {
   // back into MapView's own `center` prop — that would fight the
   // camera. Falls back to mapCenter until the first user pan.
   const [weatherCenter, setWeatherCenter] =
+    useState<[number, number] | null>(null)
+
+  // Visible map bounds → community hazard reports for that area.
+  const [mapBounds, setMapBounds] = useState<BBox | null>(null)
+  const hazardsApi = useHazards(mapBounds)
+  const [selectedHazard, setSelectedHazard] = useState<Hazard | null>(null)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [userLocation, setUserLocation] =
     useState<[number, number] | null>(null)
 
   // Device theme is the default
@@ -321,6 +333,20 @@ function MapNavigator() {
     setWeatherCenter([lat, lng])
   }, [])
 
+  const handleBoundsChange = useCallback((bbox: BBox) => {
+    setMapBounds(bbox)
+  }, [])
+
+  const handleUserLocation = useCallback((lat: number, lng: number) => {
+    setUserLocation([lat, lng])
+  }, [])
+
+  const handleHazardSelect = useCallback((hazard: Hazard) => {
+    setSelectedHazard(hazard)
+    setSelectedLocation(null)
+    setActivePanel(null)
+  }, [])
+
   const handleRouteCalculated = useCallback(
     (points: [number, number][]) => {
       setRoutePoints(points)
@@ -338,8 +364,12 @@ function MapNavigator() {
         setSelectedLocation(null)
         setMarkers([])
       }
+
+      if (selectedHazard) {
+        setSelectedHazard(null)
+      }
     },
-    [activePanel, selectedLocation]
+    [activePanel, selectedLocation, selectedHazard]
   )
 
   return (
@@ -354,6 +384,11 @@ function MapNavigator() {
         mapStyle={mapStyle}
         onMapClick={handleMapClick}
         onCenterChange={handleCenterChange}
+        onBoundsChange={handleBoundsChange}
+        onUserLocationChange={handleUserLocation}
+        hazards={hazardsApi.hazards}
+        selectedHazardId={selectedHazard?.id ?? null}
+        onHazardSelect={handleHazardSelect}
         liveNavigation={navigationState}
       />
 
@@ -373,6 +408,17 @@ function MapNavigator() {
 
       {/* WEATHER */}
       <WeatherWidget center={weatherCenter ?? mapCenter} />
+
+      {/* REPORT A HAZARD */}
+      {hazardsApi.configured && !reportOpen && !selectedHazard && (
+        <button
+          onClick={() => setReportOpen(true)}
+          className="absolute left-4 bottom-32 md:bottom-16 z-[1000] flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-card/90 backdrop-blur-sm text-foreground shadow-lg hover:bg-card transition-colors"
+        >
+          <TriangleAlert className="w-4 h-4 text-amber-500" />
+          <span className="text-sm font-medium">Report</span>
+        </button>
+      )}
 
       {/* SEARCH */}
       <SearchPanel
@@ -435,6 +481,42 @@ function MapNavigator() {
             onGetDirections={handleGetDirections}
           />
         )}
+
+      {/* HAZARD DETAILS */}
+      {selectedHazard && activePanel !== "directions" && (
+        <HazardDetails
+          hazard={selectedHazard}
+          onClose={() => setSelectedHazard(null)}
+          onVoted={(updated) => {
+            hazardsApi.upsert(updated)
+            setSelectedHazard(
+              updated.status === "active" ? updated : null
+            )
+            if (updated.status !== "active") {
+              hazardsApi.remove(updated.id)
+            }
+          }}
+        />
+      )}
+
+      {/* REPORT HAZARD SHEET */}
+      <ReportHazardSheet
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        mapCenter={
+          mapBounds
+            ? [
+                (mapBounds.minLat + mapBounds.maxLat) / 2,
+                (mapBounds.minLng + mapBounds.maxLng) / 2,
+              ]
+            : mapCenter
+        }
+        userLocation={userLocation}
+        onReported={(hazard) => {
+          hazardsApi.upsert(hazard)
+          setSelectedHazard(hazard)
+        }}
+      />
 
       {/* MOBILE NAV */}
       <MobileNav
