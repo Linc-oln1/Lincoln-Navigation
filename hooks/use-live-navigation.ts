@@ -3,12 +3,19 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react"
 
 import type { TravelMode } from "@/lib/routing"
 import { hasActivePremium } from "@/lib/premium"
+import { hazardKindMeta, type Hazard } from "@/lib/hazards"
+import {
+  distanceAlongRoute,
+  hazardsOnRoute,
+  type OnRouteHazard,
+} from "@/lib/hazard-geometry"
 
 /* =========================================================
    TYPES
@@ -31,6 +38,41 @@ interface UseLiveNavigationOptions {
   // to "driving" so callers that don't pass this keep working
   // exactly as before.
   travelMode?: TravelMode
+  // The full active route as [lat, lng], plus the community hazards
+  // near it. When both are present, navigation warns (on screen +
+  // spoken) about a reported hazard coming up on the road ahead.
+  routePath?: [number, number][]
+  hazards?: Hazard[]
+}
+
+export interface HazardAhead {
+  hazard: Hazard
+  /** Metres from the driver's current position to the hazard, along the route. */
+  distanceM: number
+}
+
+// How far ahead a hazard starts being flagged.
+const HAZARD_AHEAD_WARN_METERS = 500
+// Small tolerance so GPS jitter near a hazard doesn't flip it
+// "behind" a beat early.
+const HAZARD_AHEAD_PASSED_METERS = -30
+// Tighter than the directions-panel banner's 200 m — during
+// navigation we're committing to "this is on the road right now".
+const HAZARD_AHEAD_CORRIDOR_METERS = 120
+
+function hazardAheadLine(hazard: Hazard, gapMeters: number): string {
+  const label = hazardKindMeta(hazard.kind).label.toLowerCase()
+
+  if (hazard.source !== "crowd_report") {
+    return `Heads up — ${label}-prone area ahead.`
+  }
+
+  if (gapMeters <= 150) {
+    return `Heads up — reported ${label} ahead.`
+  }
+
+  const rounded = Math.round(gapMeters / 100) * 100
+  return `Heads up — reported ${label} in ${rounded} metres.`
 }
 
 interface NavigationPosition {
@@ -662,6 +704,8 @@ export function useLiveNavigation({
   enabled = false,
   onRerouteNeeded,
   travelMode = "driving",
+  routePath,
+  hazards,
 }: UseLiveNavigationOptions) {
   /* =======================================================
      REFS
@@ -704,6 +748,16 @@ export function useLiveNavigation({
 
   const travelModeRef =
     useRef<TravelMode>(travelMode)
+
+  // Route path ([lat, lng]) + the community hazards that sit on it,
+  // read inside processGpsPosition via refs so its useCallback deps
+  // stay stable.
+  const routePathRef = useRef<[number, number][]>([])
+  const upcomingHazardsRef = useRef<OnRouteHazard[]>([])
+
+  // Hazards already announced this navigation session (by id), so
+  // each is spoken at most once.
+  const announcedHazardsRef = useRef<Set<string>>(new Set())
 
   /*
    * Smoothed (EMA) live GPS speed in meters/second, used for the
@@ -796,6 +850,36 @@ export function useLiveNavigation({
     useState<Date | null>(
       null
     )
+
+  // A reported hazard on the road ahead, within
+  // HAZARD_AHEAD_WARN_METERS. null when the way ahead is clear.
+  const [hazardAhead, setHazardAhead] = useState<HazardAhead | null>(null)
+
+  /* =======================================================
+     HAZARDS ON THE ROUTE
+
+     Recomputed when the route or the hazard list changes (the
+     directions panel re-fetches the hazard list every ~90 s while
+     navigating). processGpsPosition reads the result via a ref.
+  ======================================================= */
+
+  const upcomingHazards = useMemo(
+    () =>
+      routePath && routePath.length >= 2 && hazards && hazards.length > 0
+        ? hazardsOnRoute(routePath, hazards, {
+            thresholdM: HAZARD_AHEAD_CORRIDOR_METERS,
+          })
+        : [],
+    [routePath, hazards]
+  )
+
+  useEffect(() => {
+    routePathRef.current = routePath ?? []
+  }, [routePath])
+
+  useEffect(() => {
+    upcomingHazardsRef.current = upcomingHazards
+  }, [upcomingHazards])
 
   /* =======================================================
      SYNCHRONIZE REFS
@@ -911,11 +995,15 @@ export function useLiveNavigation({
       smoothedSpeedRef.current =
         null
 
+      announcedHazardsRef.current.clear()
+
       setIsNavigating(false)
 
       setNavigationMessage(
         null
       )
+
+      setHazardAhead(null)
     }, [])
 
   /* =======================================================
@@ -1136,6 +1224,49 @@ export function useLiveNavigation({
             Date.now() + nextEtaSeconds * 1000
           )
         )
+
+        /* ---------------------------------------------------
+           REPORTED HAZARD AHEAD
+
+           On-screen strip is always shown; the spoken line goes
+           through speakMessage, which no-ops for non-Premium
+           visitors (turn-by-turn voice is a paid feature).
+        --------------------------------------------------- */
+
+        const hazardPath = routePathRef.current
+        const upcoming = upcomingHazardsRef.current
+
+        if (hazardPath.length >= 2 && upcoming.length > 0) {
+          const userAlong = distanceAlongRoute(hazardPath, [
+            latitude,
+            longitude,
+          ])
+
+          const next = upcoming.find((h) => {
+            const gap = h.metresAlongRoute - userAlong
+            return (
+              gap > HAZARD_AHEAD_PASSED_METERS &&
+              gap <= HAZARD_AHEAD_WARN_METERS
+            )
+          })
+
+          if (next) {
+            const gap = Math.max(
+              0,
+              Math.round(next.metresAlongRoute - userAlong)
+            )
+            setHazardAhead({ hazard: next.hazard, distanceM: gap })
+
+            if (!announcedHazardsRef.current.has(next.hazard.id)) {
+              announcedHazardsRef.current.add(next.hazard.id)
+              speakMessage(hazardAheadLine(next.hazard, gap))
+            }
+          } else {
+            setHazardAhead(null)
+          }
+        } else {
+          setHazardAhead(null)
+        }
 
         /* ---------------------------------------------------
            MANEUVER POINT
@@ -1513,6 +1644,8 @@ export function useLiveNavigation({
 
       announcedTurnRef.current.clear()
 
+      announcedHazardsRef.current.clear()
+
       rerouteCooldownRef.current =
         0
 
@@ -1719,6 +1852,8 @@ export function useLiveNavigation({
 
     announcedTurnRef.current.clear()
 
+    announcedHazardsRef.current.clear()
+
     setCurrentStepIndex(0)
   }, [steps])
 
@@ -1813,6 +1948,11 @@ export function useLiveNavigation({
     navigationMessage,
 
     gpsError,
+
+    // A reported hazard coming up on the road ahead (within ~500 m),
+    // or null when the way ahead is clear. On-screen only for free
+    // visitors; Premium also hears it spoken.
+    hazardAhead,
 
     startNavigation,
 
