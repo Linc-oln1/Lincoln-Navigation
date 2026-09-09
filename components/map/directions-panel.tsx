@@ -26,6 +26,9 @@ import { cn } from "@/lib/utils"
 
 import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
+import { useRouteHazards } from "@/hooks/use-route-hazards"
+import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
+import type { Hazard } from "@/lib/hazards"
 import {
   calculateRoute,
   formatDistance as formatRouteDistance,
@@ -78,6 +81,9 @@ interface DirectionsPanelProps {
   initialTravelMode?: TravelMode
   onRouteCalculated: (points: [number, number][]) => void
   onNavigationStateChange?: (state: NavigationUpdate) => void
+  // Tapping a hazard in the "hazards on this route" list asks the
+  // app to highlight it on the map.
+  onFocusHazard?: (hazard: Hazard) => void
 }
 
 export type TravelMode =
@@ -123,6 +129,7 @@ export function DirectionsPanel({
   initialTravelMode,
   onRouteCalculated,
   onNavigationStateChange,
+  onFocusHazard,
 }: DirectionsPanelProps) {
   /* -------------------------------------------------------
      LOCATION STATE
@@ -148,6 +155,12 @@ export function DirectionsPanel({
   const [isLoading, setIsLoading] = useState(false)
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // The calculated route as [lat, lng] points — kept so we can
+  // check which community hazards it passes near.
+  const [routeCoords, setRouteCoords] =
+    useState<[number, number][] | null>(null)
+  const routeHazards = useRouteHazards(routeCoords)
 
   /* -------------------------------------------------------
      VOICE
@@ -322,6 +335,7 @@ export function DirectionsPanel({
     setIsLoading(true)
     setError(null)
     setRouteInfo(null)
+    setRouteCoords(null)
 
     try {
       const originCoords =
@@ -378,6 +392,7 @@ export function DirectionsPanel({
       )
 
       onRouteCalculated(routeCoordinates)
+      setRouteCoords(routeCoordinates)
 
       const steps: RouteStepView[] = route.steps.map((step) => ({
         instruction: step.instruction,
@@ -458,6 +473,7 @@ export function DirectionsPanel({
     setDestinationCoordinates(previousOriginCoordinates)
 
     setRouteInfo(null)
+    setRouteCoords(null)
     setLiveSteps([])
     setLiveDestination(null)
 
@@ -553,6 +569,7 @@ export function DirectionsPanel({
               onClick={() => {
                 setTravelMode(mode)
                 setRouteInfo(null)
+                setRouteCoords(null)
                 setLiveSteps([])
                 setLiveDestination(null)
                 stopNavigation()
@@ -759,6 +776,11 @@ export function DirectionsPanel({
           )}
 
           <div className="p-4">
+            <RouteHazardWarning
+              items={routeHazards.hazards}
+              onFocus={(hazard) => onFocusHazard?.(hazard)}
+            />
+
             <div className="bg-secondary rounded-xl p-4 mb-4">
               <div className="flex items-start justify-between gap-4">
                 <div>

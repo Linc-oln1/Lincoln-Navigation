@@ -17,28 +17,37 @@ interface HazardLayerProps {
   onSelect: (hazard: Hazard) => void
 }
 
+// MapLibre owns the transform on the element it's given (it writes
+// the translate() that positions the marker), so the visible dot —
+// and its selection scale — live on an inner child instead.
 function buildMarkerElement(hazard: Hazard, selected: boolean): HTMLDivElement {
   const meta = hazardKindMeta(hazard.kind)
+
   const el = document.createElement("div")
   el.className = "lincoln-hazard-marker"
-  el.style.cssText = `
-    width: 34px; height: 34px; cursor: pointer;
+  el.style.cssText = "position: relative; width: 34px; height: 34px; cursor: pointer;"
+  el.setAttribute("role", "button")
+  el.setAttribute(
+    "aria-label",
+    `${meta.label}${hazard.source === "crowd_report" ? " reported by a driver" : " — known area"}`
+  )
+
+  const dot = document.createElement("div")
+  dot.className = "lincoln-hazard-dot"
+  dot.style.cssText = `
+    position: absolute; inset: 0;
     display: flex; align-items: center; justify-content: center;
     font-size: 16px; line-height: 1;
     border-radius: 9999px;
     background: ${meta.color};
     border: 2px solid rgba(255,255,255,0.9);
     box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-    transform: ${selected ? "scale(1.18)" : "scale(1)"};
+    transform: scale(${selected ? 1.18 : 1});
     transition: transform 120ms ease;
     ${hazard.source !== "crowd_report" ? "opacity: 0.9; border-style: dashed;" : ""}
   `
-  el.textContent = meta.emoji
-  el.setAttribute("role", "button")
-  el.setAttribute(
-    "aria-label",
-    `${meta.label}${hazard.source === "crowd_report" ? " reported by a driver" : " — known area"}`
-  )
+  dot.textContent = meta.emoji
+  el.appendChild(dot)
 
   // A soft pulse for the more serious, still-unconfirmed reports.
   if (hazard.source === "crowd_report" && hazard.severity >= 0.6) {
@@ -49,7 +58,6 @@ function buildMarkerElement(hazard: Hazard, selected: boolean): HTMLDivElement {
       animation: lincoln-hazard-pulse 2s ease-out infinite;
       pointer-events: none;
     `
-    el.style.position = "relative"
     el.appendChild(pulse)
   }
 
@@ -108,8 +116,10 @@ export function HazardLayer({
       const prev = existing.get(hazard.id)
       if (prev) {
         // Cheap update: just restyle for selection state.
-        const el = prev.getElement()
-        el.style.transform = selected ? "scale(1.18)" : "scale(1)"
+        const dot = prev
+          .getElement()
+          .querySelector<HTMLElement>(".lincoln-hazard-dot")
+        if (dot) dot.style.transform = selected ? "scale(1.18)" : "scale(1)"
         prev.setLngLat([hazard.location.lng, hazard.location.lat])
         continue
       }
