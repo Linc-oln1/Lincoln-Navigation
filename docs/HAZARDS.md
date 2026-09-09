@@ -87,6 +87,40 @@ projection is independent of the turn-by-turn step tracker, so it
 keeps working even when GPS noise makes the step tracker think
 you're briefly off-route.
 
+### 3a — route around a hazard
+
+When a route passes a hazard and no plain alternative already
+avoids it, the warning card offers **"Route around it"**. It builds
+~170 m circles around each on-route hazard and asks a routing
+engine that can exclude areas for a detour:
+`calculateRoute({ avoidAreas })` → `/api/directions` → ORS
+`driving-car` with `options.avoid_polygons`
+([`lib/geo/avoid-polygon.ts`](../lib/geo/avoid-polygon.ts)). The
+result is only applied if it actually clears the hazards
+(`hazardsOnRoute`, 140 m) and isn't more than ~2.5× the current
+route; otherwise "Couldn't find a way around."
+
+Needs `ORS_API_KEY` (free — the same key that already powers
+walking/cycling routing). Without it `/api/directions` returns 501,
+`calculateRoute` falls back to a plain OSRM route, and the check
+above reports it couldn't clear the hazard. OSRM itself can't
+exclude arbitrary areas, so there's no offline path for this.
+
+### 3b — forecast-driven flood zones
+
+The `HAZARD_SEED` flood corridors (Circle/Odawna, Alajo, Adenta
+Barrier) no longer show *always* — they only appear while the rain
+forecast for them is bad.
+[`lib/hazard-feeds/forecast-flood.ts`](../lib/hazard-feeds/forecast-flood.ts)
+checks Open-Meteo (keyless) for each zone's next 6 h; when peak
+probability ≥ 70 % **and** accumulation ≥ 8 mm it emits a `Hazard`
+with `source: "forecast"`, severity scaled to the rain, and a 3 h
+TTL. `/api/hazards` merges these in place of the static flood seeds
+(30-min server cache). Non-flood seed zones stay static. On a dry
+day there's simply no flood marker. Renders like an official zone
+(dashed, no votes) with "heavy rain forecast" copy. **Works in
+production regardless of the store** — it's not crowd data.
+
 ## Storage
 
 Crowd data must persist across devices, so this needs a real
@@ -101,9 +135,10 @@ would be misleading, so:
   hashes), `hz:rl:<hash>` (fixed-window report counter).
 - **In-memory Map** only when `NODE_ENV !== "production"` — lets you
   click through the whole flow locally with no account.
-- **Neither** in production → the feature is off: `GET` still
-  returns the static seed zones (read-only), `POST` returns 503,
-  and the "Report" button is hidden (`configured: false`).
+- **Neither** in production → community reports are off: `POST`
+  returns 503 and the "Report" button is hidden
+  (`configured: false`). `GET` still serves the static seed zones
+  and the forecast flood zones (3b) — those don't need a store.
 
 The `HazardStore` interface is storage-agnostic so this can move to
 a Supabase table if/when accounts land (see
@@ -134,7 +169,13 @@ Confirm votes nudge severity up (+0.05), clear votes down (−0.15);
 
 ## Not yet built
 
-- **Phase 3** — real avoidance re-routing (needs Valhalla
-  `exclude_locations` / GraphHopper `block_area`; engine classes
-  exist but are env-gated). Official NADMO / Hydrological Services
-  feed adapter behind the same store interface.
+- Mid-navigation re-routing — a `closure` detected ahead during
+  live nav (2c) could trigger "route around it" and rebuild the
+  step list from the driver's current position. `onRerouteNeeded`
+  is wired for the message but not the reroute itself.
+- A real official feed — GDACS / NADMO / GMet — behind a
+  `HazardFeed` interface alongside `forecast-flood.ts`.
+- `/api/geo/route-plan`: upgrade its vertex-only `detectHazards` to
+  segment-distance, give the Valhalla/GraphHopper engines `steps`,
+  and let the panel use it as the routing backend when a premium
+  engine is configured.

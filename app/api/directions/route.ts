@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { avoidPolygons, type AvoidCircle } from "@/lib/geo/avoid-polygon"
+
 /* =========================================================
-   WALKING / CYCLING ROUTING PROXY
+   WALKING / CYCLING ROUTING PROXY  (+ "route around a hazard")
 
    PREVIOUSLY: lib/routing.ts sent every travel mode straight to the
    free public OSRM demo server (router.project-osrm.org). That demo
@@ -23,14 +25,50 @@ import { NextRequest, NextResponse } from "next/server"
    path above (the same behavior the app already had) — same
    "upgrade, never a requirement" pattern already used by
    /api/geocode (Mapbox → Nominatim) and /api/places (Google → OSM).
+
+   ALSO: with an `avoid` query param (a JSON array of
+   {lat,lng,radiusM} circles), this routes ANY mode through ORS
+   `driving-car` with `options.avoid_polygons` set, so the "Route
+   around it" button (Phase 3a) can get a route that genuinely skips
+   the roads near a reported hazard. Same ORS_API_KEY, same response
+   shape; unavailable (and the caller falls back) when the key isn't
+   set.
 ========================================================= */
 
-type OrsProfile = "foot-walking" | "cycling-regular"
+type OrsProfile = "foot-walking" | "cycling-regular" | "driving-car"
 
-function getOrsProfile(mode: string | null): OrsProfile | null {
+function getOrsProfile(
+  mode: string | null,
+  hasAvoid: boolean
+): OrsProfile | null {
   if (mode === "walking") return "foot-walking"
   if (mode === "cycling") return "cycling-regular"
+  // Every road mode (driving / motorcycle / bus) shares the car graph.
+  if (hasAvoid) return "driving-car"
   return null
+}
+
+function parseAvoid(raw: string | null): AvoidCircle[] {
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .map((c) => ({
+        lat: Number(c.lat),
+        lng: Number(c.lng),
+        radiusM: c.radiusM != null ? Number(c.radiusM) : undefined,
+      }))
+      .filter(
+        (c) =>
+          Number.isFinite(c.lat) &&
+          Number.isFinite(c.lng) &&
+          (c.radiusM == null || Number.isFinite(c.radiusM))
+      )
+      .slice(0, 12)
+  } catch {
+    return []
+  }
 }
 
 function getOrsApiKey(): string | null {
@@ -70,8 +108,9 @@ export async function GET(request: NextRequest) {
 
   const coordinatesParam = searchParams.get("coordinates")
   const mode = searchParams.get("mode")
+  const avoid = parseAvoid(searchParams.get("avoid"))
 
-  const profile = getOrsProfile(mode)
+  const profile = getOrsProfile(mode, avoid.length > 0)
   const apiKey = getOrsApiKey()
 
   if (!coordinatesParam) {
@@ -114,6 +153,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const body: Record<string, unknown> = { coordinates }
+    if (avoid.length > 0) {
+      body.options = { avoid_polygons: avoidPolygons(avoid) }
+    }
+
     const response = await fetch(
       `https://api.openrouteservice.org/v2/directions/${profile}/geojson`,
       {
@@ -123,7 +167,7 @@ export async function GET(request: NextRequest) {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ coordinates }),
+        body: JSON.stringify(body),
         cache: "no-store",
       }
     )

@@ -29,7 +29,13 @@ function buildMarkerElement(hazard: Hazard, selected: boolean): HTMLDivElement {
   el.setAttribute("role", "button")
   el.setAttribute(
     "aria-label",
-    `${meta.label}${hazard.source === "crowd_report" ? " reported by a driver" : " — known area"}`
+    `${meta.label}${
+      hazard.source === "crowd_report"
+        ? " reported by a driver"
+        : hazard.source === "forecast"
+          ? " — heavy rain forecast"
+          : " — known area"
+    }`
   )
 
   const dot = document.createElement("div")
@@ -49,8 +55,12 @@ function buildMarkerElement(hazard: Hazard, selected: boolean): HTMLDivElement {
   dot.textContent = meta.emoji
   el.appendChild(dot)
 
-  // A soft pulse for the more serious, still-unconfirmed reports.
-  if (hazard.source === "crowd_report" && hazard.severity >= 0.6) {
+  // A soft pulse for the more serious live signals — a fresh
+  // report, or a flood zone under a heavy-rain forecast.
+  if (
+    (hazard.source === "crowd_report" || hazard.source === "forecast") &&
+    hazard.severity >= 0.6
+  ) {
     const pulse = document.createElement("span")
     pulse.style.cssText = `
       position: absolute; inset: -6px; border-radius: 9999px;

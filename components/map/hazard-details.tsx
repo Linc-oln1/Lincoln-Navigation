@@ -22,6 +22,7 @@ interface HazardDetailsProps {
 export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) {
   const meta = hazardKindMeta(hazard.kind)
   const isCrowd = hazard.source === "crowd_report"
+  const isForecast = hazard.source === "forecast"
 
   const [busy, setBusy] = useState<null | "confirm" | "clear">(null)
   const [voted, setVoted] = useState(false)
@@ -69,6 +70,8 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
               <p className="text-xs text-muted-foreground">
                 {isCrowd ? (
                   <>Reported by a driver · {relativeTime(hazard.createdAt)}</>
+                ) : isForecast ? (
+                  <>Heavy rain forecast</>
                 ) : (
                   <>Known {meta.label.toLowerCase()} area</>
                 )}
@@ -109,8 +112,18 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
           <div className="flex items-start gap-2 rounded-xl bg-secondary/50 p-3 text-xs text-muted-foreground">
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
-              A spot that&rsquo;s flagged this way often, from local reports —
-              not a live confirmation that it&rsquo;s happening right now.
+              {isForecast ? (
+                <>
+                  A flood-prone spot with heavy rain in the next few hours&rsquo;
+                  forecast — a warning based on the weather, not a live
+                  confirmation that it&rsquo;s flooding right now.
+                </>
+              ) : (
+                <>
+                  A spot that&rsquo;s flagged this way often, from local reports —
+                  not a live confirmation that it&rsquo;s happening right now.
+                </>
+              )}
             </span>
           </div>
         )}

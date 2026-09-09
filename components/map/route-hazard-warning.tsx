@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, TriangleAlert, X } from "lucide-react"
+import { ChevronDown, Loader2, TriangleAlert, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { alongRouteLabel, type OnRouteHazard } from "@/lib/hazard-geometry"
@@ -22,6 +22,11 @@ interface RouteHazardWarningProps {
   saferRoute?: SaferRoute | null
   onUseSaferRoute?: () => void
   onDismissSafer?: () => void
+  /** "Route around it" — ask a routing engine for a real detour.
+      Offered only when there's no plain safer alternative already. */
+  onRouteAround?: () => void
+  routeAroundBusy?: boolean
+  routeAroundError?: string | null
 }
 
 function saferLabel(safer: SaferRoute): string {
@@ -42,10 +47,15 @@ export function RouteHazardWarning({
   saferRoute,
   onUseSaferRoute,
   onDismissSafer,
+  onRouteAround,
+  routeAroundBusy,
+  routeAroundError,
 }: RouteHazardWarningProps) {
   const [open, setOpen] = useState(false)
 
   if (items.length === 0 && !saferRoute) return null
+
+  const showRouteAround = !saferRoute && items.length > 0 && !!onRouteAround
 
   const severe = items.some(
     ({ hazard }) => hazard.kind === "closure" || hazard.severity >= 0.7
@@ -135,6 +145,33 @@ export function RouteHazardWarning({
           >
             <X className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
+        </div>
+      )}
+
+      {showRouteAround && (
+        <div className="border-t border-border/50 p-3">
+          {routeAroundError ? (
+            <p className="text-xs text-muted-foreground">{routeAroundError}</p>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="flex-1 text-xs text-muted-foreground">
+                {items.length === 1
+                  ? "Try to route around it?"
+                  : "Try to route around them?"}
+              </span>
+              <button
+                type="button"
+                onClick={onRouteAround}
+                disabled={routeAroundBusy}
+                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity disabled:opacity-60 inline-flex items-center gap-1.5"
+              >
+                {routeAroundBusy && (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                )}
+                Route around it
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

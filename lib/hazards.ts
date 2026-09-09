@@ -23,7 +23,14 @@ export type HazardKind =
   | "accident_prone"
   | "closure"
 
-export type HazardSource = "crowd_report" | "seed_dataset" | "official"
+export type HazardSource =
+  | "crowd_report"
+  | "seed_dataset"
+  | "official"
+  // A known flood-prone area currently under a heavy-rain forecast
+  // (see lib/hazard-feeds/forecast-flood.ts). Shown only while the
+  // forecast is bad — no marker means no current risk.
+  | "forecast"
 
 export type HazardStatus = "active" | "cleared" | "expired"
 
