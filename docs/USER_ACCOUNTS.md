@@ -1,11 +1,23 @@
 # User accounts — design spec
 
-**Status:** proposed, not started.
+**Status:** Phase 1 (auth shell) built on the unmerged
+`user-accounts` branch; **blocked** on the owner creating the
+Supabase project + setting its env vars. Phases 2–4 not started.
 **Why:** premium entitlement is currently a signed cookie on one
 device (see [MONETIZATION.md](./MONETIZATION.md) "Known limitations").
 A paying customer loses access on a new device, and the cap-style
 gates are client-side only. Accounts make premium real and unlock
 cross-device sync for saved places and trip history.
+
+**Not a blocker for:** community hazard reports (see
+[HAZARDS.md](./HAZARDS.md)) shipped fully **anonymous** by design —
+a salted one-way `reporterHash` handles rate-limiting and
+de-duplication, nothing is linked to a person, and there is no
+"my reports" list. Accounts are not a prerequisite for that feature
+and it does not need retrofitting when they land. If we ever want
+per-user report history or a reputation signal, that's an *optional*
+enhancement layered on top — reporting must stay possible signed
+out.
 
 ---
 
@@ -40,9 +52,11 @@ Proposed: magic link + Google for launch.
 ## Principles
 
 1. **Auth is additive.** Signed-out users keep the entire app —
-   map, search, directions, explore, and up to the free limits of
-   saved places / history in localStorage. Sign-in adds sync +
-   premium, it never gates the core product.
+   map, search, directions, explore, weather, reporting and seeing
+   community hazards, and up to the free limits of saved places /
+   history in localStorage. Sign-in adds sync + premium, it never
+   gates the core product. (Hazard reports are anonymous even for
+   signed-in users — see the note under "Why" above.)
 2. **localStorage stays as the offline/anonymous layer.** For
    signed-in users it becomes a write-through cache of the DB.
 3. **The DB is the source of truth for entitlement.** The signed
@@ -180,7 +194,7 @@ mark localStorage as migrated (keep it as cache).
 
 | Phase | Scope | Ships value |
 | --- | --- | --- |
-| **1. Auth shell** | Supabase project, `profiles`, middleware, `/login`, `/auth/callback`, header entry, `/account` (sign out only) | People can create accounts |
+| **1. Auth shell** — *built on `user-accounts`, blocked on the Supabase project* | Supabase project, `profiles`, middleware, `/login`, `/auth/callback`, header entry, `/account` (sign out only) | People can create accounts |
 | **2. Synced data** | `saved_places` + `recent_searches` tables + RLS, `use-account-data`, hook split, localStorage import | Saved places follow you across devices |
 | **3. Real subscriptions** | Paystack Plan, webhook, `subscriptions` table, entitlement from DB, `/account` manage/cancel | Premium survives device changes; recurring revenue |
 | **4. Cleanup** | make `requirePremium` async everywhere, drop cookie-only assumptions, docs | — |
