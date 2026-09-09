@@ -27,8 +27,7 @@ import { cn } from "@/lib/utils"
 import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
 import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
-import type { Hazard } from "@/lib/hazards"
-import { fetchHazards } from "@/lib/hazards"
+import { fetchHazards, hazardKindMeta, type Hazard } from "@/lib/hazards"
 import {
   hazardsOnRoute,
   routeBBox,
@@ -241,6 +240,7 @@ export function DirectionsPanel({
     arrivalTime,
     navigationMessage,
     gpsError,
+    hazardAhead,
     startNavigation,
     stopNavigation,
   } = useLiveNavigation({
@@ -248,6 +248,8 @@ export function DirectionsPanel({
     destination: liveDestination,
     enabled: isLiveNavigation,
     travelMode,
+    routePath: routeCoords ?? [],
+    hazards: candidateHazards,
   })
 
   /* =======================================================
@@ -264,6 +266,36 @@ export function DirectionsPanel({
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isNavigating, position])
+
+  /* =======================================================
+     KEEP HAZARDS FRESH DURING NAVIGATION
+
+     A snapshot from route-calc time would miss a flood reported
+     after you set off (or one others have since cleared), so
+     re-fetch the route's hazards every 90 s while navigating.
+  ======================================================= */
+
+  useEffect(() => {
+    if (!isNavigating || !routeCoords || routeCoords.length < 2) return
+
+    let cancelled = false
+    const bbox = routeBBox(routeCoords)
+
+    const poll = async () => {
+      try {
+        const res = await fetchHazards(bbox)
+        if (!cancelled) setCandidateHazards(res.hazards)
+      } catch {
+        // Keep the last good set; try again next tick.
+      }
+    }
+
+    const id = setInterval(poll, 90_000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [isNavigating, routeCoords])
 
   /* =======================================================
      INITIAL DESTINATION
@@ -917,6 +949,26 @@ export function DirectionsPanel({
                   <p className="text-sm font-medium mt-1">
                     {liveSteps[currentStepIndex].instruction}
                   </p>
+                </div>
+              )}
+
+              {hazardAhead && (
+                <div className="mt-3 rounded-lg bg-white p-3 flex items-center gap-2.5">
+                  <span className="text-lg leading-none" aria-hidden>
+                    {hazardKindMeta(hazardAhead.hazard.kind).emoji}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-red-600">
+                      {hazardAhead.hazard.source === "crowd_report"
+                        ? `Reported ${hazardKindMeta(hazardAhead.hazard.kind).label.toLowerCase()}`
+                        : `${hazardKindMeta(hazardAhead.hazard.kind).label} area`}
+                    </p>
+                    <p className="text-xs text-neutral-600">
+                      {hazardAhead.distanceM <= 60
+                        ? "right ahead"
+                        : `${Math.round(hazardAhead.distanceM / 50) * 50} m ahead`}
+                    </p>
+                  </div>
                 </div>
               )}
 

@@ -139,6 +139,41 @@ export function hazardsOnRoute(
   return out.sort((a, b) => a.metresAlongRoute - b.metresAlongRoute)
 }
 
+/**
+ * How far along the route the closest point to `point` is, in
+ * metres from the start. Used during live navigation to tell
+ * whether a hazard is still ahead of the driver.
+ */
+export function distanceAlongRoute(
+  coords: RoutePoint[],
+  point: RoutePoint
+): number {
+  if (coords.length < 2) return 0
+
+  let cumulative = 0
+  let best = Infinity
+  let bestAlong = 0
+
+  for (let i = 1; i < coords.length; i++) {
+    const segLen = haversineMeters(
+      { lat: coords[i - 1][0], lng: coords[i - 1][1] },
+      { lat: coords[i][0], lng: coords[i][1] }
+    )
+    const { point: proj, t } = closestOnSegment(point, coords[i - 1], coords[i])
+    const d = haversineMeters(
+      { lat: point[0], lng: point[1] },
+      { lat: proj[0], lng: proj[1] }
+    )
+    if (d < best) {
+      best = d
+      bestAlong = cumulative + t * segLen
+    }
+    cumulative += segLen
+  }
+
+  return bestAlong
+}
+
 /** "1.2 km in" / "450 m in" for a distance along the route. */
 export function alongRouteLabel(metres: number): string {
   if (metres < 950) return `${Math.round(metres / 10) * 10} m in`
