@@ -74,6 +74,17 @@ function buildMarkerElement(hazard: Hazard, selected: boolean): HTMLDivElement {
   return el
 }
 
+// Everything buildMarkerElement renders off the hazard (colour, emoji,
+// dashed border, aria label, pulse) except the selection scale, which
+// is restyled in place. When this string changes the marker element is
+// rebuilt; otherwise the update is a cheap restyle + reposition.
+function visualSignature(hazard: Hazard): string {
+  const pulses =
+    (hazard.source === "crowd_report" || hazard.source === "forecast") &&
+    hazard.severity >= 0.6
+  return `${hazard.kind}|${hazard.source}|${pulses ? "1" : "0"}`
+}
+
 // Inject the keyframes once.
 let keyframesInjected = false
 function ensureKeyframes() {
@@ -95,12 +106,20 @@ export function HazardLayer({
   selectedId,
   onSelect,
 }: HazardLayerProps) {
-  const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map())
+  const markersRef = useRef<
+    Map<string, { marker: maplibregl.Marker; sig: string }>
+  >(new Map())
   // Keep the latest onSelect without re-running the whole diff effect.
   const onSelectRef = useRef(onSelect)
   useEffect(() => {
     onSelectRef.current = onSelect
   }, [onSelect])
+
+  // Latest hazard object per id, so a marker's click handler always
+  // hands back current data (vote counts, note, severity) even when
+  // the marker element itself wasn't rebuilt.
+  const hazardsByIdRef = useRef<Map<string, Hazard>>(new Map())
+  hazardsByIdRef.current = new Map(hazards.map((h) => [h.id, h]))
 
   useEffect(() => {
     ensureKeyframes()
@@ -113,38 +132,53 @@ export function HazardLayer({
     const nextIds = new Set(hazards.map((h) => h.id))
 
     // Remove markers for hazards that are gone.
-    for (const [id, marker] of existing) {
+    for (const [id, entry] of existing) {
       if (!nextIds.has(id)) {
-        marker.remove()
+        entry.marker.remove()
         existing.delete(id)
       }
     }
 
-    // Add / update the rest.
-    for (const hazard of hazards) {
-      const selected = hazard.id === selectedId
-      const prev = existing.get(hazard.id)
-      if (prev) {
-        // Cheap update: just restyle for selection state.
-        const dot = prev
-          .getElement()
-          .querySelector<HTMLElement>(".lincoln-hazard-dot")
-        if (dot) dot.style.transform = selected ? "scale(1.18)" : "scale(1)"
-        prev.setLngLat([hazard.location.lng, hazard.location.lat])
-        continue
-      }
-
+    const addMarker = (hazard: Hazard, selected: boolean) => {
       const el = buildMarkerElement(hazard, selected)
       el.addEventListener("click", (e) => {
         e.stopPropagation()
-        onSelectRef.current(hazard)
+        // Read the current hazard object, not the one captured here.
+        onSelectRef.current(hazardsByIdRef.current.get(hazard.id) ?? hazard)
       })
 
       const marker = new maplibregl.Marker({ element: el, anchor: "center" })
         .setLngLat([hazard.location.lng, hazard.location.lat])
         .addTo(map)
 
-      existing.set(hazard.id, marker)
+      existing.set(hazard.id, { marker, sig: visualSignature(hazard) })
+    }
+
+    // Add / update the rest.
+    for (const hazard of hazards) {
+      const selected = hazard.id === selectedId
+      const prev = existing.get(hazard.id)
+
+      if (!prev) {
+        addMarker(hazard, selected)
+        continue
+      }
+
+      // A changed emoji / colour / source / pulse means the element
+      // has to be rebuilt (and its stale click closure with it).
+      if (prev.sig !== visualSignature(hazard)) {
+        prev.marker.remove()
+        existing.delete(hazard.id)
+        addMarker(hazard, selected)
+        continue
+      }
+
+      // Cheap update: restyle selection state, reposition.
+      const dot = prev.marker
+        .getElement()
+        .querySelector<HTMLElement>(".lincoln-hazard-dot")
+      if (dot) dot.style.transform = selected ? "scale(1.18)" : "scale(1)"
+      prev.marker.setLngLat([hazard.location.lng, hazard.location.lat])
     }
   }, [map, hazards, selectedId])
 
@@ -152,7 +186,7 @@ export function HazardLayer({
   useEffect(() => {
     const markers = markersRef.current
     return () => {
-      for (const marker of markers.values()) marker.remove()
+      for (const { marker } of markers.values()) marker.remove()
       markers.clear()
     }
   }, [])
