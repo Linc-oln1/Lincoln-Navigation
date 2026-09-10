@@ -16,6 +16,7 @@
 import { HAZARD_SEED } from "@/lib/geo-intelligence/route-intelligence"
 import type { LatLng } from "@/lib/geo-intelligence/types"
 import type { Hazard } from "@/lib/hazards"
+import type { HazardFeed } from "./types"
 
 // A zone escalates to a warning when, over the next few hours, the
 // peak rain probability and the total accumulation both cross these.
@@ -148,4 +149,10 @@ export async function getForecastFloodHazards(): Promise<Hazard[]> {
 
   cache = { expires: Date.now() + CACHE_TTL_MS, data }
   return data
+}
+
+export const forecastFloodFeed: HazardFeed = {
+  id: "forecast-flood",
+  label: "Flood-prone corridors under a heavy-rain forecast (Open-Meteo)",
+  fetch: getForecastFloodHazards,
 }

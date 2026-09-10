@@ -49,6 +49,21 @@ export interface Hazard {
   /** 0–1, starts at the kind default and drifts with confirm/clear votes. */
   severity: number
   status: HazardStatus
+  /** A report/details page for the hazard (e.g. a GDACS event page). */
+  url?: string
+}
+
+/** Sources that describe a specific point and may inform routing.
+    "official" feeds (GDACS etc.) are region-scale advisories and are
+    deliberately NOT in this set. */
+export const ROUTE_RELEVANT_SOURCES: readonly HazardSource[] = [
+  "crowd_report",
+  "forecast",
+  "seed_dataset",
+]
+
+export function isRouteRelevant(hazard: Hazard): boolean {
+  return ROUTE_RELEVANT_SOURCES.includes(hazard.source)
 }
 
 export interface BBox {

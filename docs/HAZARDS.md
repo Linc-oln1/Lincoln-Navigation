@@ -20,7 +20,8 @@ anonymous and expire on their own.
 | [`components/map/hazard-details.tsx`](../components/map/hazard-details.tsx) | Detail card with "Still there" / "Cleared" votes. |
 | [`lib/hazard-geometry.ts`](../lib/hazard-geometry.ts) | Client-safe: `routeBBox`, `hazardsOnRoute` (point-to-segment proximity + distance-along-route), `distanceAlongRoute` (driver position → metres along route), `alongRouteLabel`. |
 | [`lib/route-scoring.ts`](../lib/route-scoring.ts) | Client-safe: `countTurns`, `scoreCandidates` (the ETA/turns/hazard formula, extracted once), `pickSaferRoute`. |
-| [`components/map/route-hazard-warning.tsx`](../components/map/route-hazard-warning.tsx) | Collapsible "N hazards on this route" banner + the "safer route" offer in the directions panel. |
+| [`components/map/route-hazard-warning.tsx`](../components/map/route-hazard-warning.tsx) | Collapsible "N hazards on this route" banner + the "safer route" / "route around it" actions. |
+| [`lib/hazard-feeds/`](../lib/hazard-feeds/) | `HazardFeed` interface + aggregator (`getFeedHazards`). Adapters: `forecast-flood.ts` (Open-Meteo rain over the flood corridors) and `gdacs.ts` (UN/EC official alerts, env-gated). |
 
 `MapView` gained `onBoundsChange`, `hazards`, `selectedHazardId`,
 `onHazardSelect` and `onUserLocationChange`; `app/app/page.tsx`
@@ -121,6 +122,29 @@ day there's simply no flood marker. Renders like an official zone
 (dashed, no votes) with "heavy rain forecast" copy. **Works in
 production regardless of the store** — it's not crowd data.
 
+## Hazard feeds
+
+`lib/hazard-feeds/` turns external / derived sources into the same
+`Hazard` shape. `getFeedHazards()` runs every configured feed
+(`Promise.allSettled` — a failing feed is logged and dropped) and
+`/api/hazards`'s `baseHazards()` merges the result with the static
+non-flood seeds.
+
+| Feed | `source` | Configured when | Notes |
+| --- | --- | --- | --- |
+| `forecast-flood` | `"forecast"` | always | 3b above. 30-min cache. |
+| `gdacs` | `"official"` | `HAZARD_FEED_GDACS=on` | GDACS (UN OCHA + EC JRC) Orange/Red flood alerts touching Ghana. Keyless. 60-min cache. Off by default — the marker sits at a **region centroid**, coarse for a street map. `note` says "regional flood alert", `url` links the GDACS report, and `expiresAt` = the event's `todate` (capped at 5 days for perpetually-ongoing events). |
+
+**`"official"` hazards never affect routing.** `isRouteRelevant()`
+in `lib/hazards.ts` limits the route-warning / safer-route /
+hazard-ahead / reroute logic to `crowd_report | forecast |
+seed_dataset` — a GDACS regional centroid landing on your route is
+meaningless, so it shows on the map as an advisory only.
+
+To add a real NADMO / GMet feed later: implement `HazardFeed` in a
+new file under `lib/hazard-feeds/` and add it to the `FEEDS` array
+in `index.ts`.
+
 ## Storage
 
 Crowd data must persist across devices, so this needs a real
@@ -191,8 +215,9 @@ stays on the driver.
 
 ## Not yet built
 
-- A real official feed — GDACS / NADMO / GMet — behind a
-  `HazardFeed` interface alongside `forecast-flood.ts`.
+- A **NADMO / GMet** feed (a real Ghana agency, street/district
+  granularity) — the `HazardFeed` interface is ready for it; GDACS
+  is the country-scale placeholder.
 - `/api/geo/route-plan`: upgrade its vertex-only `detectHazards` to
   segment-distance, give the Valhalla/GraphHopper engines `steps`,
   and let the panel use it as the routing backend when a premium

@@ -12,7 +12,7 @@ import {
 import { reporterHash } from "@/lib/hazard-identity"
 import { HAZARD_SEED } from "@/lib/geo-intelligence/route-intelligence"
 import { haversineMeters } from "@/lib/geo-intelligence/confidence"
-import { getForecastFloodHazards } from "@/lib/hazard-feeds/forecast-flood"
+import { getFeedHazards } from "@/lib/hazard-feeds"
 
 /* =========================================================
    COMMUNITY HAZARD REPORTS
@@ -57,9 +57,9 @@ function centroid(points: { lat: number; lng: number }[]): {
   return { lat: sum.lat / points.length, lng: sum.lng / points.length }
 }
 
-// Non-flood seed zones stay static. Flood zones are handled by
-// getForecastFloodHazards() instead — they only appear while the
-// rain forecast for them is bad (Phase 3b).
+// Non-flood seed zones stay static. Flood zones are handled by the
+// forecast-flood feed instead — they only appear while the rain
+// forecast for them is bad (Phase 3b).
 function staticSeedHazards(): Hazard[] {
   return HAZARD_SEED.filter((zone) => zone.kind !== "flood").map((zone) => ({
     id: zone.id,
@@ -77,8 +77,8 @@ function staticSeedHazards(): Hazard[] {
 }
 
 async function baseHazards(): Promise<Hazard[]> {
-  const forecast = await getForecastFloodHazards().catch(() => [])
-  return [...staticSeedHazards(), ...forecast]
+  const feeds = await getFeedHazards().catch(() => [])
+  return [...staticSeedHazards(), ...feeds]
 }
 
 function parseBBox(raw: string | null): BBox | null {

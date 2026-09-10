@@ -10,7 +10,7 @@ import {
 
 import type { TravelMode } from "@/lib/routing"
 import { hasActivePremium } from "@/lib/premium"
-import { hazardKindMeta, type Hazard } from "@/lib/hazards"
+import { hazardKindMeta, isRouteRelevant, type Hazard } from "@/lib/hazards"
 import {
   distanceAlongRoute,
   hazardsOnRoute,
@@ -866,7 +866,7 @@ export function useLiveNavigation({
   const upcomingHazards = useMemo(
     () =>
       routePath && routePath.length >= 2 && hazards && hazards.length > 0
-        ? hazardsOnRoute(routePath, hazards, {
+        ? hazardsOnRoute(routePath, hazards.filter(isRouteRelevant), {
             thresholdM: HAZARD_AHEAD_CORRIDOR_METERS,
           })
         : [],
