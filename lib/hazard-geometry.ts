@@ -125,7 +125,13 @@ export function nearestOnPolyline(
   return { distanceM: best, metresAlong: bestAlong }
 }
 
-function buildCumulative(coords: RoutePoint[]): number[] {
+/**
+ * Segment-length prefix sums for a polyline (`cum[i]` = metres from
+ * the start to vertex `i`). Pass the result back into
+ * `nearestOnPolyline` / `distanceAlongRoute` to avoid rebuilding it
+ * when projecting many points (e.g. a moving GPS fix) onto one route.
+ */
+export function buildCumulative(coords: RoutePoint[]): number[] {
   const cum: number[] = [0]
   for (let i = 1; i < coords.length; i++) {
     cum[i] =
@@ -194,10 +200,11 @@ export function hazardsOnRoute(
  */
 export function distanceAlongRoute(
   coords: RoutePoint[],
-  point: RoutePoint
+  point: RoutePoint,
+  cumulative?: number[]
 ): number {
   if (coords.length < 2) return 0
-  return nearestOnPolyline(point, coords).metresAlong
+  return nearestOnPolyline(point, coords, cumulative).metresAlong
 }
 
 /** "1.2 km in" / "450 m in" for a distance along the route. */

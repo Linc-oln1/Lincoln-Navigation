@@ -30,11 +30,15 @@ function graphHopperManeuver(sign: number): { type: string; modifier?: string } 
     case -1:
       return { type: "turn", modifier: "slight left" }
     case 2:
-    case 7:
       return { type: "turn", modifier: "right" }
     case -2:
-    case -7:
       return { type: "turn", modifier: "left" }
+    // ±7 = "keep right/left" — a lane fork, not a turn. Match OSRM's
+    // "fork" so turn-complexity scoring treats it the same across engines.
+    case 7:
+      return { type: "fork", modifier: "slight right" }
+    case -7:
+      return { type: "fork", modifier: "slight left" }
     case 3:
       return { type: "turn", modifier: "sharp right" }
     case -3:
