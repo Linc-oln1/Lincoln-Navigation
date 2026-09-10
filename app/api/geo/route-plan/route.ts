@@ -10,6 +10,16 @@ import { getHazardStore } from "@/lib/hazard-store"
    against known hazard corridors + turn complexity + ETA, and
    returns them ranked with a `reasoning` trail per route so the
    "best route" is never a black-box claim.
+
+   Response: { routes: ScoredRoute[], best }. Every route carries
+   `geometry` ([lat,lng]), `steps` (turn-by-turn, same RouteStep
+   shape as lib/routing.ts, from whichever engine answered),
+   `score` + `scoreBreakdown`, and `hazardsCrossed`.
+
+   NOTE: no UI calls this yet. lib/routing.ts's calculateRoute()
+   (OSRM direct + ORS) is what the directions panel uses; this
+   endpoint becomes the panel's backend the day a premium engine
+   (Valhalla / GraphHopper) is configured.
 ========================================================= */
 
 const VALID_VEHICLES: VehicleType[] = ["car", "motorcycle", "bus", "walking", "cycling"]

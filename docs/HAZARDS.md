@@ -218,7 +218,8 @@ stays on the driver.
 - A **NADMO / GMet** feed (a real Ghana agency, street/district
   granularity) — the `HazardFeed` interface is ready for it; GDACS
   is the country-scale placeholder.
-- `/api/geo/route-plan`: upgrade its vertex-only `detectHazards` to
-  segment-distance, give the Valhalla/GraphHopper engines `steps`,
-  and let the panel use it as the routing backend when a premium
-  engine is configured.
+- Wiring `/api/geo/route-plan` into the directions panel — the
+  endpoint is now complete (turn-by-turn from every engine,
+  segment-aware `detectHazards`), so this is a small change the day
+  a premium routing engine (`VALHALLA_URL` / `GRAPHHOPPER_API_KEY`)
+  is configured.
