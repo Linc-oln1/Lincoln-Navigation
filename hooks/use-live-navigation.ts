@@ -12,6 +12,7 @@ import type { TravelMode } from "@/lib/routing"
 import { hasActivePremium } from "@/lib/premium"
 import { hazardKindMeta, isRouteRelevant, type Hazard } from "@/lib/hazards"
 import {
+  buildCumulative,
   distanceAlongRoute,
   hazardsOnRoute,
   type OnRouteHazard,
@@ -753,6 +754,9 @@ export function useLiveNavigation({
   // read inside processGpsPosition via refs so its useCallback deps
   // stay stable.
   const routePathRef = useRef<[number, number][]>([])
+  // Segment-length prefix sums for routePathRef, rebuilt only when the
+  // path changes — not on every GPS fix's distance-along projection.
+  const routeCumulativeRef = useRef<number[]>([])
   const upcomingHazardsRef = useRef<OnRouteHazard[]>([])
 
   // Hazards already announced this navigation session (by id), so
@@ -875,6 +879,7 @@ export function useLiveNavigation({
 
   useEffect(() => {
     routePathRef.current = routePath ?? []
+    routeCumulativeRef.current = buildCumulative(routePathRef.current)
   }, [routePath])
 
   useEffect(() => {
@@ -1237,10 +1242,11 @@ export function useLiveNavigation({
         const upcoming = upcomingHazardsRef.current
 
         if (hazardPath.length >= 2 && upcoming.length > 0) {
-          const userAlong = distanceAlongRoute(hazardPath, [
-            latitude,
-            longitude,
-          ])
+          const userAlong = distanceAlongRoute(
+            hazardPath,
+            [latitude, longitude],
+            routeCumulativeRef.current
+          )
 
           const next = upcoming.find((h) => {
             const gap = h.metresAlongRoute - userAlong

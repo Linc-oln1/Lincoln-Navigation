@@ -60,6 +60,9 @@ export interface HazardStore {
 
 const MAX_NOTE_LENGTH = 200
 const CLEAR_MARGIN = 3 // (clears − confirms) that flips a hazard to "cleared"
+// How long a reporter's rate-limit history is retained. Must comfortably
+// exceed the largest window countRecentByReporter is ever asked about.
+const RATE_HISTORY_TTL_SECONDS = 2 * 60 * 60
 
 export function sanitizeNote(raw: unknown): string | undefined {
   if (typeof raw !== "string") return undefined
@@ -170,7 +173,7 @@ class MemoryHazardStore implements HazardStore {
     voterHash: string
   ): Promise<VoteResult | null> {
     const current = await this.get(id)
-    if (!current) return null
+    if (!current || current.status !== "active") return null
 
     const voters = this.votes.get(id) ?? new Set<string>()
     if (voters.has(voterHash)) {
@@ -248,16 +251,20 @@ class RedisHazardStore implements HazardStore {
     const hazard = newHazard(input)
     const ttl = ttlSeconds(hazard)
 
+    const rateKey = KEY.rate(input.reporterHash)
+    const now = Date.now()
+
     await Promise.all([
       this.redis.set(KEY.hazard(hazard.id), hazard, { ex: ttl }),
       this.redis.sadd(KEY.activeSet, hazard.id),
+      // Sliding-window rate history: one timestamped member per report,
+      // trimmed on read against whatever window the caller asks for.
+      this.redis.zadd(rateKey, {
+        score: now,
+        member: `${now}:${hazard.id}`,
+      }),
     ])
-
-    // Fixed-window rate counter: first report starts a 1-hour clock.
-    const count = await this.redis.incr(KEY.rate(input.reporterHash))
-    if (count === 1) {
-      await this.redis.expire(KEY.rate(input.reporterHash), 60 * 60)
-    }
+    await this.redis.expire(rateKey, RATE_HISTORY_TTL_SECONDS)
 
     return hazard
   }
@@ -268,7 +275,7 @@ class RedisHazardStore implements HazardStore {
     voterHash: string
   ): Promise<VoteResult | null> {
     const current = await this.get(id)
-    if (!current) return null
+    if (!current || current.status !== "active") return null
 
     const added = await this.redis.sadd(KEY.votes(id), voterHash)
     if (added === 0) {
@@ -292,9 +299,13 @@ class RedisHazardStore implements HazardStore {
     return { hazard: updated, counted: true }
   }
 
-  async countRecentByReporter(reporterHash: string): Promise<number> {
-    const count = await this.redis.get<number>(KEY.rate(reporterHash))
-    return typeof count === "number" ? count : Number(count ?? 0)
+  async countRecentByReporter(
+    reporterHash: string,
+    windowMs: number
+  ): Promise<number> {
+    const key = KEY.rate(reporterHash)
+    await this.redis.zremrangebyscore(key, 0, Date.now() - windowMs)
+    return this.redis.zcard(key)
   }
 }
 
