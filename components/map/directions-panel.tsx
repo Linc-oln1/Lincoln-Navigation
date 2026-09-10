@@ -27,7 +27,12 @@ import { cn } from "@/lib/utils"
 import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
 import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
-import { fetchHazards, hazardKindMeta, type Hazard } from "@/lib/hazards"
+import {
+  fetchHazards,
+  hazardKindMeta,
+  isRouteRelevant,
+  type Hazard,
+} from "@/lib/hazards"
 import {
   hazardsOnRoute,
   routeBBox,
@@ -194,7 +199,7 @@ export function DirectionsPanel({
   const routeHazards: OnRouteHazard[] = useMemo(
     () =>
       routeCoords && candidateHazards.length > 0
-        ? hazardsOnRoute(routeCoords, candidateHazards)
+        ? hazardsOnRoute(routeCoords, candidateHazards.filter(isRouteRelevant))
         : [],
     [routeCoords, candidateHazards]
   )

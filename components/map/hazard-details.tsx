@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Check, MapPin, ShieldAlert, X } from "lucide-react"
+import { Check, ExternalLink, MapPin, ShieldAlert, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -23,6 +23,7 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
   const meta = hazardKindMeta(hazard.kind)
   const isCrowd = hazard.source === "crowd_report"
   const isForecast = hazard.source === "forecast"
+  const isOfficial = hazard.source === "official"
 
   const [busy, setBusy] = useState<null | "confirm" | "clear">(null)
   const [voted, setVoted] = useState(false)
@@ -72,6 +73,8 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
                   <>Reported by a driver · {relativeTime(hazard.createdAt)}</>
                 ) : isForecast ? (
                   <>Heavy rain forecast</>
+                ) : isOfficial ? (
+                  <>Official regional alert</>
                 ) : (
                   <>Known {meta.label.toLowerCase()} area</>
                 )}
@@ -118,6 +121,13 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
                   forecast — a warning based on the weather, not a live
                   confirmation that it&rsquo;s flooding right now.
                 </>
+              ) : isOfficial ? (
+                <>
+                  A wide-area flood alert for this region, from an official
+                  agency. The marker is a regional centre point, not a
+                  street-level report — check the report for what&rsquo;s
+                  actually affected.
+                </>
               ) : (
                 <>
                   A spot that&rsquo;s flagged this way often, from local reports —
@@ -126,6 +136,18 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
               )}
             </span>
           </div>
+        )}
+
+        {hazard.url && (
+          <a
+            href={hazard.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm text-primary hover:underline"
+          >
+            <ExternalLink className="w-4 h-4 shrink-0" />
+            View the full report
+          </a>
         )}
       </div>
 
