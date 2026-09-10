@@ -14,6 +14,8 @@
 // one provider's black-box ranking. That is the entire design
 // philosophy of this module: make judgment legible, not eliminate it.
 
+import type { RouteStep } from "../routing"
+
 export type ProviderId = "google" | "foursquare" | "mapbox" | "osm"
 
 export interface LatLng {
@@ -99,6 +101,8 @@ export interface RouteCandidate {
   distanceMeters: number
   durationSeconds: number
   geometry: LatLng[]
+  /** Turn-by-turn, normalized to lib/routing.ts's RouteStep shape. */
+  steps: RouteStep[]
   turnCount: number
   hazardsCrossed: HazardZone[]
 }

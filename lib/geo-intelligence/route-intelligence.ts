@@ -11,8 +11,9 @@
 // SERVER-ONLY.
 
 import { calculateRoute, type Coordinate } from "../routing"
-import { scoreCandidates } from "../route-scoring"
-import { haversineMeters } from "./confidence"
+import { countTurns, scoreCandidates } from "../route-scoring"
+import { pointToPolylineMeters } from "../hazard-geometry"
+import { graphHopperSteps, valhallaSteps } from "./engine-steps"
 import type { HazardZone, LatLng, RouteCandidate, ScoredRoute, VehicleType } from "./types"
 
 /* =========================================================
@@ -86,11 +87,6 @@ function vehicleToOsrmMode(vehicle: VehicleType): "driving" | "walking" | "cycli
   return "driving" // car, motorcycle, bus all use the road network
 }
 
-function countTurns(steps: Array<{ maneuver: { type: string } }>): number {
-  return steps.filter((s) => !["depart", "arrive", "continue", "new name"].includes(s.maneuver.type))
-    .length
-}
-
 class OsrmEngine implements RouteEngine {
   id = "osrm"
   isConfigured(): boolean {
@@ -115,6 +111,7 @@ class OsrmEngine implements RouteEngine {
       distanceMeters: route.distance,
       durationSeconds: route.duration,
       geometry: route.geometry.coordinates.map(([lng, lat]) => ({ lat, lng })),
+      steps: route.steps,
       turnCount: countTurns(route.steps),
       hazardsCrossed: [],
     }))
@@ -150,20 +147,21 @@ class GraphHopperEngine implements RouteEngine {
     const data = await response.json()
     const paths: any[] = Array.isArray(data.paths) ? data.paths : []
 
-    return paths.map((path, i) => ({
-      id: `graphhopper-${i}`,
-      engine: "graphhopper",
-      distanceMeters: path.distance,
-      durationSeconds: path.time / 1000,
-      geometry: (path.points?.coordinates ?? []).map(([lng, lat]: [number, number]) => ({
-        lat,
-        lng,
-      })),
-      turnCount: Array.isArray(path.instructions)
-        ? path.instructions.filter((instr: any) => instr.sign !== 0).length
-        : 0,
-      hazardsCrossed: [],
-    }))
+    return paths.map((path, i) => {
+      const steps = graphHopperSteps(path)
+      return {
+        id: `graphhopper-${i}`,
+        engine: "graphhopper",
+        distanceMeters: path.distance,
+        durationSeconds: path.time / 1000,
+        geometry: (path.points?.coordinates ?? []).map(
+          ([lng, lat]: [number, number]) => ({ lat, lng })
+        ),
+        steps,
+        turnCount: countTurns(steps),
+        hazardsCrossed: [],
+      }
+    })
   }
 }
 
@@ -235,13 +233,10 @@ class ValhallaEngine implements RouteEngine {
     const trips = [data.trip, ...(data.alternates ?? []).map((a: any) => a.trip)].filter(Boolean)
 
     return trips.map((trip, i) => {
-      const geometry = (trip.legs ?? []).flatMap((leg: any) => decodePolyline6(leg.shape ?? ""))
-      const turnCount = (trip.legs ?? []).reduce(
-        (sum: number, leg: any) =>
-          sum +
-          (leg.maneuvers ?? []).filter((m: any) => ![1, 4, 8].includes(m.type)).length,
-        0
-      )
+      const legs: any[] = trip.legs ?? []
+      const geometryByLeg = legs.map((leg) => decodePolyline6(leg.shape ?? ""))
+      const geometry = geometryByLeg.flat()
+      const steps = valhallaSteps(legs, geometryByLeg)
 
       return {
         id: `valhalla-${i}`,
@@ -249,7 +244,8 @@ class ValhallaEngine implements RouteEngine {
         distanceMeters: (trip.summary?.length ?? 0) * 1000, // Valhalla reports km
         durationSeconds: trip.summary?.time ?? 0,
         geometry,
-        turnCount,
+        steps,
+        turnCount: countTurns(steps),
         hazardsCrossed: [],
       }
     })
@@ -263,11 +259,15 @@ const ENGINES: RouteEngine[] = [new OsrmEngine(), new GraphHopperEngine(), new V
 ========================================================= */
 
 function detectHazards(geometry: LatLng[], hazards: HazardZone[]): HazardZone[] {
-  if (geometry.length === 0) return []
+  if (geometry.length < 2) return []
 
+  // Segment-aware distance (see lib/hazard-geometry.ts) — a hazard
+  // sitting between two far-apart route vertices is still caught,
+  // which the old vertex-only check missed.
   return hazards.filter((hazard) =>
-    hazard.polygonOrLine.some((hazardPoint) =>
-      geometry.some((routePoint) => haversineMeters(routePoint, hazardPoint) <= HAZARD_PROXIMITY_METERS)
+    hazard.polygonOrLine.some(
+      (hazardPoint) =>
+        pointToPolylineMeters(hazardPoint, geometry) <= HAZARD_PROXIMITY_METERS
     )
   )
 }

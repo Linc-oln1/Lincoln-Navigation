@@ -41,6 +41,8 @@ lib/geo-intelligence/
 │                              providers + confidence-ranked canonical places
 ├── route-intelligence.ts    — ROUTE INTEL: OSRM / GraphHopper / Valhalla,
 │                              hazard-crossing detection, vehicle-aware scoring
+├── engine-steps.ts          — GraphHopper / Valhalla maneuvers → the shared
+│                              RouteStep shape, so every engine returns turn-by-turn
 └── ghana-landmarks.ts       — LOCAL KNOWLEDGE ENGINE: relative-landmark parsing
                                 against OSM, with calibrated uncertainty radii
 
@@ -51,6 +53,8 @@ app/api/geo/
 ```
 
 This sits *beside* your existing `/api/places`, `/api/geocode`, and `lib/routing.ts` rather than replacing them — nothing currently working breaks. When you're ready, point the search UI at `/api/geo/search` and the directions flow at `/api/geo/route-plan` instead, and you get fused multi-source results with the same response shapes your app already knows how to render, plus a `confidence` object you can surface however you like (a small badge, a sort option, a "verified by 3 sources" label).
+
+**Status (route-plan):** every candidate now carries `steps` (turn-by-turn, the same `RouteStep` shape as `lib/routing.ts`, mapped per-engine in `engine-steps.ts`) and `hazardsCrossed` uses the segment-aware distance from `lib/hazard-geometry.ts` — so the endpoint is a complete drop-in for the directions panel's routing. It's the natural backend the day `VALHALLA_URL` or `GRAPHHOPPER_API_KEY` is set; until then the panel stays on `lib/routing.ts` (OSRM + ORS) and nothing calls this route.
 
 ## Why POI intelligence isn't "just call Google Places"
 
