@@ -1289,6 +1289,14 @@ export function MapView({
   // instead of clobbering a newer/valid map style.
   const styleRequestIdRef = useRef(0)
 
+  // During live navigation the camera follows the driver, firing a
+  // `moveend` roughly once a second. The route's hazards are already
+  // kept fresh by the directions panel's own poll, so we suppress the
+  // ambient bounds emission while navigating (and emit once when it
+  // ends, to catch up to wherever the trip finished).
+  const isNavigatingRef = useRef(false)
+  const emitBoundsRef = useRef<() => void>(() => {})
+
   const [mapInstance, setMapInstance] =
     useState<maplibregl.Map | null>(null)
 
@@ -1461,11 +1469,14 @@ export function MapView({
           maxLat: b.getNorth(),
         })
       }
+      emitBoundsRef.current = emitBounds
 
       map.on("moveend", (event: any) => {
         // Bounds fire for any move (hazards should load wherever the
-        // map ends up, however it got there).
-        emitBounds()
+        // map ends up, however it got there) — except during live
+        // navigation, where the camera-follow would otherwise refetch
+        // once a second on top of the panel's dedicated hazard poll.
+        if (!isNavigatingRef.current) emitBounds()
 
         // Center only for user-initiated moves — programmatic
         // flyTo/easeTo (search selection, route fitting) don't carry
@@ -1738,6 +1749,18 @@ export function MapView({
       { padding: 64, duration: 800 }
     )
   }, [routePoints, liveNavigation?.isNavigating])
+
+  /* =======================================================
+     PAUSE AMBIENT BOUNDS EMISSION DURING NAVIGATION
+  ======================================================= */
+
+  useEffect(() => {
+    const navigating = Boolean(liveNavigation?.isNavigating)
+    const wasNavigating = isNavigatingRef.current
+    isNavigatingRef.current = navigating
+    // Trip just ended — refresh hazards for wherever it finished.
+    if (wasNavigating && !navigating) emitBoundsRef.current()
+  }, [liveNavigation?.isNavigating])
 
   /* =======================================================
      ALTERNATIVE ("safer") ROUTE PREVIEW
