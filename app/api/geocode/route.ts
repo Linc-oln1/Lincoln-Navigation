@@ -42,9 +42,12 @@ type NormalizedResult = {
   importance?: number
 }
 
-// Accra, used only as a soft ranking bias (never a restriction) so
-// nearby results surface first without excluding anywhere else.
+// Accra — a soft proximity bias so nearby results rank first.
 const GHANA_CENTER: [number, number] = [-0.187, 5.6037] // [lng, lat]
+// This is a Ghana-only nav app, so Mapbox results are hard-scoped to
+// Ghana (ISO 3166-1 alpha-2). Without this, unmatched queries like
+// "Madina Market" spill to same-named places in the US / India.
+const MAPBOX_COUNTRY = "gh"
 
 function getMapboxToken(): string | null {
   const token = process.env.MAPBOX_ACCESS_TOKEN
@@ -76,6 +79,7 @@ async function mapboxForwardGeocode(
     access_token: token,
     limit: String(Math.min(limit, 10)), // Mapbox v6 forward caps at 10
     language: "en",
+    country: MAPBOX_COUNTRY,
     proximity: `${GHANA_CENTER[0]},${GHANA_CENTER[1]}`,
   })
 
@@ -103,6 +107,7 @@ async function mapboxReverseGeocode(
     latitude: lat,
     access_token: token,
     language: "en",
+    country: MAPBOX_COUNTRY,
   })
 
   const response = await fetch(`https://api.mapbox.com/search/geocode/v6/reverse?${params}`, {
