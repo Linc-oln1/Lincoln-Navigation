@@ -500,14 +500,19 @@ export function DirectionsPanel({
 
     setCandidateHazards(hazards)
 
-    if (routes.length < 2 || hazards.length === 0) {
+    // Only point-scale sources should influence which route we offer —
+    // region-centroid "official" alerts must not (same filter the
+    // warning banner and live-nav hook apply).
+    const routable = hazards.filter(isRouteRelevant)
+
+    if (routes.length < 2 || routable.length === 0) {
       setSaferAlt(null)
       onAlternativeRoute?.([])
       return
     }
 
     const perRoute = routes.map((route) => {
-      const onRoute = hazardsOnRoute(toLatLng(route), hazards)
+      const onRoute = hazardsOnRoute(toLatLng(route), routable)
       const severities = onRoute.map((o) => o.hazard.severity)
       return {
         route,
