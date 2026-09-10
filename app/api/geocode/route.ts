@@ -176,8 +176,9 @@ function getUserAgent(): string {
   return `${appName}/1.0 (self-hosted map app; contact: not-provided)`
 }
 
-// Ghana bounding box, used only to bias ranking (bounded=0),
-// never to exclude results from elsewhere.
+// Ghana bounding box — biases ranking (bounded=0). Forward search
+// also passes countrycodes=gh so the fallback stays in-country, the
+// same scope as the Mapbox path.
 const GHANA_VIEWBOX = "-3.5,11.4,1.5,4.4" // left,top,right,bottom
 
 interface NominatimResult {
@@ -313,9 +314,15 @@ export async function GET(request: NextRequest) {
     if (mapboxToken) {
       try {
         const mapboxResults = await mapboxForwardGeocode(query, limit, mapboxToken)
-        const results = { results: mapboxResults }
-        setCached(cacheKey, results)
-        return NextResponse.json(results)
+        if (mapboxResults.length > 0) {
+          const results = { results: mapboxResults }
+          setCached(cacheKey, results)
+          return NextResponse.json(results)
+        }
+        // Mapbox found nothing in Ghana — its coverage of informal
+        // place names ("Kejetia", trotro stations, market names) is
+        // patchy, and OSM/Nominatim often has them. Fall through.
+        console.warn(`[geocode] Mapbox had no match for "${query}", trying Nominatim`)
       } catch (error) {
         console.error("[geocode] Mapbox geocoding failed, falling back to Nominatim:", error)
         // fall through to Nominatim below
@@ -328,7 +335,8 @@ export async function GET(request: NextRequest) {
       addressdetails: "1",
       limit: String(limit),
       viewbox: GHANA_VIEWBOX,
-      bounded: "0", // bias toward Ghana, never exclude elsewhere
+      bounded: "0", // viewbox is a ranking bias; countrycodes does the scoping
+      countrycodes: "gh",
     })
 
     const response = await fetch(
