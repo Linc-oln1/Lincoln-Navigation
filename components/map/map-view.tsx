@@ -166,10 +166,6 @@ const SATELLITE_TILES = [
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
 ]
 
-const SATELLITE_LABEL_TILES = [
-  "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
-]
-
 const TOPO_TILES = [
   "https://a.tile.opentopomap.org/{z}/{x}/{y}.png",
   "https://b.tile.opentopomap.org/{z}/{x}/{y}.png",
@@ -791,16 +787,19 @@ function extractVectorSource(
 type BuildingTheme = "light" | "dark" | "satellite" | "terrain"
 
 // Height-interpolated building colors per map theme — light gray
-// for the light map, charcoal for dark, and a warm off-white/tan
-// for satellite and terrain so extruded buildings read clearly
-// against real photography or topo shading.
+// for the light map, charcoal for dark, a warm off-white/tan for
+// terrain, and a neutral cool gray-white for satellite (Apple/
+// Google-style "flyover" extrusions read as a translucent 3D hint
+// over the photo rather than a flat tan patch that clashes with
+// whatever's actually underneath — green canopy, blue water, tan
+// sand, gray concrete).
 const BUILDING_COLOR_RAMPS: Record<
   BuildingTheme,
   [string, string, string, string]
 > = {
   light: ["#cbd0d6", "#aab0ba", "#8d94a0", "#6f7684"],
   dark: ["#39393c", "#2e2e30", "#242426", "#1a1a1b"],
-  satellite: ["#e9e4d8", "#d9d2c0", "#c7bfa9", "#b3a98e"],
+  satellite: ["#f0f2f4", "#dee2e6", "#c5cbd2", "#a7afba"],
   terrain: ["#d8cdb8", "#c3b79d", "#ab9d80", "#8f8266"],
 }
 
@@ -850,9 +849,148 @@ function buildBuildingExtrusionLayer(
         0,
       ],
       "fill-extrusion-opacity":
-        theme === "satellite" || theme === "terrain" ? 0.92 : 0.85,
+        theme === "satellite" ? 0.8 : theme === "terrain" ? 0.92 : 0.85,
     },
   }
+}
+
+// Apple/Google's satellite view isn't just a photo — it's a
+// "hybrid" view with real streets, place names and points of
+// interest drawn on top so the imagery is actually navigable, not
+// just decorative. Rather than hand-author a second set of road/
+// label layers, this clones the relevant layers straight out of
+// the SAME vector basemap style used for light/dark mode (see
+// categorizeLayer / recolorVectorStyle above) and repaints them
+// with a palette built for legibility over unpredictable photo
+// backgrounds — bright sand, dark water, green canopy, gray
+// concrete — instead of a flat cartographic background. Filters,
+// zoom ranges and text layout (font, size, road-label placement,
+// icon images, etc.) all carry over unchanged from the original
+// layer; only the paint (colors/halos) is swapped, and the
+// original array order is preserved so roads/borders (drawn
+// first in any OpenMapTiles-schema style) still sit correctly
+// underneath labels/POI icons (drawn last) — the real-world
+// stacking order.
+const HYBRID_ROAD_PALETTE: RoadPalette = {
+  motorway: "#ffc866",
+  motorwayCasing: "#7a4f14",
+  trunk: "#ffe0a3",
+  trunkCasing: "#6b5220",
+  primary: "#fff6e3",
+  primaryCasing: "#5a4a2e",
+  secondary: "#ffffff",
+  secondaryCasing: "#2f3136",
+  rail: "#d8d8dc",
+}
+
+// Stronger halo than the flat-basemap labels use (see
+// recolorVectorStyle) — a photo background varies wildly in
+// brightness from one spot to the next, so labels need real
+// contrast insurance rather than the subtle halo that's enough
+// against a flat cartographic fill.
+const HYBRID_LABEL_HALO = "rgba(0, 0, 0, 0.82)"
+
+function buildHybridLayerPaint(
+  category: LayerCategory,
+  layer: { id?: string }
+): Record<string, unknown> | null {
+  const isCasing = /(case|casing|outline|bg)/.test(
+    (layer.id || "").toLowerCase()
+  )
+
+  switch (category) {
+    case "highway":
+      return {
+        "line-color": buildRoadColorExpression(
+          HYBRID_ROAD_PALETTE,
+          isCasing
+            ? HYBRID_ROAD_PALETTE.motorwayCasing
+            : HYBRID_ROAD_PALETTE.motorway,
+          isCasing ? "casing" : "fill"
+        ),
+        "line-opacity": 0.96,
+      }
+    case "road":
+      return {
+        "line-color": buildRoadColorExpression(
+          HYBRID_ROAD_PALETTE,
+          isCasing
+            ? HYBRID_ROAD_PALETTE.secondaryCasing
+            : HYBRID_ROAD_PALETTE.secondary,
+          isCasing ? "casing" : "fill"
+        ),
+        "line-opacity": 0.9,
+      }
+    case "border":
+      return {
+        "line-color": "#f3e9ff",
+        "line-opacity": 0.85,
+      }
+    case "poi":
+      return {
+        "icon-color": buildPoiColorExpression(),
+        "text-color": "#ffffff",
+        "text-halo-color": HYBRID_LABEL_HALO,
+        "text-halo-width": 1.4,
+      }
+    case "label-region":
+      return {
+        "text-color": "#ffffff",
+        "text-halo-color": HYBRID_LABEL_HALO,
+        "text-halo-width": 1.5,
+      }
+    case "label-water":
+      return {
+        "text-color": "#bfe6ff",
+        "text-halo-color": HYBRID_LABEL_HALO,
+        "text-halo-width": 1.4,
+      }
+    case "label-place":
+      return {
+        "text-color": "#ffffff",
+        "text-halo-color": HYBRID_LABEL_HALO,
+        "text-halo-width": 1.5,
+      }
+    default:
+      return null
+  }
+}
+
+// Categories worth drawing over satellite photography — every fill
+// category (water, parks, landuse, building footprints) is
+// deliberately left out since the photo already shows those far
+// more accurately than a flat color ever could.
+const HYBRID_OVERLAY_CATEGORIES: LayerCategory[] = [
+  "highway",
+  "road",
+  "border",
+  "poi",
+  "label-region",
+  "label-water",
+  "label-place",
+]
+
+function buildHybridOverlayLayers(
+  baseStyle: StyleSpecification,
+  sourceId: string
+): any[] {
+  const out: any[] = []
+
+  for (const layer of (baseStyle.layers || []) as any[]) {
+    const category = categorizeLayer(layer)
+    if (!category || !HYBRID_OVERLAY_CATEGORIES.includes(category)) continue
+
+    const paint = buildHybridLayerPaint(category, layer)
+    if (!paint) continue
+
+    const clone = JSON.parse(JSON.stringify(layer))
+    clone.id = `sat-hybrid-${layer.id}`
+    clone.source = sourceId
+    clone.paint = { ...(clone.paint || {}), ...paint }
+    out.push(clone)
+  }
+
+  return out
 }
 
 function buildRasterStyle(options: {
@@ -863,8 +1001,26 @@ function buildRasterStyle(options: {
     maxzoom?: number
     attribution?: string
     opacity?: number
+    // Apple/Google-style color grading for photographic imagery —
+    // Esri's raw World Imagery tiles read noticeably flatter/duller
+    // than what Apple/Google ship, since both run their aerial
+    // photos through their own color correction before serving
+    // them. These map straight to MapLibre's raster paint
+    // properties and are applied client-side at render time, so
+    // they cost nothing extra to fetch.
+    saturation?: number
+    contrast?: number
+    brightnessMin?: number
+    brightnessMax?: number
   }>
   withTerrain?: boolean
+  // Real aerial photography already contains real shadows —
+  // stacking the full synthetic hillshade tuned for the flat,
+  // shadowless Terrain/topo mode on top of it double-shadows the
+  // image and muddies its true colors. Callers layering this over
+  // photographic imagery should pass a noticeably lower value than
+  // the topo-mode default below.
+  hillshadeExaggeration?: number
 }): StyleSpecification {
   const sources: Record<string, any> = {}
   const layers: any[] = []
@@ -887,6 +1043,19 @@ function buildRasterStyle(options: {
       paint: {
         "raster-opacity": layer.opacity ?? 1,
         "raster-fade-duration": 150,
+        "raster-resampling": "linear",
+        ...(layer.saturation !== undefined && {
+          "raster-saturation": layer.saturation,
+        }),
+        ...(layer.contrast !== undefined && {
+          "raster-contrast": layer.contrast,
+        }),
+        ...(layer.brightnessMin !== undefined && {
+          "raster-brightness-min": layer.brightnessMin,
+        }),
+        ...(layer.brightnessMax !== undefined && {
+          "raster-brightness-max": layer.brightnessMax,
+        }),
       },
     })
   })
@@ -916,7 +1085,7 @@ function buildRasterStyle(options: {
       type: "hillshade",
       source: "lincoln-terrain-dem",
       paint: {
-        "hillshade-exaggeration": 0.7,
+        "hillshade-exaggeration": options.hillshadeExaggeration ?? 0.7,
         "hillshade-shadow-color": "#3b2f2a",
         "hillshade-highlight-color": "#fdf6e3",
         "hillshade-accent-color": "#5a4634",
@@ -935,10 +1104,20 @@ function buildRasterStyle(options: {
 // Satellite mode is real aerial photography (Esri World Imagery),
 // not a stylized 3D vector render — there's no free/keyless dataset
 // with Apple-style textured 3D landscapes and building facades to
-// draw from. Instead we get as close to a "3D flyover" feel as
-// free data allows: real photos, draped over real elevation relief
-// (hillshading + terrain tilt), with extruded building blocks from
-// OpenFreeMap's vector data layered on top.
+// draw from. Instead we get as close to Apple/Google's "hybrid"
+// satellite view as free data allows:
+//   - real photos, color-graded to be less flat than Esri's raw
+//     tiles (see the saturation/contrast below)
+//   - draped over real elevation relief (a light hillshade — see
+//     hillshadeExaggeration — plus true terrain tilt), toned down
+//     from Terrain mode's since the photo already has real shadows
+//   - a full hybrid overlay of roads, road casings, place/POI
+//     labels and admin borders, cloned straight from the same
+//     vector basemap data used everywhere else in the app (see
+//     buildHybridOverlayLayers) so satellite mode can actually find
+//     streets and places on it — the way Apple/Google's "Satellite"
+//     mode does — instead of the old sparse boundary-only overlay
+//   - extruded building blocks from that same vector data on top
 async function buildSatelliteStyle(): Promise<StyleSpecification> {
   const style = buildRasterStyle({
     layers: [
@@ -947,16 +1126,28 @@ async function buildSatelliteStyle(): Promise<StyleSpecification> {
         tiles: SATELLITE_TILES,
         attribution: ATTRIBUTIONS.esri,
         maxzoom: 19,
-      },
-      {
-        id: "labels",
-        tiles: SATELLITE_LABEL_TILES,
-        attribution: ATTRIBUTIONS.esri,
-        maxzoom: 19,
-        opacity: 0.95,
+        // Esri's raw World Imagery tiles read noticeably flatter
+        // and duller than Apple/Google's aerial photography, which
+        // both run through their own color correction before
+        // serving. This lift is tuned by eye against real Ghana
+        // tiles (Kotoka roundabout, Kumasi CBD) side-by-side with
+        // Esri's raw output — enough to make sandy/tan ground and
+        // green canopy read with real color instead of a washed-out
+        // haze, without crushing shadow detail or turning noise
+        // into color banding on the lower-resolution tiles.
+        saturation: 0.35,
+        contrast: 0.18,
+        brightnessMin: 0.02,
+        brightnessMax: 0.98,
       },
     ],
     withTerrain: true,
+    // Was 0.35. Real photography already carries real shadows, and
+    // the extra synthetic shading was dulling the saturation/contrast
+    // lift above right back down over flat terrain (most of Ghana) —
+    // dropped further so the hillshade only shows up as real relief
+    // (hills, valleys) instead of a low-contrast haze over flat land.
+    hillshadeExaggeration: 0.18,
   })
 
   try {
@@ -965,6 +1156,11 @@ async function buildSatelliteStyle(): Promise<StyleSpecification> {
 
     if (vectorSource) {
       ;(style.sources as any)[vectorSource.id] = vectorSource.source
+
+      style.layers.push(
+        ...(buildHybridOverlayLayers(base, vectorSource.id) as any[])
+      )
+
       style.layers.push(
         buildBuildingExtrusionLayer(
           vectorSource.id,
@@ -974,8 +1170,9 @@ async function buildSatelliteStyle(): Promise<StyleSpecification> {
       )
     }
   } catch {
-    // Satellite imagery still works fine without the 3D buildings
-    // overlay — never let this block the style from loading.
+    // Satellite imagery still works fine without the hybrid roads/
+    // labels/buildings overlay — never let this block the style
+    // from loading.
   }
 
   return style
