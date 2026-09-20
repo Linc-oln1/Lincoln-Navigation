@@ -1,8 +1,8 @@
 # User accounts — design spec
 
-**Status:** Phase 1 (auth shell) built — inert until a Supabase
-project is connected, see [SUPABASE_SETUP.md](./SUPABASE_SETUP.md).
-Phases 2–4 not started.
+**Status:** Phases 1–2 (auth shell + synced data) built — inert
+until a Supabase project is connected, see
+[SUPABASE_SETUP.md](./SUPABASE_SETUP.md). Phases 3–4 not started.
 **Decisions locked:** Supabase; magic link + Google; subscriptions
 only (no one-off charge).
 **Why:** premium entitlement is currently a signed cookie on one
@@ -187,9 +187,32 @@ mark localStorage as migrated (keep it as cache).
 | Phase | Scope | Ships value |
 | --- | --- | --- |
 | **1. Auth shell** ✅ built | Supabase clients, `middleware.ts` session refresh, `/login` (magic link + Google), `/auth/callback`, `/auth/signout`, `/account`, header entry, `supabase/migrations/0001_profiles.sql` | People can create accounts |
-| **2. Synced data** | `saved_places` + `recent_searches` tables + RLS, `use-account-data`, hook split, localStorage import | Saved places follow you across devices |
+| **2. Synced data** ✅ built | `saved_places` + `recent_searches` tables + RLS (`supabase/migrations/0002_saved_places_recent_searches.sql`), `lib/supabase/account-data.ts`, `hooks/use-account-data.ts` (SWR), `use-saved-places`/`use-recent-searches` fork on sign-in state, one-time import-prompt toast | Saved places follow you across devices |
 | **3. Real subscriptions** | Paystack Plan, webhook, `subscriptions` table, entitlement from DB, `/account` manage/cancel | Premium survives device changes; recurring revenue |
 | **4. Cleanup** | make `requirePremium` async everywhere, drop cookie-only assumptions, docs | — |
+
+**Phase 2 notes:**
+- Same public shape as before for both hooks — `app/app/page.tsx` and
+  `components/map/search-panel.tsx` needed zero changes. Signed out
+  (or `AUTH_ENABLED` false, i.e. everywhere in prod right now): byte-
+  identical to pre-Phase-2 behavior, verified in the browser.
+  Signed in: reads/writes go to Supabase instead, with optimistic
+  local updates so `toggleFavorite()` etc. can stay synchronous.
+- `recent_searches` schema gained a `place_id` column (the
+  geocoder's own id, e.g. `mapbox-...`/`osm-...`) beyond what's in
+  the "Data model" section above, so re-searching the same place can
+  be de-duped the same way the localStorage hook already does.
+- Only saved places are offered for import on first sign-in, not
+  recent-search history — matches the "Migration of existing local
+  data" wording above, and trip history is disposable enough not to
+  need it.
+- **Not yet verified against a real Supabase project** — none exists
+  yet (blocked on the owner, see Phase 1 above). Verified: `tsc`,
+  `pnpm build`, and the entire signed-out path in the browser. The
+  signed-in code path (RLS policies, the partial unique indexes, the
+  optimistic-update/rollback logic, the import-prompt toast) is
+  correct by review but should get one real pass in the browser
+  console the day Supabase is connected.
 
 Phases 1–2 are independent of Paystack and can ship while the
 Paystack account is still in verification.
