@@ -65,24 +65,31 @@ function LoginContent() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#0d0d0d] text-neutral-300">
-      {/* Decorative warm glow field, matching /about's hero treatment */}
+      {/* Logo used directly as a soft blurred background — no dark scrim on top of it */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-[#c9a06e]/[0.10] blur-[100px]" />
-        <div className="absolute -right-24 top-1/3 h-72 w-72 rounded-full bg-[#c9a06e]/[0.08] blur-[100px]" />
-        <div className="absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-[#c9a06e]/[0.06] blur-[110px]" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo/lincoln-navigation-mark.webp"
+          alt=""
+          aria-hidden="true"
+          className="absolute left-1/2 top-1/2 h-[130%] w-[130%] -translate-x-1/2 -translate-y-1/2 object-cover opacity-40 blur-[70px]"
+        />
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-14">
         <Link
           href="/"
-          className="mb-6 inline-flex w-fit items-center gap-2 text-sm text-neutral-500 hover:text-[#d9b98c] transition-colors"
+          className="landing-fade-up mb-6 inline-flex w-fit items-center gap-2 text-sm text-neutral-500 hover:text-[#d9b98c] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to LincolnNavigation
         </Link>
 
         {/* Header card, echoing the dashboard-style app bar */}
-        <div className="flex items-center gap-3 rounded-2xl border border-[#c9a06e]/15 bg-[#161310] px-4 py-3">
+        <div
+          className="landing-fade-up flex items-center gap-3 rounded-2xl border border-[#c9a06e]/15 bg-[#161310]/90 px-4 py-3 backdrop-blur-sm transition-colors hover:border-[#c9a06e]/30"
+          style={{ animationDelay: "60ms" }}
+        >
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#c9a06e]/20 bg-black/30">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -97,10 +104,16 @@ function LoginContent() {
           </div>
         </div>
 
-        <h1 className="mt-7 text-2xl font-extrabold tracking-tight text-white">
+        <h1
+          className="landing-fade-up mt-7 text-2xl font-extrabold tracking-tight text-white"
+          style={{ animationDelay: "120ms" }}
+        >
           Welcome back
         </h1>
-        <p className="mt-1.5 text-sm text-neutral-500">
+        <p
+          className="landing-fade-up mt-1.5 text-sm text-neutral-500"
+          style={{ animationDelay: "120ms" }}
+        >
           Sync your saved places and manage your Premium plan.
         </p>
 
@@ -119,11 +132,14 @@ function LoginContent() {
             </p>
           </div>
         ) : (
-          <div className="mt-7 space-y-3">
+          <div
+            className="landing-fade-up mt-7 space-y-3"
+            style={{ animationDelay: "180ms" }}
+          >
             {/* Focused card — email, the primary method */}
-            <div className="rounded-2xl border border-[#c9a06e]/15 bg-[#161310] p-5">
+            <div className="group rounded-2xl border border-[#c9a06e]/15 bg-[#161310] p-5 transition-colors focus-within:border-[#c9a06e]/40 hover:border-[#c9a06e]/25">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#c9a06e]/15">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#c9a06e]/15 transition-transform duration-200 group-focus-within:scale-110">
                   <Mail className="h-4 w-4 text-[#c9a06e]" />
                 </div>
                 <div>
@@ -141,12 +157,12 @@ function LoginContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="w-full rounded-xl border border-[#c9a06e]/20 bg-black/30 px-4 py-2.5 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-[#c9a06e]/50"
+                  className="w-full rounded-xl border border-[#c9a06e]/20 bg-black/30 px-4 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-neutral-600 focus:border-[#c9a06e]/50"
                 />
                 <button
                   type="submit"
                   disabled={busy !== null}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#c9a06e] px-4 py-2.5 text-sm font-semibold text-[#1a1206] transition hover:brightness-105 disabled:opacity-60"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#c9a06e] px-4 py-2.5 text-sm font-semibold text-[#1a1206] transition-all duration-150 hover:brightness-105 active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100"
                 >
                   {busy === "email" ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -164,7 +180,7 @@ function LoginContent() {
                 type="button"
                 onClick={signInWithGoogle}
                 disabled={busy !== null}
-                className="flex items-center gap-3 rounded-2xl border border-[#c9a06e]/15 bg-[#161310] p-4 text-left transition hover:border-[#c9a06e]/30 disabled:opacity-60"
+                className="flex items-center gap-3 rounded-2xl border border-[#c9a06e]/15 bg-[#161310] p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-[#c9a06e]/30 hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:scale-[0.98] disabled:opacity-60 disabled:hover:translate-y-0"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black/30">
                   {busy === "google" ? (
@@ -183,7 +199,7 @@ function LoginContent() {
 
               <Link
                 href={next}
-                className="flex items-center gap-3 rounded-2xl border border-dashed border-[#c9a06e]/15 bg-[#161310]/50 p-4 transition hover:border-[#c9a06e]/30"
+                className="group flex items-center gap-3 rounded-2xl border border-dashed border-[#c9a06e]/15 bg-[#161310]/50 p-4 transition-all duration-150 hover:-translate-y-0.5 hover:border-[#c9a06e]/30 hover:bg-[#161310] hover:shadow-lg hover:shadow-black/20 active:translate-y-0 active:scale-[0.98]"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black/30">
                   <UserRound className="h-4 w-4 text-neutral-400" />
@@ -194,7 +210,7 @@ function LoginContent() {
                     Skip it
                   </p>
                 </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-neutral-600" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-neutral-600 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>
 
