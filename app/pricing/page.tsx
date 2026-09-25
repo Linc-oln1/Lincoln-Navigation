@@ -71,8 +71,7 @@ function PricingContent() {
           </h1>
           <p className="mt-3 text-muted-foreground max-w-xl">
             The map, search and directions are free forever. Premium removes
-            ads and unlocks offline maps and voice navigation for the whole
-            country.
+            ads and unlocks voice navigation and unlimited saved places.
           </p>
         </header>
 

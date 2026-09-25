@@ -90,9 +90,8 @@ export default function AboutPage() {
           </p>
           <p>
             The map is built on open data that anyone can improve, and the core
-            app is free and stays free. A Premium plan adds offline maps for
-            every region of Ghana, turn-by-turn voice navigation, and unlimited
-            saved places.
+            app is free and stays free. A Premium plan adds turn-by-turn voice
+            navigation and unlimited saved places.
           </p>
         </div>
 

@@ -65,7 +65,6 @@ export function formatPremiumPrice(): string {
 /** What the paid tier unlocks — shown on /pricing. */
 export const PREMIUM_FEATURES: string[] = [
   "No ads, anywhere",
-  "Offline maps for every region of Ghana",
   "Turn-by-turn voice navigation",
   "Unlimited saved places and trip history",
   "Priority routing with live traffic avoidance",
