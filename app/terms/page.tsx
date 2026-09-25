@@ -111,7 +111,7 @@ export default function TermsPage() {
           <section>
             <h2>Premium</h2>
             <p>
-              Premium is a paid upgrade (currently GHS 30/month, shown on{" "}
+              Premium is a paid upgrade (currently GHS 30 for 31 days, shown on{" "}
               <Link
                 href="/pricing"
                 className="text-foreground underline underline-offset-2"

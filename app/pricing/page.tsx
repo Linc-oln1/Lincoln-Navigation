@@ -134,7 +134,7 @@ function PricingContent() {
               {formatPremiumPrice()}
               <span className="text-sm font-normal text-muted-foreground">
                 {" "}
-                / month
+                for 31 days
               </span>
             </p>
             <ul className="mt-5 space-y-2.5 text-sm">
@@ -172,7 +172,7 @@ function PricingContent() {
                   <p className="text-xs text-destructive">{error}</p>
                 )}
                 <p className="text-center text-[11px] text-muted-foreground">
-                  Secure payment via Paystack · cancel anytime
+                  Secure payment via Paystack · one-time payment, no auto-renewal
                 </p>
                 <AgreeLine className="text-center" />
               </form>
