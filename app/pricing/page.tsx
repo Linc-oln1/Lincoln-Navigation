@@ -11,6 +11,7 @@ import {
   formatPremiumPrice,
 } from "@/lib/monetization"
 import { usePremium } from "@/hooks/use-premium"
+import { AgreeLine, SiteLinks } from "@/components/site-links"
 
 export default function PricingPage() {
   return (
@@ -173,6 +174,7 @@ function PricingContent() {
                 <p className="text-center text-[11px] text-muted-foreground">
                   Secure payment via Paystack · cancel anytime
                 </p>
+                <AgreeLine className="text-center" />
               </form>
             ) : (
               <p className="mt-6 rounded-xl border border-dashed border-border px-4 py-2.5 text-center text-xs text-muted-foreground">
@@ -189,6 +191,7 @@ function PricingContent() {
             Advertise or sponsor a place →
           </Link>
         </p>
+        <SiteLinks className="mt-6" />
       </div>
     </main>
   )

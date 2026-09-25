@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { SiteLinks } from "@/components/site-links"
 
 export const metadata = {
   title: "Privacy Policy — Lincoln Navigation",
@@ -263,6 +264,8 @@ export default function PrivacyPage() {
             </p>
           </section>
         </div>
+
+        <SiteLinks exclude="/privacy" className="mt-12" />
       </div>
     </main>
   )

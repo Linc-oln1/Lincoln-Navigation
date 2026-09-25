@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { SiteLinks } from "@/components/site-links"
 
 export const metadata = {
   title: "Terms of Service — Lincoln Navigation",
@@ -266,6 +267,8 @@ export default function TermsPage() {
             </p>
           </section>
         </div>
+
+        <SiteLinks exclude="/terms" className="mt-12" />
       </div>
     </main>
   )

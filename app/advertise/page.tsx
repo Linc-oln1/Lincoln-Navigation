@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft, MapPin, MousePointerClick, Store } from "lucide-react"
 import { ADVERTISE_CONTACT_EMAIL } from "@/lib/monetization"
+import { SiteLinks } from "@/components/site-links"
 
 const OPTIONS = [
   {
@@ -132,6 +133,8 @@ export default function AdvertisePage() {
             to write directly? That works too.
           </p>
         </form>
+
+        <SiteLinks className="mt-10" />
       </div>
     </main>
   )

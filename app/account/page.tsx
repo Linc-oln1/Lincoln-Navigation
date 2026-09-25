@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
 import { AUTH_ENABLED } from "@/lib/supabase/config"
 import { getSessionUser } from "@/lib/supabase/server"
+import { SiteLinks } from "@/components/site-links"
 
 export const metadata = { title: "Account — Lincoln Navigation" }
 
@@ -65,6 +66,7 @@ function Shell({ children }: { children: React.ReactNode }) {
           Account
         </h1>
         {children}
+        <SiteLinks className="mt-10" />
       </div>
     </main>
   )

@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation"
 import { ArrowLeft, ChevronRight, Loader2, Mail, UserRound } from "lucide-react"
 import { AUTH_ENABLED } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/client"
+import { AgreeLine } from "@/components/site-links"
 
 type Busy = null | "google" | "email"
 
@@ -220,7 +221,9 @@ function LoginContent() {
           </div>
         )}
 
-        <p className="mt-8 text-center text-[11px] tracking-[0.2em] text-neutral-600">
+        <AgreeLine className="mt-6 text-center text-neutral-500" />
+
+        <p className="mt-6 text-center text-[11px] tracking-[0.2em] text-neutral-600">
           MAP &bull; NAVIGATE &bull; EXPLORE
         </p>
       </div>
