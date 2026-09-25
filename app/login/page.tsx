@@ -2,13 +2,12 @@
 
 import { Suspense, useState } from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
-import { ArrowLeft, ArrowRight, Loader2, Mail, Phone, UserRound } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { ArrowLeft, ArrowRight, Loader2, Mail, UserRound } from "lucide-react"
 import { AUTH_ENABLED } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/client"
 
-type Method = "email" | "phone"
-type Busy = null | "google" | "email" | "phone-send" | "phone-verify"
+type Busy = null | "google" | "email"
 
 export default function LoginPage() {
   return (
@@ -19,16 +18,11 @@ export default function LoginPage() {
 }
 
 function LoginContent() {
-  const router = useRouter()
   const params = useSearchParams()
   const next = params.get("next") || "/app"
   const hadError = params.get("error")
 
-  const [method, setMethod] = useState<Method>("email")
   const [email, setEmail] = useState("")
-  const [phone, setPhone] = useState("")
-  const [code, setCode] = useState("")
-  const [codeSent, setCodeSent] = useState(false)
   const [busy, setBusy] = useState<Busy>(null)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<string | null>(
@@ -67,46 +61,6 @@ function LoginContent() {
       return
     }
     setSent(true)
-  }
-
-  async function sendPhoneCode(e: React.FormEvent) {
-    e.preventDefault()
-    setBusy("phone-send")
-    setError(null)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithOtp({ phone })
-    setBusy(null)
-    if (error) {
-      setError(error.message)
-      return
-    }
-    setCodeSent(true)
-  }
-
-  async function verifyPhoneCode(e: React.FormEvent) {
-    e.preventDefault()
-    setBusy("phone-verify")
-    setError(null)
-    const supabase = createClient()
-    const { error } = await supabase.auth.verifyOtp({
-      phone,
-      token: code,
-      type: "sms",
-    })
-    if (error) {
-      setError(error.message)
-      setBusy(null)
-      return
-    }
-    router.push(next)
-    router.refresh()
-  }
-
-  function switchMethod(next: Method) {
-    setMethod(next)
-    setError(null)
-    setCodeSent(false)
-    setCode("")
   }
 
   return (
@@ -161,109 +115,25 @@ function LoginContent() {
             </div>
           ) : (
             <div className="mt-7 space-y-4">
-              <div className="grid grid-cols-2 gap-1 rounded-2xl border border-border bg-secondary/40 p-1 text-sm font-semibold">
-                <button
-                  type="button"
-                  onClick={() => switchMethod("email")}
-                  className={`flex items-center justify-center gap-1.5 rounded-xl py-2 transition ${
-                    method === "email"
-                      ? "bg-card shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Mail className="h-3.5 w-3.5" />
-                  Email
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMethod("phone")}
-                  className={`flex items-center justify-center gap-1.5 rounded-xl py-2 transition ${
-                    method === "phone"
-                      ? "bg-card shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Phone className="h-3.5 w-3.5" />
-                  Phone
-                </button>
-              </div>
-
-              {method === "email" ? (
-                <form onSubmit={signInWithEmail} className="space-y-3">
-                  <div className="relative">
-                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      className="w-full rounded-2xl border border-border bg-input px-4 py-3 pl-11 text-sm outline-none focus:border-primary"
-                    />
-                  </div>
-                  <PrimaryButton
-                    busy={busy === "email"}
-                    icon={<Mail className="h-4 w-4" />}
-                    label="Email me a sign-in link"
-                    disabled={busy !== null}
-                  />
-                </form>
-              ) : !codeSent ? (
-                <form onSubmit={sendPhoneCode} className="space-y-3">
-                  <div className="relative">
-                    <Phone className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+233241234567"
-                      className="w-full rounded-2xl border border-border bg-input px-4 py-3 pl-11 text-sm outline-none focus:border-primary"
-                    />
-                  </div>
-                  <p className="px-1 text-[11px] text-muted-foreground">
-                    Include the country code, e.g. +233 for Ghana.
-                  </p>
-                  <PrimaryButton
-                    busy={busy === "phone-send"}
-                    icon={<Phone className="h-4 w-4" />}
-                    label="Text me a code"
-                    disabled={busy !== null}
-                  />
-                </form>
-              ) : (
-                <form onSubmit={verifyPhoneCode} className="space-y-3">
-                  <p className="px-1 text-xs text-muted-foreground">
-                    Code sent to <span className="text-foreground">{phone}</span>.{" "}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCodeSent(false)
-                        setCode("")
-                      }}
-                      className="font-semibold text-foreground underline underline-offset-2"
-                    >
-                      Change number
-                    </button>
-                  </p>
+              <form onSubmit={signInWithEmail} className="space-y-3">
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
+                    type="email"
                     required
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="123456"
-                    className="w-full rounded-2xl border border-border bg-input px-4 py-3 text-center text-sm tracking-[0.4em] outline-none focus:border-primary"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full rounded-2xl border border-border bg-input px-4 py-3 pl-11 text-sm outline-none focus:border-primary"
                   />
-                  <PrimaryButton
-                    busy={busy === "phone-verify"}
-                    icon={<Phone className="h-4 w-4" />}
-                    label="Verify code"
-                    disabled={busy !== null}
-                  />
-                </form>
-              )}
+                </div>
+                <PrimaryButton
+                  busy={busy === "email"}
+                  icon={<Mail className="h-4 w-4" />}
+                  label="Email me a sign-in link"
+                  disabled={busy !== null}
+                />
+              </form>
 
               {error && (
                 <p className="text-center text-xs text-destructive">{error}</p>

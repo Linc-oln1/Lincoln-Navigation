@@ -36,9 +36,6 @@ run it. (Or `supabase db push` if you set up the CLI.)
   is on; magic links work out of the box.
 - **Google** — toggle on, then fill Client ID + Client Secret from
   step 4.
-- **Phone** — toggle on, then configure the SMS provider from
-  step 5. Skip this if you don't want phone sign-in yet; the phone
-  tab on `/login` will just error until it's on.
 
 ## 4. Google OAuth client
 
