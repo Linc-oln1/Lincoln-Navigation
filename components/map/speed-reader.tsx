@@ -27,14 +27,44 @@ export function toKmh(metersPerSecond: number | null): number | null {
 export function SpeedReader({
   mode,
   speedMps,
+  compact = false,
 }: {
   mode: SpeedMode
   speedMps: number | null
+  compact?: boolean
 }) {
   const { label, icon: Icon, gaugeMaxKmh, fastKmh } = MODE_INFO[mode]
   const kmh = toKmh(speedMps)
   const pct = kmh === null ? 0 : Math.min(100, (kmh / gaugeMaxKmh) * 100)
   const fast = kmh !== null && kmh >= fastKmh
+
+  if (compact) {
+    return (
+      <div
+        className="flex items-center gap-3"
+        role="status"
+        aria-label={`${label} speed`}
+      >
+        <Icon className="h-5 w-5 shrink-0" />
+        <span className="w-14 text-right text-2xl font-extrabold tabular-nums leading-none">
+          {kmh === null ? "--" : kmh}
+        </span>
+        <span className="text-[11px] uppercase tracking-wide opacity-80">km/h</span>
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/20">
+          <div
+            className={cn(
+              "h-full rounded-full transition-all duration-500",
+              fast ? "bg-amber-300" : "bg-white",
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <span className="text-[11px] font-semibold uppercase tracking-wide opacity-80">
+          {label}
+        </span>
+      </div>
+    )
+  }
 
   return (
     <div

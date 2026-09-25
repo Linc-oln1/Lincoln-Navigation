@@ -1128,6 +1128,13 @@ export function DirectionsPanel({
         </div>
       </div>
 
+      {/* Pinned speed strip — stays put while the step list scrolls */}
+      {isNavigating && isSpeedMode(travelMode) && (
+        <div className="border-b border-border bg-primary px-4 py-2 text-primary-foreground">
+          <SpeedReader compact mode={travelMode} speedMps={position?.speed ?? null} />
+        </div>
+      )}
+
       {/* ROUTE CONTENT */}
       {routeInfo && (
         <div ref={routeScrollRef} className="relative flex min-h-0 flex-1 flex-col">
@@ -1143,10 +1150,6 @@ export function DirectionsPanel({
                   <p className="font-semibold">{navigationMessage || "Following route..."}</p>
                 </div>
               </div>
-
-              {isSpeedMode(travelMode) && (
-                <SpeedReader mode={travelMode} speedMps={position?.speed ?? null} />
-              )}
 
               {(distanceToDestination !== null || etaSeconds !== null) && (
                 <div className="mt-3 flex items-baseline gap-2 text-sm opacity-90">
@@ -1357,13 +1360,13 @@ export function DirectionsPanel({
         </ScrollArea>
 
         {(canScrollUp || canScrollDown) && (
-          <div className="pointer-events-none absolute bottom-4 right-3 flex flex-col gap-2">
+          <div className="flex items-center justify-end gap-2 border-t border-border bg-card px-4 py-2">
             <button
               type="button"
               aria-label="Scroll directions up"
               onClick={() => scrollRoute(-1)}
               disabled={!canScrollUp}
-              className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/95 text-foreground shadow-lg backdrop-blur transition-all duration-150 hover:bg-secondary active:scale-90 disabled:pointer-events-none disabled:opacity-30"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-all duration-150 hover:brightness-110 active:scale-90 disabled:pointer-events-none disabled:opacity-30"
             >
               <ChevronUp className="h-5 w-5" />
             </button>
@@ -1372,7 +1375,7 @@ export function DirectionsPanel({
               aria-label="Scroll directions down"
               onClick={() => scrollRoute(1)}
               disabled={!canScrollDown}
-              className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-border bg-primary text-primary-foreground shadow-lg transition-all duration-150 hover:brightness-110 active:scale-90 disabled:pointer-events-none disabled:opacity-30"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all duration-150 hover:brightness-110 active:scale-90 disabled:pointer-events-none disabled:opacity-30"
             >
               <ChevronDown className="h-5 w-5" />
             </button>
