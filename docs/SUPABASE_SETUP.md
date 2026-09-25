@@ -1,8 +1,10 @@
 # Supabase setup
 
-Steps only the project owner can do. Until these are done, auth is
-inert: `/login` and `/account` show a "not available yet" notice,
+Steps only the project owner can do. Until these are done, sign-in
+is inert: `/login` and `/account` show a "not available yet" notice,
 the header shows no account button, and the middleware no-ops.
+"Continue as guest" on `/login` always works, with or without any of
+this — it just skips straight into the app.
 
 Design context: [USER_ACCOUNTS.md](./USER_ACCOUNTS.md).
 
@@ -34,6 +36,9 @@ run it. (Or `supabase db push` if you set up the CLI.)
   is on; magic links work out of the box.
 - **Google** — toggle on, then fill Client ID + Client Secret from
   step 4.
+- **Phone** — toggle on, then configure the SMS provider from
+  step 5. Skip this if you don't want phone sign-in yet; the phone
+  tab on `/login` will just error until it's on.
 
 ## 4. Google OAuth client
 
