@@ -7,7 +7,7 @@ export const metadata = {
     "What LincolnNavigation.com collects, why, and how it's used — in plain language.",
 }
 
-const CONTACT_EMAIL = "lincolnjonathan8@gmail.com"
+const CONTACT_EMAIL = "info@lincolnnavigation.com"
 const LAST_UPDATED = "25 September 2026"
 
 export default function PrivacyPage() {
