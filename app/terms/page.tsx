@@ -248,7 +248,14 @@ export default function TermsPage() {
           <section>
             <h2>Contact</h2>
             <p>
-              Questions about these terms — reach us at{" "}
+              Questions about these terms — use our{" "}
+              <Link
+                href="/contact"
+                className="text-foreground underline underline-offset-2"
+              >
+                contact page
+              </Link>{" "}
+              or email us at{" "}
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
                 className="text-foreground underline underline-offset-2"

@@ -104,11 +104,8 @@ export function LithosFeatures() {
                 {id === "contact" ? (
                   <>
                     {description}{" "}
-                    <a
-                      href="mailto:info@lincolnnavigation.com"
-                      className="text-[#e8702a] hover:underline"
-                    >
-                      info@lincolnnavigation.com
+                    <a href="/contact" className="text-[#e8702a] hover:underline">
+                      Contact us
                     </a>
                   </>
                 ) : (

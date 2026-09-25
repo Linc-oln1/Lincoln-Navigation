@@ -245,7 +245,14 @@ export default function PrivacyPage() {
           <section>
             <h2>Contact</h2>
             <p>
-              Questions about this policy or your data — reach us at{" "}
+              Questions about this policy or your data — use our{" "}
+              <Link
+                href="/contact"
+                className="text-foreground underline underline-offset-2"
+              >
+                contact page
+              </Link>{" "}
+              or email us at{" "}
               <a
                 href={`mailto:${CONTACT_EMAIL}`}
                 className="text-foreground underline underline-offset-2"

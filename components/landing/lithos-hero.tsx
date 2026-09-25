@@ -18,16 +18,14 @@ const NAV_LINKS = ["Features", "Live Map", "About", "Contact"]
 const NAV_ROUTES: Record<string, string> = {
   "Live Map": "/app",
   About: "/about",
+  Contact: "/contact",
 }
 
-/* "Features" and "Contact" live in the mission section below —
-   scroll-margin on their targets (see lithos-features.tsx) keeps
-   the fixed nav from covering whatever they scroll to. "Contact"
-   lands on the "We're listening" card, which carries the actual
-   mailto: link. */
+/* "Features" lives in the mission section below — scroll-margin on
+   its target (see lithos-features.tsx) keeps the fixed nav from
+   covering it. */
 const NAV_SCROLL_TARGETS: Record<string, string> = {
   Features: "features",
-  Contact: "contact",
 }
 
 /**
