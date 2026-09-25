@@ -17,6 +17,8 @@ import {
   VolumeX,
   Lock,
   Square,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -195,6 +197,43 @@ export function DirectionsPanel({
   // Guards against a stale hazard fetch landing after a newer
   // route calculation.
   const hazardFetchIdRef = useRef(0)
+
+  const routeScrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollUp, setCanScrollUp] = useState(false)
+  const [canScrollDown, setCanScrollDown] = useState(false)
+
+  const getRouteViewport = () =>
+    routeScrollRef.current?.querySelector<HTMLElement>(
+      "[data-slot=scroll-area-viewport]",
+    ) ?? null
+
+  const updateScrollState = useCallback(() => {
+    const el = getRouteViewport()
+    if (!el) return
+    setCanScrollUp(el.scrollTop > 8)
+    setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 8)
+  }, [])
+
+  const scrollRoute = (dir: 1 | -1) => {
+    const el = getRouteViewport()
+    if (!el) return
+    el.scrollBy({ top: dir * el.clientHeight * 0.7, behavior: "smooth" })
+  }
+
+  const routeInfoPresent = !!routeInfo
+  useEffect(() => {
+    const el = getRouteViewport()
+    if (!el) return
+    updateScrollState()
+    el.addEventListener("scroll", updateScrollState, { passive: true })
+    const ro = new ResizeObserver(updateScrollState)
+    ro.observe(el)
+    if (el.firstElementChild) ro.observe(el.firstElementChild)
+    return () => {
+      el.removeEventListener("scroll", updateScrollState)
+      ro.disconnect()
+    }
+  }, [routeInfoPresent, updateScrollState])
 
   const routeHazards: OnRouteHazard[] = useMemo(
     () =>
@@ -1090,7 +1129,8 @@ export function DirectionsPanel({
 
       {/* ROUTE CONTENT */}
       {routeInfo && (
-        <ScrollArea className="flex-1">
+        <div ref={routeScrollRef} className="relative flex min-h-0 flex-1 flex-col">
+        <ScrollArea className="min-h-0 flex-1">
           {isNavigating && (
             <div className="mx-4 mt-4 rounded-xl bg-primary text-primary-foreground p-4 shadow-lg">
               <div className="flex items-center gap-3">
@@ -1310,6 +1350,30 @@ export function DirectionsPanel({
             </p>
           </div>
         </ScrollArea>
+
+        {(canScrollUp || canScrollDown) && (
+          <div className="pointer-events-none absolute bottom-4 right-3 flex flex-col gap-2">
+            <button
+              type="button"
+              aria-label="Scroll directions up"
+              onClick={() => scrollRoute(-1)}
+              disabled={!canScrollUp}
+              className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/95 text-foreground shadow-lg backdrop-blur transition-all duration-150 hover:bg-secondary active:scale-90 disabled:pointer-events-none disabled:opacity-30"
+            >
+              <ChevronUp className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Scroll directions down"
+              onClick={() => scrollRoute(1)}
+              disabled={!canScrollDown}
+              className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-border bg-primary text-primary-foreground shadow-lg transition-all duration-150 hover:brightness-110 active:scale-90 disabled:pointer-events-none disabled:opacity-30"
+            >
+              <ChevronDown className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+        </div>
       )}
     </div>
   )
