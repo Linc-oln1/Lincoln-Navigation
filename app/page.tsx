@@ -422,6 +422,7 @@ export default function LandingPage() {
             <a href="/pricing" className="hover:text-foreground transition-colors">Pricing</a>
             <a href="/advertise" className="hover:text-foreground transition-colors">Advertise</a>
             <a href="/login" className="hover:text-foreground transition-colors">Sign in</a>
+            <a href="/contact" className="hover:text-foreground transition-colors">Contact</a>
             <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
             <a href="/terms" className="hover:text-foreground transition-colors">Terms</a>
           </nav>

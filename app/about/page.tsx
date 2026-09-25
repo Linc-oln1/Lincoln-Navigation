@@ -143,6 +143,9 @@ export default function AboutPage() {
             <Link href="/advertise" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
               Advertise
             </Link>
+            <Link href="/contact" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
+              Contact
+            </Link>
             <Link href="/privacy" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
               Privacy
             </Link>
