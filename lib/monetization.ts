@@ -107,7 +107,7 @@ export type TierLimits = { savedPlaces: number; tripHistory: number }
 /** Feature list for the free tier — shown on /pricing. */
 export const FREE_FEATURES: string[] = [
   "Full Ghana map and search",
-  "Driving, transit, cycling and walking directions",
+  "Driving, motorcycle, transit, cycling and walking directions",
   "Explore nearby places",
   `Up to ${FREE_LIMITS.savedPlaces} saved places`,
 ]
