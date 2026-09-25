@@ -223,22 +223,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
           </div>
         )}
 
-        <div className="absolute top-[14%] left-0 right-0 z-50 flex flex-col items-center text-center px-5 pointer-events-none">
-          <h1 className="text-white leading-[0.95]">
-            <span
-              className="hero-anim hero-reveal block font-playfair italic font-normal text-5xl sm:text-7xl md:text-8xl"
-              style={{ letterSpacing: "-0.05em", animationDelay: "0.25s" }}
-            >
-              Know the way
-            </span>
-            <span
-              className="hero-anim hero-reveal block font-normal text-5xl sm:text-7xl md:text-8xl -mt-1"
-              style={{ letterSpacing: "-0.08em", animationDelay: "0.42s" }}
-            >
-              before you go
-            </span>
-          </h1>
-        </div>
+        <h1 className="sr-only">Lincoln Navigation — maps and navigation for Ghana</h1>
 
         <div
           className="hero-anim hero-fade hidden sm:block absolute bottom-14 left-10 md:left-14 max-w-[260px] z-50"
