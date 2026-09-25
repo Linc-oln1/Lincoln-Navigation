@@ -57,11 +57,22 @@ function MapBackdrop() {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#c4c8d0] to-[#aeb2bc] px-4 py-10 text-neutral-900 sm:px-8 sm:py-16">
-      <div className="mx-auto max-w-[920px]">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#c4c8d0] to-[#aeb2bc] px-4 py-10 text-neutral-900 sm:px-8 sm:py-16">
+      {/* Logo as a soft blurred background — nothing layered over it */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo/lincoln-navigation-mark.webp"
+          alt=""
+          aria-hidden="true"
+          className="absolute left-1/2 top-1/2 h-[130%] w-[130%] -translate-x-1/2 -translate-y-1/2 object-cover opacity-60 blur-[40px] saturate-[1.8]"
+        />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[920px]">
         <Link
           href="/"
-          className="mb-6 inline-flex items-center gap-2 text-xs font-medium text-neutral-700 transition-colors hover:text-black"
+          className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-neutral-950 transition-colors hover:text-black"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Back to LincolnNavigation
@@ -119,7 +130,7 @@ export default function ContactPage() {
           </div>
         </section>
 
-        <p className="mt-6 text-right text-[11px] text-neutral-700">
+        <p className="mt-6 text-right text-[11px] font-semibold text-neutral-950">
           <Link href="/privacy" className="hover:underline">Privacy</Link>
           {"  ·  "}
           <Link href="/terms" className="hover:underline">Terms</Link>
