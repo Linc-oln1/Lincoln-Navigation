@@ -1,0 +1,74 @@
+"use client"
+
+import { Bus, Car, Motorbike } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+export type SpeedMode = "driving" | "motorcycle" | "bus"
+
+const MODE_INFO: Record<
+  SpeedMode,
+  { label: string; icon: typeof Car; gaugeMaxKmh: number; fastKmh: number }
+> = {
+  driving: { label: "Car", icon: Car, gaugeMaxKmh: 160, fastKmh: 110 },
+  motorcycle: { label: "Moto", icon: Motorbike, gaugeMaxKmh: 140, fastKmh: 90 },
+  bus: { label: "Bus", icon: Bus, gaugeMaxKmh: 120, fastKmh: 80 },
+}
+
+export function isSpeedMode(mode: string): mode is SpeedMode {
+  return mode === "driving" || mode === "motorcycle" || mode === "bus"
+}
+
+/** GPS speed (m/s) -> km/h, or null when the device has no reading. */
+export function toKmh(metersPerSecond: number | null): number | null {
+  if (metersPerSecond === null || !Number.isFinite(metersPerSecond)) return null
+  return Math.max(0, Math.round(metersPerSecond * 3.6))
+}
+
+export function SpeedReader({
+  mode,
+  speedMps,
+}: {
+  mode: SpeedMode
+  speedMps: number | null
+}) {
+  const { label, icon: Icon, gaugeMaxKmh, fastKmh } = MODE_INFO[mode]
+  const kmh = toKmh(speedMps)
+  const pct = kmh === null ? 0 : Math.min(100, (kmh / gaugeMaxKmh) * 100)
+  const fast = kmh !== null && kmh >= fastKmh
+
+  return (
+    <div
+      className="mt-3 rounded-lg bg-black/20 px-3 py-2.5"
+      role="status"
+      aria-label={`${label} speed`}
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="flex flex-1 items-baseline gap-1.5">
+          <span className="text-3xl font-extrabold tabular-nums leading-none">
+            {kmh === null ? "--" : kmh}
+          </span>
+          <span className="text-xs uppercase tracking-wide opacity-80">km/h</span>
+        </div>
+        <span className="text-xs font-semibold uppercase tracking-wide opacity-80">
+          {label}
+        </span>
+      </div>
+
+      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/20">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            fast ? "bg-amber-300" : "bg-white",
+          )}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {kmh === null && (
+        <p className="mt-1.5 text-[11px] opacity-70">Waiting for GPS speed…</p>
+      )}
+    </div>
+  )
+}

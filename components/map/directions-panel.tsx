@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils"
 import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
 import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
+import { SpeedReader, isSpeedMode } from "@/components/map/speed-reader"
 import {
   fetchHazards,
   hazardKindMeta,
@@ -1142,6 +1143,10 @@ export function DirectionsPanel({
                   <p className="font-semibold">{navigationMessage || "Following route..."}</p>
                 </div>
               </div>
+
+              {isSpeedMode(travelMode) && (
+                <SpeedReader mode={travelMode} speedMps={position?.speed ?? null} />
+              )}
 
               {(distanceToDestination !== null || etaSeconds !== null) && (
                 <div className="mt-3 flex items-baseline gap-2 text-sm opacity-90">
