@@ -133,20 +133,20 @@ export default function AboutPage() {
       <footer className="border-t border-[#c9a06e]/10 px-6 py-8 text-sm text-neutral-500">
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 sm:flex-row">
           <span>© {new Date().getFullYear()} LincolnNavigation.com</span>
-          <nav className="flex items-center gap-5">
-            <Link href="/app" className="hover:text-neutral-300 transition-colors">
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            <Link href="/app" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
               Open map
             </Link>
-            <Link href="/pricing" className="hover:text-neutral-300 transition-colors">
+            <Link href="/pricing" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
               Pricing
             </Link>
-            <Link href="/advertise" className="hover:text-neutral-300 transition-colors">
+            <Link href="/advertise" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
               Advertise
             </Link>
-            <Link href="/privacy" className="hover:text-neutral-300 transition-colors">
+            <Link href="/privacy" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
               Privacy
             </Link>
-            <Link href="/terms" className="hover:text-neutral-300 transition-colors">
+            <Link href="/terms" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
               Terms
             </Link>
           </nav>
