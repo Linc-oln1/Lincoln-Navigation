@@ -10,7 +10,6 @@ export const metadata = {
 }
 
 const INFO_EMAIL = "info@lincolnnavigation.com"
-const MAPS_URL = "https://www.google.com/maps/search/?api=1&query=Accra%2C%20Ghana"
 
 /* A deterministic city-block pattern, so the backdrop looks like a street map
    without shipping an image. */
@@ -72,16 +71,6 @@ export default function ContactPage() {
           {/* Map band */}
           <div className="relative h-[330px] overflow-hidden rounded-t-xl bg-[#222] md:h-[335px]">
             <MapBackdrop />
-            <a
-              href={MAPS_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute left-6 top-6 z-10 flex items-center gap-3 text-xs text-white/90 transition-colors hover:text-white sm:left-[95px]"
-            >
-              look at google maps
-              <span className="h-px w-6 bg-white/80" />
-            </a>
-
             <div className="absolute left-[38%] top-[36%] z-10 -translate-x-1/2 -translate-y-1/2 sm:left-[42%]">
               <MapPin className="h-9 w-9 fill-white text-white drop-shadow" strokeWidth={1.5} />
             </div>
