@@ -67,7 +67,6 @@ export const PREMIUM_FEATURES: string[] = [
   "No ads, anywhere",
   "Turn-by-turn voice navigation",
   "Unlimited saved places and trip history",
-  "Priority routing with live traffic avoidance",
 ]
 
 /* --------------------- entitlement gates --------------------- */
