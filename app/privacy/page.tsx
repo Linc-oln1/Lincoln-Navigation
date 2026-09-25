@@ -1,6 +1,6 @@
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-import { SiteLinks } from "@/components/site-links"
+import { SiteHeader } from "@/components/site/site-header"
+import { SiteFooter } from "@/components/site/site-footer"
 
 export const metadata = {
   title: "Privacy Policy — Lincoln Navigation",
@@ -13,15 +13,9 @@ const LAST_UPDATED = "25 September 2026"
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-3xl px-6 py-14">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to LincolnNavigation
-        </Link>
+    <main className="flex min-h-screen flex-col bg-background text-foreground">
+      <SiteHeader />
+      <div className="w-full flex-1 mx-auto max-w-3xl px-6 py-14">
 
         <header className="mt-8 mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
@@ -264,9 +258,8 @@ export default function PrivacyPage() {
             </p>
           </section>
         </div>
-
-        <SiteLinks exclude="/privacy" className="mt-12" />
       </div>
+    <SiteFooter />
     </main>
   )
 }

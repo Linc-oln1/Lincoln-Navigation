@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { ArrowLeft } from "lucide-react"
 import { AUTH_ENABLED } from "@/lib/supabase/config"
 import { getSessionUser } from "@/lib/supabase/server"
-import { SiteLinks } from "@/components/site-links"
+import { SiteHeader } from "@/components/site/site-header"
+import { SiteFooter } from "@/components/site/site-footer"
 
 export const metadata = { title: "Account — Lincoln Navigation" }
 
@@ -53,21 +53,15 @@ export default async function AccountPage() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-lg px-6 py-14">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to LincolnNavigation
-        </Link>
+    <main className="flex min-h-screen flex-col bg-background text-foreground">
+      <SiteHeader />
+      <div className="mx-auto w-full max-w-lg flex-1 px-6 py-14">
         <h1 className="m-0 mt-8 mb-8 text-3xl font-extrabold tracking-tight">
           Account
         </h1>
         {children}
-        <SiteLinks className="mt-10" />
       </div>
+    <SiteFooter />
     </main>
   )
 }

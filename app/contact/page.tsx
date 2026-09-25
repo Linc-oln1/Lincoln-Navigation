@@ -1,5 +1,6 @@
-import Link from "next/link"
-import { ArrowLeft, MapPin } from "lucide-react"
+import { MapPin } from "lucide-react"
+import { SiteHeader } from "@/components/site/site-header"
+import { SiteFooter } from "@/components/site/site-footer"
 import { ContactForm } from "@/components/contact/contact-form"
 import { ADVERTISE_CONTACT_EMAIL } from "@/lib/monetization"
 
@@ -57,7 +58,7 @@ function MapBackdrop() {
 
 export default function ContactPage() {
   return (
-    <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#c4c8d0] to-[#aeb2bc] px-4 py-10 text-neutral-900 sm:px-8 sm:py-16">
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-b from-[#c4c8d0] to-[#aeb2bc] text-neutral-900">
       {/* Logo as a soft blurred background — nothing layered over it */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -69,14 +70,10 @@ export default function ContactPage() {
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-[920px]">
-        <Link
-          href="/"
-          className="mb-6 inline-flex items-center gap-2 text-xs font-semibold text-neutral-950 transition-colors hover:text-black"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to LincolnNavigation
-        </Link>
+      <SiteHeader variant="light" />
+
+      <main className="relative z-10 flex-1 px-4 py-10 sm:px-8 sm:py-16">
+      <div className="mx-auto max-w-[920px]">
 
         <section className="relative rounded-xl bg-[#1d1d1d] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.45)] md:min-h-[500px]">
           {/* Map band */}
@@ -129,13 +126,10 @@ export default function ContactPage() {
             <div className="hidden md:block" />
           </div>
         </section>
-
-        <p className="mt-6 text-right text-[11px] font-semibold text-neutral-950">
-          <Link href="/privacy" className="hover:underline">Privacy</Link>
-          {"  ·  "}
-          <Link href="/terms" className="hover:underline">Terms</Link>
-        </p>
       </div>
-    </main>
+      </main>
+
+      <SiteFooter variant="light" />
+    </div>
   )
 }

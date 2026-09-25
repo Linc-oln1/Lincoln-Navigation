@@ -1,5 +1,7 @@
 import Link from "next/link"
-import { ArrowLeft, Compass, Route, MapPin, WifiOff } from "lucide-react"
+import { Compass, Route, MapPin, WifiOff } from "lucide-react"
+import { SiteHeader } from "@/components/site/site-header"
+import { SiteFooter } from "@/components/site/site-footer"
 
 export const metadata = {
   title: "About — Lincoln Navigation",
@@ -33,6 +35,7 @@ const PILLARS = [
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[#0d0d0d] text-neutral-300">
+      <SiteHeader variant="gold" />
       {/* ---- hero: the emblem art ----
            Background art lives at /public/lincoln-navigation-hero.webp
            (the dark-textured emblem). Until it's added, the radial
@@ -48,15 +51,6 @@ export default function AboutPage() {
           backgroundRepeat: "no-repeat, no-repeat, no-repeat",
         }}
       >
-        <div className="w-full px-6 pt-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 rounded-full border border-[#c9a06e]/25 bg-black/40 px-3 py-1.5 text-xs font-medium text-[#d9b98c] backdrop-blur-sm transition-colors hover:bg-black/60"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to LincolnNavigation
-          </Link>
-        </div>
       </section>
 
       {/* ---- story ---- */}
@@ -127,33 +121,7 @@ export default function AboutPage() {
           </Link>
         </div>
       </section>
-
-      {/* ---- footer ---- */}
-      <footer className="border-t border-[#c9a06e]/10 px-6 py-8 text-sm text-neutral-500">
-        <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-4 sm:flex-row">
-          <span>© {new Date().getFullYear()} LincolnNavigation.com</span>
-          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            <Link href="/app" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
-              Open map
-            </Link>
-            <Link href="/pricing" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
-              Pricing
-            </Link>
-            <Link href="/advertise" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
-              Advertise
-            </Link>
-            <Link href="/contact" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
-              Contact
-            </Link>
-            <Link href="/privacy" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="whitespace-nowrap hover:text-neutral-300 transition-colors">
-              Terms
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter variant="gold" />
     </main>
   )
 }

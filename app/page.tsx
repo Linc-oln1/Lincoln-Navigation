@@ -21,6 +21,7 @@ import { LithosFeatures } from "@/components/landing/lithos-features"
 import { LithosStats } from "@/components/landing/lithos-stats"
 import { ProductShowcase } from "@/components/landing/product-showcase"
 import { AdSlot } from "@/components/ads/ad-slot"
+import { SiteFooter } from "@/components/site/site-footer"
 
 /* =========================================================
    LANDING PAGE
@@ -411,23 +412,7 @@ export default function LandingPage() {
       )}
 
       {phase === "destination" && <ProductShowcase />}
-
-      {/* ---- footer ---- */}
-      <footer className="bg-background border-t border-border px-6 py-8 text-sm text-muted-foreground">
-        <div className="mx-auto max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span>© {new Date().getFullYear()} LincolnNavigation.com</span>
-          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            <a href="/app" className="hover:text-foreground transition-colors">Open map</a>
-            <a href="/about" className="hover:text-foreground transition-colors">About</a>
-            <a href="/pricing" className="hover:text-foreground transition-colors">Pricing</a>
-            <a href="/advertise" className="hover:text-foreground transition-colors">Advertise</a>
-            <a href="/login" className="hover:text-foreground transition-colors">Sign in</a>
-            <a href="/contact" className="hover:text-foreground transition-colors">Contact</a>
-            <a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a>
-            <a href="/terms" className="hover:text-foreground transition-colors">Terms</a>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
     </main>
   )
 }

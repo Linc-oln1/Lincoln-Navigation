@@ -2,8 +2,10 @@
 
 import { Suspense, useState } from "react"
 import Link from "next/link"
+import { SiteHeader } from "@/components/site/site-header"
+import { SiteFooter } from "@/components/site/site-footer"
 import { useSearchParams } from "next/navigation"
-import { ArrowLeft, Check, Loader2, Sparkles } from "lucide-react"
+import { Check, Loader2, Sparkles } from "lucide-react"
 import {
   FREE_FEATURES,
   PREMIUM_ENABLED,
@@ -11,7 +13,7 @@ import {
   formatPremiumPrice,
 } from "@/lib/monetization"
 import { usePremium } from "@/hooks/use-premium"
-import { AgreeLine, SiteLinks } from "@/components/site-links"
+import { AgreeLine } from "@/components/site-links"
 
 export default function PricingPage() {
   return (
@@ -55,15 +57,9 @@ function PricingContent() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-4xl px-6 py-14">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to LincolnNavigation
-        </Link>
+    <main className="flex min-h-screen flex-col bg-background text-foreground">
+      <SiteHeader />
+      <div className="w-full flex-1 mx-auto max-w-4xl px-6 py-14">
 
         <header className="mt-8 mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
@@ -190,8 +186,8 @@ function PricingContent() {
             Advertise or sponsor a place →
           </Link>
         </p>
-        <SiteLinks className="mt-6" />
       </div>
+    <SiteFooter />
     </main>
   )
 }
