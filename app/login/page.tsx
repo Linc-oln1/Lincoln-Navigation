@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { ArrowLeft, ArrowRight, Loader2, Mail, UserRound } from "lucide-react"
+import { ArrowLeft, ChevronRight, Loader2, Mail, UserRound } from "lucide-react"
 import { AUTH_ENABLED } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/client"
 
@@ -11,7 +11,7 @@ type Busy = null | "google" | "email"
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-background" />}>
+    <Suspense fallback={<main className="min-h-screen bg-[#0d0d0d]" />}>
       <LoginContent />
     </Suspense>
   )
@@ -64,151 +64,151 @@ function LoginContent() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      {/* Decorative glow field */}
+    <main className="relative min-h-screen overflow-hidden bg-[#0d0d0d] text-neutral-300">
+      {/* Decorative warm glow field, matching /about's hero treatment */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-primary/25 blur-[100px]" />
-        <div className="absolute -right-24 top-1/3 h-72 w-72 rounded-full bg-primary/15 blur-[100px]" />
-        <div className="absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-primary/10 blur-[110px]" />
+        <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-[#c9a06e]/[0.10] blur-[100px]" />
+        <div className="absolute -right-24 top-1/3 h-72 w-72 rounded-full bg-[#c9a06e]/[0.08] blur-[100px]" />
+        <div className="absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-[#c9a06e]/[0.06] blur-[110px]" />
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-14">
         <Link
           href="/"
-          className="mb-6 inline-flex w-fit items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="mb-6 inline-flex w-fit items-center gap-2 text-sm text-neutral-500 hover:text-[#d9b98c] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to LincolnNavigation
         </Link>
 
-        <div className="rounded-[28px] border border-border bg-card/70 p-7 shadow-2xl backdrop-blur-2xl sm:p-9">
-          {/* Logo */}
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl border border-border bg-card/90 shadow-xl shadow-primary/10">
+        {/* Header card, echoing the dashboard-style app bar */}
+        <div className="flex items-center gap-3 rounded-2xl border border-[#c9a06e]/15 bg-[#161310] px-4 py-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#c9a06e]/20 bg-black/30">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo/lincoln-navigation-logo.webp"
               alt="LincolnNavigation"
-              className="h-11 w-11 object-contain"
+              className="h-7 w-7 object-contain"
             />
           </div>
-
-          <h1 className="mt-6 text-center text-2xl font-extrabold tracking-tight">
-            Welcome back
-          </h1>
-          <p className="mt-1.5 text-center text-sm text-muted-foreground">
-            Sync your saved places and manage your Premium plan.
-          </p>
-
-          {!AUTH_ENABLED ? (
-            <div className="mt-7 rounded-2xl border border-dashed border-border px-4 py-3 text-center text-sm text-muted-foreground">
-              Sign-in isn&rsquo;t available yet — the Supabase project needs to
-              be connected (see docs/SUPABASE_SETUP.md).
-            </div>
-          ) : sent ? (
-            <div className="mt-7 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-4 text-sm">
-              <p className="font-semibold">Check your email</p>
-              <p className="mt-1 text-muted-foreground">
-                We sent a sign-in link to{" "}
-                <span className="text-foreground">{email}</span>. Open it on
-                this device.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-7 space-y-4">
-              <form onSubmit={signInWithEmail} className="space-y-3">
-                <div className="relative">
-                  <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full rounded-2xl border border-border bg-input px-4 py-3 pl-11 text-sm outline-none focus:border-primary"
-                  />
-                </div>
-                <PrimaryButton
-                  busy={busy === "email"}
-                  icon={<Mail className="h-4 w-4" />}
-                  label="Email me a sign-in link"
-                  disabled={busy !== null}
-                />
-              </form>
-
-              {error && (
-                <p className="text-center text-xs text-destructive">{error}</p>
-              )}
-            </div>
-          )}
-
-          <div className="mt-7 flex items-center gap-3 text-[10px] font-semibold tracking-widest text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            OR CONTINUE WITH
-            <span className="h-px flex-1 bg-border" />
+          <div>
+            <p className="text-sm font-bold text-white">LincolnNavigation</p>
+            <p className="text-xs text-neutral-500">Ghana Maps &amp; Navigation</p>
           </div>
+        </div>
 
-          <div className={`mt-4 grid gap-3 ${AUTH_ENABLED ? "grid-cols-2" : "grid-cols-1"}`}>
-            {AUTH_ENABLED && (
+        <h1 className="mt-7 text-2xl font-extrabold tracking-tight text-white">
+          Welcome back
+        </h1>
+        <p className="mt-1.5 text-sm text-neutral-500">
+          Sync your saved places and manage your Premium plan.
+        </p>
+
+        {!AUTH_ENABLED ? (
+          <div className="mt-7 rounded-2xl border border-dashed border-[#c9a06e]/20 px-4 py-3 text-sm text-neutral-500">
+            Sign-in isn&rsquo;t available yet — the Supabase project needs to
+            be connected (see docs/SUPABASE_SETUP.md).
+          </div>
+        ) : sent ? (
+          <div className="mt-7 rounded-2xl border border-[#c9a06e]/25 bg-[#c9a06e]/10 px-4 py-4 text-sm">
+            <p className="font-semibold text-[#d9b98c]">Check your email</p>
+            <p className="mt-1 text-neutral-400">
+              We sent a sign-in link to{" "}
+              <span className="text-white">{email}</span>. Open it on this
+              device.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-7 space-y-3">
+            {/* Focused card — email, the primary method */}
+            <div className="rounded-2xl border border-[#c9a06e]/15 bg-[#161310] p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#c9a06e]/15">
+                  <Mail className="h-4 w-4 text-[#c9a06e]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Email</p>
+                  <p className="text-xs text-neutral-500">
+                    Get a one-tap sign-in link
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={signInWithEmail} className="mt-4 space-y-2.5">
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full rounded-xl border border-[#c9a06e]/20 bg-black/30 px-4 py-2.5 text-sm text-white outline-none placeholder:text-neutral-600 focus:border-[#c9a06e]/50"
+                />
+                <button
+                  type="submit"
+                  disabled={busy !== null}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#c9a06e] px-4 py-2.5 text-sm font-semibold text-[#1a1206] transition hover:brightness-105 disabled:opacity-60"
+                >
+                  {busy === "email" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Mail className="h-4 w-4" />
+                  )}
+                  Email me a sign-in link
+                </button>
+              </form>
+            </div>
+
+            {/* Grid of alternative methods, echoing the dashboard's device cards */}
+            <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={signInWithGoogle}
                 disabled={busy !== null}
-                className="flex flex-col items-center gap-2 rounded-2xl border border-border bg-card/60 py-4 hover:bg-secondary transition disabled:opacity-60"
+                className="flex items-center gap-3 rounded-2xl border border-[#c9a06e]/15 bg-[#161310] p-4 text-left transition hover:border-[#c9a06e]/30 disabled:opacity-60"
               >
-                {busy === "google" ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <GoogleGlyph />
-                )}
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  Google
-                </span>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black/30">
+                  {busy === "google" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-[#c9a06e]" />
+                  ) : (
+                    <GoogleGlyph />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-white">Google</p>
+                  <p className="truncate text-xs text-neutral-500">
+                    Fast sign-in
+                  </p>
+                </div>
               </button>
+
+              <Link
+                href={next}
+                className="flex items-center gap-3 rounded-2xl border border-dashed border-[#c9a06e]/15 bg-[#161310]/50 p-4 transition hover:border-[#c9a06e]/30"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-black/30">
+                  <UserRound className="h-4 w-4 text-neutral-400" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-white">Guest</p>
+                  <p className="truncate text-xs text-neutral-500">
+                    Skip it
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 shrink-0 text-neutral-600" />
+              </Link>
+            </div>
+
+            {error && (
+              <p className="px-1 text-center text-xs text-red-400">{error}</p>
             )}
-
-            <Link
-              href={next}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border bg-card/40 py-4 hover:border-foreground hover:text-foreground transition"
-            >
-              <UserRound className="h-5 w-5" />
-              <span className="text-[11px] font-medium text-muted-foreground">
-                Guest
-              </span>
-            </Link>
           </div>
-        </div>
+        )}
 
-        <p className="mt-7 text-center text-[11px] tracking-[0.2em] text-muted-foreground">
+        <p className="mt-8 text-center text-[11px] tracking-[0.2em] text-neutral-600">
           MAP &bull; NAVIGATE &bull; EXPLORE
         </p>
       </div>
     </main>
-  )
-}
-
-function PrimaryButton({
-  busy,
-  icon,
-  label,
-  disabled,
-}: {
-  busy: boolean
-  icon: React.ReactNode
-  label: string
-  disabled: boolean
-}) {
-  return (
-    <button
-      type="submit"
-      disabled={disabled}
-      className="group relative flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-[var(--primary-dark)] py-3.5 pl-5 pr-14 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/25 hover:brightness-110 transition disabled:opacity-60"
-    >
-      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : icon}
-      {label}
-      <span className="absolute right-1.5 flex h-9 w-9 items-center justify-center rounded-full bg-white/15 transition group-hover:bg-white/25">
-        <ArrowRight className="h-4 w-4" />
-      </span>
-    </button>
   )
 }
 
