@@ -143,6 +143,12 @@ export default function AboutPage() {
             <Link href="/advertise" className="hover:text-neutral-300 transition-colors">
               Advertise
             </Link>
+            <Link href="/privacy" className="hover:text-neutral-300 transition-colors">
+              Privacy
+            </Link>
+            <Link href="/terms" className="hover:text-neutral-300 transition-colors">
+              Terms
+            </Link>
           </nav>
         </div>
       </footer>
