@@ -64,6 +64,11 @@ interface Location {
   // drives the "Sponsored" tag + advertiser link in LocationDetails.
   sponsored?: boolean
   url?: string
+  // Business details (Premium), from the Explore Nearby result.
+  phone?: string
+  website?: string
+  openingHours?: string
+  cuisine?: string
 }
 
 interface LiveNavigationState {
@@ -310,6 +315,10 @@ function MapNavigator() {
       type?: string
       sponsored?: boolean
       url?: string
+      phone?: string
+      website?: string
+      openingHours?: string
+      cuisine?: string
     }) => {
       setMapCenter([place.lat, place.lng])
 
@@ -321,6 +330,10 @@ function MapNavigator() {
         type: place.type,
         sponsored: place.sponsored,
         url: place.url,
+        phone: place.phone,
+        website: place.website,
+        openingHours: place.openingHours,
+        cuisine: place.cuisine,
       })
 
       setMarkers([

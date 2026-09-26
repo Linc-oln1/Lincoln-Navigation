@@ -99,7 +99,7 @@ export const PREMIUM_FEATURES: PlanFeature[] = [
   { text: "Advanced route options — fastest or shortest, avoid highways, tolls and ferries, and route choices" },
   { text: "Real-time road alerts", soon: true },
   { text: "Premium location intelligence", soon: true },
-  { text: "Advanced business discovery", soon: true },
+  { text: "Advanced business discovery — opening hours, phone, website, distance and filters on nearby places" },
 ]
 
 /** What Lincoln Pro adds on top of Premium — shown on /pricing. */

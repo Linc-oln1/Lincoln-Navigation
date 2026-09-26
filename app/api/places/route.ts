@@ -279,6 +279,13 @@ function formatAddress(tags: Record<string, string>): string {
   return parts.length > 0 ? parts.join(", ") : "Unnamed road"
 }
 
+/** Trim an OSM tag value; undefined when empty. */
+function clean(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined
+  const trimmed = value.trim()
+  return trimmed ? trimmed.slice(0, 300) : undefined
+}
+
 interface NearbyPlace {
   id: string
   name: string
@@ -288,6 +295,10 @@ interface NearbyPlace {
   type: string
   rating?: number
   ratingCount?: number
+  phone?: string
+  website?: string
+  openingHours?: string
+  cuisine?: string
 }
 
 function getGooglePlacesApiKey(): string | null {
@@ -524,6 +535,16 @@ export async function GET(request: NextRequest) {
 
         seen.add(key)
 
+        // Business details, when the mapper filled them in (often they
+        // didn't — OSM coverage of hours/phone/website varies a lot).
+        const phone = clean(tags.phone) ?? clean(tags["contact:phone"])
+        const website =
+          clean(tags.website) ?? clean(tags["contact:website"]) ?? clean(tags.url)
+        const openingHours = clean(tags.opening_hours)
+        const cuisine = clean(tags.cuisine)
+          ?.split(";")[0]
+          ?.replace(/_/g, " ")
+
         return {
           id: `${element.type}-${element.id}`,
           name,
@@ -531,6 +552,10 @@ export async function GET(request: NextRequest) {
           lat: elementLat,
           lng: elementLng,
           type: category,
+          ...(phone && { phone }),
+          ...(website && { website }),
+          ...(openingHours && { openingHours }),
+          ...(cuisine && { cuisine }),
         }
       })
       .filter(

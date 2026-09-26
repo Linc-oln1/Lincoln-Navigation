@@ -2,9 +2,11 @@
 
 import { useI18n } from "@/components/i18n/language-provider"
 
-import { X, Navigation, Share2, Star, MapPin, Phone, Globe, Clock } from "lucide-react"
+import { X, Navigation, Share2, Star, MapPin, Phone, Globe, Clock, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { usePremium } from "@/hooks/use-premium"
+import { openStatus } from "@/lib/opening-hours"
 
 interface LocationDetailsProps {
   location: {
@@ -15,6 +17,10 @@ interface LocationDetailsProps {
     type?: string
     sponsored?: boolean
     url?: string
+    phone?: string
+    website?: string
+    openingHours?: string
+    cuisine?: string
   } | null
   isFavorite?: boolean
   onToggleFavorite?: () => void
@@ -30,7 +36,11 @@ export function LocationDetails({
   onGetDirections,
 }: LocationDetailsProps) {
   const { t } = useI18n()
+  const { isPremium } = usePremium()
   if (!location) return null
+
+  const status = openStatus(location.openingHours)
+  const hasBusinessInfo = Boolean(location.openingHours || location.phone || location.website)
 
   const handleShare = async () => {
     const url = `https://www.openstreetmap.org/?mlat=${location.lat}&mlon=${location.lng}#map=16/${location.lat}/${location.lng}`
@@ -116,6 +126,69 @@ export function LocationDetails({
           <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <span className="text-foreground">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</span>
         </div>
+        {isPremium && location.openingHours && (
+          <div className="flex items-start gap-3 text-sm">
+            <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+            <div>
+              {status.state === "open" && (
+                <p className="font-semibold text-green-500">
+                  {status.always ? (
+                    t("biz.open24")
+                  ) : (
+                    <>
+                      {t("biz.open")}
+                      {status.closesAt && (
+                        <span className="ml-1 font-normal text-muted-foreground">
+                          · {t("biz.closesAt", { time: status.closesAt })}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </p>
+              )}
+              {status.state === "closed" && (
+                <p className="font-semibold text-red-400">
+                  {t("biz.closed")}
+                  {status.opensAt && (
+                    <span className="ml-1 font-normal text-muted-foreground">
+                      · {t("biz.opensAt", { time: status.opensAt })}
+                    </span>
+                  )}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">{location.openingHours}</p>
+            </div>
+          </div>
+        )}
+        {isPremium && location.phone && (
+          <a
+            href={`tel:${location.phone.replace(/[^+\d]/g, "")}`}
+            className="flex items-center gap-3 text-sm text-primary hover:underline"
+          >
+            <Phone className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{location.phone}</span>
+          </a>
+        )}
+        {isPremium && location.website && (
+          <a
+            href={/^https?:\/\//i.test(location.website) ? location.website : `https://${location.website}`}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="flex items-center gap-3 text-sm text-primary hover:underline"
+          >
+            <Globe className="h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{t("biz.website")}</span>
+          </a>
+        )}
+        {!isPremium && hasBusinessInfo && (
+          <a
+            href="/pricing"
+            className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/[0.06] px-3 py-2 text-xs text-primary transition-colors hover:bg-primary/10"
+          >
+            <Lock className="h-3.5 w-3.5 flex-shrink-0" aria-hidden />
+            {t("biz.premiumHint")}
+          </a>
+        )}
         {location.url && (
           <a
             href={location.url}

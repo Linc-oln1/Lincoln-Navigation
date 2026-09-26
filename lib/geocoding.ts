@@ -18,6 +18,12 @@ export interface GeocodeResult {
   // fallback — undefined for OSM results, which don't have ratings.
   rating?: number
   ratingCount?: number
+  // Business details from OpenStreetMap, when the place has them.
+  phone?: string
+  website?: string
+  /** Raw OSM opening_hours value, e.g. "Mo-Sa 08:00-18:00". */
+  openingHours?: string
+  cuisine?: string
 }
 
 export type Place = GeocodeResult
