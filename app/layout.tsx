@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { RegisterServiceWorker } from '@/components/pwa/register-service-worker'
 import { AdSenseScript } from '@/components/ads/adsense-script'
 import { Toaster } from '@/components/ui/toaster'
+import { LanguageProvider } from '@/components/i18n/language-provider'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -57,7 +58,7 @@ export default function RootLayout({
         className="font-sans antialiased"
         suppressHydrationWarning
       >
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
         <Toaster />
         <RegisterServiceWorker />
         <AdSenseScript />

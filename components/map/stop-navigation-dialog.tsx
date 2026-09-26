@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { useI18n } from "@/components/i18n/language-provider"
 
 /**
  * "Stop navigation?" confirmation shown before anything that would end a
@@ -20,6 +21,8 @@ export function StopNavigationDialog({
   onKeep: () => void
   onStop: () => void
 }) {
+  const { t } = useI18n()
+
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -45,7 +48,7 @@ export function StopNavigationDialog({
         className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
       >
         <h2 id="stop-nav-title" className="text-lg font-semibold text-foreground">
-          Stop navigation?
+          {t("stop.title")}
         </h2>
         <p id="stop-nav-desc" className="mt-2 text-sm text-muted-foreground">
           {description}
@@ -64,7 +67,7 @@ export function StopNavigationDialog({
             onClick={onKeep}
             className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95"
           >
-            Keep navigating
+            {t("stop.keep")}
           </button>
         </div>
       </div>

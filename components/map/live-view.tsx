@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { ArrowUp, CameraOff, Compass, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/components/i18n/language-provider"
 import type { TravelMode } from "@/lib/routing"
 
 /**
@@ -74,6 +75,7 @@ export function LiveView({
   speedMps = null,
   onClose,
 }: LiveViewProps) {
+  const { t } = useI18n()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [compassHeading, setHeading] = useState<number | null>(null)
@@ -304,7 +306,7 @@ export function LiveView({
             className="pointer-events-auto mx-auto flex items-center gap-2 rounded-full bg-[#ffd34d] px-5 py-3 text-sm font-bold text-black shadow-xl active:scale-95"
           >
             <Compass className="h-4 w-4" />
-            Enable compass
+            {t("lv.enableCompass")}
           </button>
         )}
         {compassBlocked && (
@@ -333,27 +335,27 @@ export function LiveView({
               {toTurn !== null ? formatDistance(toTurn) : "—"}
             </p>
             <p className="mt-1 text-xs uppercase tracking-wide text-white/70">
-              to next turn
+              {t("lv.toTurn")}
             </p>
             {nextStep && (
               <p className="mt-2 max-w-[16rem] text-xs text-white/80">
-                Then: {nextStep.instruction}
+                {t("lv.then")} {nextStep.instruction}
               </p>
             )}
           </div>
           {distanceToDestination !== null && (
             <div className="text-right">
               <p className="text-xl font-semibold">{formatDistance(distanceToDestination)}</p>
-              <p className="text-xs uppercase tracking-wide text-white/70">to destination</p>
+              <p className="text-xs uppercase tracking-wide text-white/70">{t("lv.toDest")}</p>
             </div>
           )}
         </div>
         <p className="text-center text-[11px] text-white/60">
           {driving
             ? motorcycle
-              ? "Mount your phone securely before you ride. Never hold or touch it while riding."
-              : "Mount your phone before you drive. Never hold or touch it while driving."
-            : "Keep looking where you're walking — glance at the screen, don't stare."}
+              ? t("lv.rideNote")
+              : t("lv.driveNote")
+            : t("lv.walkNote")}
         </p>
       </div>
     </div>

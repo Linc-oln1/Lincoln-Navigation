@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Search, Navigation, Layers, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSession } from "@/hooks/use-session"
+import { useI18n } from "@/components/i18n/language-provider"
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { StopNavigationDialog } from "@/components/map/stop-navigation-dialog"
 
 interface HeaderProps {
@@ -20,6 +22,7 @@ interface HeaderProps {
 export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, activePanel, isNavigating = false }: HeaderProps) {
   const { user, authEnabled } = useSession()
   const router = useRouter()
+  const { t } = useI18n()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
 
@@ -63,8 +66,8 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
             <button
               type="button"
               onClick={handleExit}
-              aria-label="Exit map"
-              title="Exit map"
+              aria-label={t("map.exit")}
+              title={t("map.exit")}
               className="flex items-center gap-1.5 rounded-xl px-2.5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary active:scale-95"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -92,7 +95,7 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
               )}
             >
               <Search className="w-4 h-4" />
-              <span className="text-sm">Search anywhere...</span>
+              <span className="text-sm">{t("map.search")}</span>
             </button>
 
             {/* Quick Actions */}
@@ -122,6 +125,13 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
                 <Layers className="w-5 h-5" />
               </button>
 
+              <div className="hidden sm:block">
+                <LanguageSwitcher
+                  buttonClass="p-2.5 rounded-xl hover:bg-secondary text-foreground"
+                  menuClass="border-border bg-card text-foreground"
+                />
+              </div>
+
               {authEnabled &&
                 (user ? (
                   <Link
@@ -134,7 +144,7 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
                 ) : (
                   <Link
                     href="/login"
-                    title="Sign in"
+                    title={t("nav.signIn")}
                     className="p-2.5 rounded-xl hover:bg-secondary text-foreground transition-colors"
                   >
                     <User className="w-5 h-5" />
@@ -148,8 +158,8 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
 
     <StopNavigationDialog
       open={confirmOpen}
-      description="You're in the middle of a trip. Leaving the map will end live navigation and turn off voice guidance."
-      stopLabel="Stop & exit"
+      description={t("stop.exitDesc")}
+      stopLabel={t("stop.exit")}
       onKeep={() => setConfirmOpen(false)}
       onStop={leave}
     />

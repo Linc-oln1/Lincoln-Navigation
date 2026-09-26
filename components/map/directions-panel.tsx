@@ -31,6 +31,8 @@ import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
 import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
 import { SpeedReader, isSpeedMode } from "@/components/map/speed-reader"
+import type { MessageKey } from "@/lib/i18n/messages"
+import { useI18n } from "@/components/i18n/language-provider"
 import { LiveView, isLiveViewMode } from "@/components/map/live-view"
 import { StopNavigationDialog } from "@/components/map/stop-navigation-dialog"
 import {
@@ -202,6 +204,7 @@ export function DirectionsPanel({
   // route calculation.
   const hazardFetchIdRef = useRef(0)
 
+  const { t } = useI18n()
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
   const [liveViewOpen, setLiveViewOpen] = useState(false)
   // Live View tapped before the trip started: open it once navigation is on.
@@ -963,7 +966,7 @@ export function DirectionsPanel({
       {/* HEADER */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Directions</h2>
+          <h2 className="text-lg font-semibold">{t("dir.title")}</h2>
 
           <div className="flex items-center gap-1">
             {hasVoice ? (
@@ -998,7 +1001,7 @@ export function DirectionsPanel({
               type="button"
               onClick={requestClose}
               className="p-2 hover:bg-secondary rounded-lg transition-colors"
-              aria-label="Close directions"
+              aria-label={t("dir.close")}
             >
               <X className="w-5 h-5" />
             </button>
@@ -1007,7 +1010,7 @@ export function DirectionsPanel({
 
         {/* TRAVEL MODES */}
         <div className="flex gap-1.5 mb-4">
-          {TRAVEL_MODES.map(({ mode, icon: Icon, label }) => (
+          {TRAVEL_MODES.map(({ mode, icon: Icon }) => (
             <button
               type="button"
               key={mode}
@@ -1029,7 +1032,7 @@ export function DirectionsPanel({
               )}
             >
               <Icon className="w-4 h-4" />
-              <span className="text-[11px] font-medium leading-none">{label}</span>
+              <span className="text-[11px] font-medium leading-none">{t(`mode.${mode}` as MessageKey)}</span>
             </button>
           ))}
         </div>
@@ -1039,7 +1042,7 @@ export function DirectionsPanel({
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500" />
             <Input
-              placeholder="Starting point"
+              placeholder={t("dir.start")}
               value={origin}
               onChange={(event) => {
                 setOrigin(event.target.value)
@@ -1052,8 +1055,8 @@ export function DirectionsPanel({
               type="button"
               onClick={handleUseCurrentLocation}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
-              title="Use current location"
-              aria-label="Use current location"
+              title={t("dir.currentLoc")}
+              aria-label={t("dir.currentLoc")}
             >
               <LocateFixed className="w-4 h-4 text-muted-foreground" />
             </button>
@@ -1065,8 +1068,8 @@ export function DirectionsPanel({
               type="button"
               onClick={swapLocations}
               className="p-1.5 hover:bg-secondary rounded-lg transition-colors"
-              title="Swap locations"
-              aria-label="Swap locations"
+              title={t("dir.swap")}
+              aria-label={t("dir.swap")}
             >
               <ArrowRight className="w-4 h-4 rotate-90" />
             </button>
@@ -1076,7 +1079,7 @@ export function DirectionsPanel({
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
             <Input
-              placeholder="Destination"
+              placeholder={t("dir.dest")}
               value={destination}
               onChange={(event) => {
                 setDestination(event.target.value)
@@ -1096,12 +1099,12 @@ export function DirectionsPanel({
             {isLoading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Calculating route...
+                {t("dir.calculating")}
               </>
             ) : (
               <>
                 <Navigation className="w-4 h-4 mr-2" />
-                Get Directions
+                {t("dir.get")}
               </>
             )}
           </Button>
@@ -1116,12 +1119,12 @@ export function DirectionsPanel({
               {isNavigating ? (
                 <>
                   <LocateFixed className="w-4 h-4 mr-2 animate-pulse" />
-                  Live Navigation Active
+                  {t("dir.liveActive")}
                 </>
               ) : (
                 <>
                   <Navigation className="w-4 h-4 mr-2" />
-                  Start Live Navigation
+                  {t("dir.startLive")}
                 </>
               )}
             </Button>
@@ -1143,7 +1146,7 @@ export function DirectionsPanel({
               className="w-full"
             >
               <Camera className="w-4 h-4 mr-2" />
-              Live View (camera)
+              {t("dir.liveView")}
             </Button>
           )}
 
@@ -1155,7 +1158,7 @@ export function DirectionsPanel({
               className="w-full"
             >
               <Square className="w-4 h-4 mr-2" />
-              Stop Live Navigation
+              {t("dir.stopLive")}
             </Button>
           )}
 
@@ -1310,7 +1313,7 @@ export function DirectionsPanel({
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-0.5">
-                    {isNavigating && etaSeconds !== null ? "Live ETA" : "Estimated"}
+                    {isNavigating && etaSeconds !== null ? t("dir.liveEta") : t("dir.estimated")}
                   </p>
                   <p className="text-2xl font-bold text-foreground">
                     {isNavigating && etaSeconds !== null
@@ -1345,7 +1348,7 @@ export function DirectionsPanel({
             </div>
 
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-              Turn-by-turn
+              {t("dir.turnByTurn")}
             </h3>
 
             <div className="space-y-2">
@@ -1438,8 +1441,8 @@ export function DirectionsPanel({
 
       <StopNavigationDialog
         open={confirmCloseOpen}
-        description="You're in the middle of a trip. Closing directions will end live navigation and turn off voice guidance."
-        stopLabel="Stop & close"
+        description={t("stop.closeDesc")}
+        stopLabel={t("stop.close")}
         onKeep={() => setConfirmCloseOpen(false)}
         onStop={handleClose}
       />

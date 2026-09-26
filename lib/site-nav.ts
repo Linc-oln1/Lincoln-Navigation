@@ -1,46 +1,48 @@
+import type { MessageKey } from "@/lib/i18n/messages"
+
 export interface NavLink {
-  label: string
+  labelKey: MessageKey
   href: string
 }
 
 /** Top bar links. */
 export const HEADER_LINKS: NavLink[] = [
-  { label: "Map", href: "/app" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "About", href: "/about" },
-  { label: "Advertise", href: "/advertise" },
-  { label: "Contact", href: "/contact" },
+  { labelKey: "nav.map", href: "/app" },
+  { labelKey: "nav.pricing", href: "/pricing" },
+  { labelKey: "nav.about", href: "/about" },
+  { labelKey: "nav.advertise", href: "/advertise" },
+  { labelKey: "nav.contact", href: "/contact" },
 ]
 
 /** Footer columns — every public page appears in exactly one group. */
-export const FOOTER_GROUPS: { title: string; links: NavLink[] }[] = [
+export const FOOTER_GROUPS: { titleKey: MessageKey; links: NavLink[] }[] = [
   {
-    title: "Product",
+    titleKey: "footer.product",
     links: [
-      { label: "Live map", href: "/app" },
-      { label: "Pricing", href: "/pricing" },
+      { labelKey: "nav.liveMap", href: "/app" },
+      { labelKey: "nav.pricing", href: "/pricing" },
     ],
   },
   {
-    title: "Company",
+    titleKey: "footer.company",
     links: [
-      { label: "About", href: "/about" },
-      { label: "Advertise", href: "/advertise" },
-      { label: "Contact", href: "/contact" },
+      { labelKey: "nav.about", href: "/about" },
+      { labelKey: "nav.advertise", href: "/advertise" },
+      { labelKey: "nav.contact", href: "/contact" },
     ],
   },
   {
-    title: "Legal",
+    titleKey: "footer.legal",
     links: [
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
+      { labelKey: "footer.privacy", href: "/privacy" },
+      { labelKey: "footer.terms", href: "/terms" },
     ],
   },
   {
-    title: "Account",
+    titleKey: "footer.account",
     links: [
-      { label: "Sign in", href: "/login" },
-      { label: "My account", href: "/account" },
+      { labelKey: "nav.signIn", href: "/login" },
+      { labelKey: "nav.myAccount", href: "/account" },
     ],
   },
 ]

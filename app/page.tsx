@@ -21,6 +21,7 @@ import { LithosFeatures } from "@/components/landing/lithos-features"
 import { LithosStats } from "@/components/landing/lithos-stats"
 import { ProductShowcase } from "@/components/landing/product-showcase"
 import { AdSlot } from "@/components/ads/ad-slot"
+import { useI18n } from "@/components/i18n/language-provider"
 import { SiteFooter } from "@/components/site/site-footer"
 
 /* =========================================================
@@ -142,6 +143,7 @@ function Starfield({ count = 60 }: { count?: number }) {
 export default function LandingPage() {
   const router = useRouter()
 
+  const { t } = useI18n()
   const [phase, setPhase] = useState<Phase>("intro")
   const [destinationIndex, setDestinationIndex] = useState(0)
   const [query, setQuery] = useState("")
@@ -225,7 +227,7 @@ export default function LandingPage() {
               onClick={handleLaunchMap}
               className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[#0b1118] text-sm font-semibold hover:bg-white/90 transition-colors"
             >
-              Launch Map
+              {t("home.launch")}
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
@@ -285,7 +287,7 @@ export default function LandingPage() {
               ) : (
                 <History className="w-3.5 h-3.5" />
               )}
-              {showFacts ? "Hide History & Facts" : "History & Facts"}
+              {showFacts ? t("home.hideFacts") : t("home.facts")}
             </button>
 
             {showFacts && (
@@ -388,7 +390,7 @@ export default function LandingPage() {
                 type="submit"
                 className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:brightness-110 transition-[filter] flex-shrink-0"
               >
-                Get Directions
+                {t("dir.get")}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>

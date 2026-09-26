@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { HEADER_LINKS } from "@/lib/site-nav"
+import { useI18n } from "@/components/i18n/language-provider"
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { SITE_THEME, type SiteVariant } from "@/components/site/site-theme"
 
 /** Shared top bar for the public pages. */
@@ -13,6 +15,7 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
   const t = SITE_THEME[variant]
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const { t: tr } = useI18n()
 
   const linkClass = (href: string) =>
     cn(
@@ -37,9 +40,13 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
         <nav aria-label="Main" className="hidden items-center gap-6 md:flex">
           {HEADER_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className={linkClass(l.href)}>
-              {l.label}
+              {tr(l.labelKey)}
             </Link>
           ))}
+          <LanguageSwitcher
+            buttonClass={cn("border", t.border, t.muted, t.hover)}
+            menuClass={t.menu}
+          />
           <Link
             href="/login"
             className={cn(
@@ -47,19 +54,25 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
               t.pill,
             )}
           >
-            Sign in
+            {tr("nav.signIn")}
           </Link>
         </nav>
 
+        <div className="flex items-center gap-1 md:hidden">
+        <LanguageSwitcher
+          buttonClass={cn("border", t.border, t.text)}
+          menuClass={t.menu}
+        />
         <button
           type="button"
-          aria-label={open ? "Close menu" : "Open menu"}
+          aria-label={open ? tr("nav.closeMenu") : tr("nav.openMenu")}
           aria-expanded={open}
           onClick={() => setOpen((o) => !o)}
-          className={cn("rounded-md p-2 md:hidden", t.text)}
+          className={cn("rounded-md p-2", t.text)}
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
+        </div>
       </div>
 
       {open && (
@@ -77,7 +90,7 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
               onClick={() => setOpen(false)}
               className={cn("rounded-md py-2.5 text-base", linkClass(l.href))}
             >
-              {l.label}
+              {tr(l.labelKey)}
             </Link>
           ))}
           <Link
@@ -88,7 +101,7 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
               t.pill,
             )}
           >
-            Sign in
+            {tr("nav.signIn")}
           </Link>
         </nav>
       )}

@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { InstallAppButton } from "@/components/pwa/install-app-button"
+import { useI18n } from "@/components/i18n/language-provider"
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
+import type { MessageKey } from "@/lib/i18n/messages"
 
 interface LithosHeroProps {
   /* Called when a visitor chooses to move past the hero — there's no
@@ -11,7 +14,12 @@ interface LithosHeroProps {
   onEnter?: () => void
 }
 
-const NAV_LINKS = ["Features", "Live Map", "About", "Contact"]
+const NAV_LINKS: { id: string; labelKey: MessageKey }[] = [
+  { id: "Features", labelKey: "nav.features" },
+  { id: "Live Map", labelKey: "nav.liveMap" },
+  { id: "About", labelKey: "nav.about" },
+  { id: "Contact", labelKey: "nav.contact" },
+]
 
 /* "Live Map" opens the app; "About" opens the dedicated /about
    page. */
@@ -39,6 +47,7 @@ const NAV_SCROLL_TARGETS: Record<string, string> = {
  */
 export function LithosHero({ onEnter }: LithosHeroProps) {
   const router = useRouter()
+  const { t } = useI18n()
   const sectionRef = useRef<HTMLElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -136,9 +145,9 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
 
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full px-2 py-2 items-center gap-1">
             <button type="button" className="px-4 py-1.5 rounded-full text-sm font-medium text-white">
-              Explore
+              {t("nav.explore")}
             </button>
-            {NAV_LINKS.map((label) => {
+            {NAV_LINKS.map(({ id: label, labelKey }) => {
               const route = NAV_ROUTES[label]
               const targetId = NAV_SCROLL_TARGETS[label]
               const onClick = route
@@ -153,25 +162,30 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
                   onClick={onClick}
                   className="px-4 py-1.5 rounded-full text-sm font-medium text-white/80 hover:bg-white/20 hover:text-white transition-colors"
                 >
-                  {label}
+                  {t(labelKey)}
                 </button>
               )
             })}
           </div>
 
           <div className="flex items-center gap-3">
+            <LanguageSwitcher
+              buttonClass="border border-white/25 bg-white/10 text-white hover:bg-white/20 h-10 md:h-auto"
+              menuClass="border-white/20 bg-[#12141a]/95 text-white backdrop-blur-xl"
+              showLabel
+            />
             <InstallAppButton className="hidden md:flex bg-white/10 hover:bg-white/20 border border-white/20 text-white" />
             <button
               type="button"
               onClick={goToApp}
               className="hidden md:block bg-white text-gray-900 text-sm font-semibold px-6 py-2.5 rounded-full hover:bg-gray-100"
             >
-              Launch Map
+              {t("home.launch")}
             </button>
             <button
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
-              aria-label={menuOpen ? "Close menu" : "Menu"}
+              aria-label={menuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
               aria-expanded={menuOpen}
               className="md:hidden w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white"
             >
@@ -191,9 +205,9 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
               onClick={handleMobileNavClick()}
               className="text-[#e8702a] text-2xl font-medium py-3"
             >
-              Explore
+              {t("nav.explore")}
             </button>
-            {NAV_LINKS.map((label) => {
+            {NAV_LINKS.map(({ id: label, labelKey }) => {
               const route = NAV_ROUTES[label]
               const targetId = NAV_SCROLL_TARGETS[label]
               const action = route
@@ -208,7 +222,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
                   onClick={handleMobileNavClick(action)}
                   className="text-white/90 text-2xl font-medium py-3 hover:text-white transition-colors"
                 >
-                  {label}
+                  {t(labelKey)}
                 </button>
               )
             })}
@@ -217,7 +231,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
               onClick={handleMobileNavClick(goToApp)}
               className="mt-6 bg-white text-gray-900 text-base font-semibold px-8 py-3.5 rounded-full hover:bg-gray-100"
             >
-              Launch Map
+              {t("home.launch")}
             </button>
             <InstallAppButton className="mt-3 border border-white/20 text-white/90 hover:text-white text-base px-6 py-3" />
           </div>
@@ -230,8 +244,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
           style={{ animationDelay: "0.7s" }}
         >
           <p className="text-sm text-white/80 leading-relaxed">
-            A clear path through every street, roundabout, and detour — built for how Ghana
-            actually moves.
+            {t("home.tagLeft")}
           </p>
         </div>
 
@@ -240,14 +253,14 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
           style={{ animationDelay: "0.85s" }}
         >
           <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
-            Real-time routes and live positioning, whichever way you&apos;re headed.
+            {t("home.tagRight")}
           </p>
           <button
             type="button"
             onClick={onEnter}
             className="bg-[#e8702a] hover:bg-[#d2611f] text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-[#e8702a]/30"
           >
-            Start Exploring
+            {t("home.startExploring")}
           </button>
         </div>
       </section>
