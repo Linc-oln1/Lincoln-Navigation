@@ -24,6 +24,14 @@ interface PremiumPayload {
   exp: number
   /** Paystack reference that paid for this period. */
   ref: string
+  /** Which plan was bought. Absent on cookies minted before Pro existed = "premium". */
+  plan?: "premium" | "pro"
+}
+
+export type PaidPlan = "premium" | "pro"
+
+export function planOf(payload: PremiumPayload): PaidPlan {
+  return payload.plan === "pro" ? "pro" : "premium"
 }
 
 function b64url(buf: Buffer): string {
@@ -42,6 +50,7 @@ export function mintPremiumCookie(input: {
   email: string
   reference: string
   days?: number
+  plan?: PaidPlan
 }): { value: string; maxAge: number } {
   const now = Math.floor(Date.now() / 1000)
   const maxAge = (input.days ?? 31) * 24 * 60 * 60
@@ -50,6 +59,7 @@ export function mintPremiumCookie(input: {
     iat: now,
     exp: now + maxAge,
     ref: input.reference,
+    plan: input.plan ?? "premium",
   }
   const encoded = b64url(Buffer.from(JSON.stringify(payload)))
   return { value: `${encoded}.${sign(encoded)}`, maxAge }

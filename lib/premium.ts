@@ -22,9 +22,11 @@ export interface Entitlement {
   active: boolean
   /** ISO date the entitlement lapses, if known. */
   expiresAt: string | null
+  /** "pro" includes everything in Premium. UI only — servers verify the signature. */
+  plan: "premium" | "pro" | null
 }
 
-const INACTIVE: Entitlement = { active: false, expiresAt: null }
+const INACTIVE: Entitlement = { active: false, expiresAt: null, plan: null }
 
 /** Parse + expiry-check the ln_premium cookie payload. Browser only. */
 export function readEntitlement(): Entitlement {
@@ -41,13 +43,14 @@ export function readEntitlement(): Entitlement {
     const payloadPart = decodeURIComponent(raw).split(".")[0]
     const json = JSON.parse(
       atob(payloadPart.replace(/-/g, "+").replace(/_/g, "/")),
-    ) as { exp?: number }
+    ) as { exp?: number; plan?: string }
 
     if (!json.exp) return INACTIVE
     const expiresAt = new Date(json.exp * 1000)
     return {
       active: expiresAt.getTime() > Date.now(),
       expiresAt: expiresAt.toISOString(),
+      plan: json.plan === "pro" ? "pro" : "premium",
     }
   } catch {
     return INACTIVE

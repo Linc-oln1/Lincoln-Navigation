@@ -13,7 +13,7 @@
 //   }
 
 import { NextResponse } from "next/server"
-import { PREMIUM_COOKIE_NAME, verifyPremiumCookie } from "@/lib/premium-cookie"
+import { PREMIUM_COOKIE_NAME, planOf, verifyPremiumCookie } from "@/lib/premium-cookie"
 
 /** The verified entitlement payload, or null if not premium. */
 export function getPremiumEntitlement(req: Request) {
@@ -33,6 +33,19 @@ export function requirePremium(req: Request): NextResponse | null {
   if (getPremiumEntitlement(req)) return null
   return NextResponse.json(
     { error: "premium_required", upgrade: "/pricing" },
+    { status: 402 },
+  )
+}
+
+/**
+ * Like requirePremium, but only for the Pro plan (Pro includes everything
+ * in Premium, so requirePremium still passes for Pro cookies).
+ */
+export function requirePro(req: Request): NextResponse | null {
+  const entitlement = getPremiumEntitlement(req)
+  if (entitlement && planOf(entitlement) === "pro") return null
+  return NextResponse.json(
+    { error: "pro_required", upgrade: "/pricing" },
     { status: 402 },
   )
 }

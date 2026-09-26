@@ -21,6 +21,7 @@ export function usePremium() {
   const [entitlement, setEntitlement] = useState<Entitlement>({
     active: false,
     expiresAt: null,
+    plan: null,
   })
 
   const refresh = useCallback(() => setEntitlement(readEntitlement()), [])
@@ -33,6 +34,7 @@ export function usePremium() {
   }, [refresh])
 
   const isPremium = entitlement.active
+  const isPro = entitlement.active && entitlement.plan === "pro"
 
   const can = useCallback(
     (_feature: PremiumFeature) => isPremium,
@@ -49,6 +51,8 @@ export function usePremium() {
     available: PREMIUM_ENABLED,
     /** This visitor currently has an active premium entitlement. */
     isPremium,
+    /** Active Pro plan (a superset of Premium). */
+    isPro,
     expiresAt: entitlement.expiresAt,
     /** Gate a named capability: `can("voiceNavigation")`. */
     can,

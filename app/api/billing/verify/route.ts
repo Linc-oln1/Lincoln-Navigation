@@ -8,7 +8,13 @@
 // Requires env: PAYSTACK_SECRET_KEY
 
 import { NextResponse } from "next/server"
-import { mintPremiumCookie, PREMIUM_COOKIE_NAME } from "@/lib/premium-cookie"
+import {
+  mintPremiumCookie,
+  planOf,
+  PREMIUM_COOKIE_NAME,
+  verifyPremiumCookie,
+} from "@/lib/premium-cookie"
+import { PRO_PRICE_PESEWAS } from "@/lib/monetization"
 
 export async function GET(req: Request) {
   const url = new URL(req.url)
@@ -29,7 +35,12 @@ export async function GET(req: Request) {
   )
   const data = (await res.json()) as {
     status: boolean
-    data?: { status: string; customer?: { email?: string } }
+    data?: {
+      status: string
+      amount?: number
+      customer?: { email?: string }
+      metadata?: { plan?: string } | null
+    }
   }
 
   if (!res.ok || !data.status || data.data?.status !== "success") {
@@ -37,9 +48,29 @@ export async function GET(req: Request) {
   }
 
   const email = data.data.customer?.email || "unknown"
-  const { value, maxAge } = mintPremiumCookie({ email, reference })
 
-  const response = NextResponse.redirect(`${origin}/pricing?welcome=1`)
+  // The plan was set server-side at checkout (metadata) — and a Pro
+  // cookie is only issued if the amount actually paid covers Pro.
+  const plan =
+    data.data.metadata?.plan === "pro_monthly" &&
+    (data.data.amount ?? 0) >= PRO_PRICE_PESEWAS
+      ? "pro"
+      : "premium"
+
+  // Don't let a later Premium purchase replace a still-valid Pro cookie.
+  const existing = req.headers
+    .get("cookie")
+    ?.split("; ")
+    .find((c) => c.startsWith(`${PREMIUM_COOKIE_NAME}=`))
+    ?.slice(PREMIUM_COOKIE_NAME.length + 1)
+  const current = verifyPremiumCookie(existing ? decodeURIComponent(existing) : null)
+  if (plan === "premium" && current && planOf(current) === "pro") {
+    return NextResponse.redirect(`${origin}/pricing?welcome=1`)
+  }
+
+  const { value, maxAge } = mintPremiumCookie({ email, reference, plan })
+
+  const response = NextResponse.redirect(`${origin}/pricing?welcome=${plan === "pro" ? "pro" : "1"}`)
   response.cookies.set(PREMIUM_COOKIE_NAME, value, {
     maxAge,
     path: "/",

@@ -82,6 +82,28 @@ const baseEn = {
   "lv.driveNote": "Mount your phone before you drive. Never hold or touch it while driving.",
   "lv.rideNote":
     "Mount your phone securely before you ride. Never hold or touch it while riding.",
+
+  // Route planner (Pro). English only for now — other languages fall back.
+  "plan.label": "Route planner (Pro)",
+  "plan.proOnly": "Route optimization is a Pro feature",
+  "plan.title": "Route planner",
+  "plan.intro": "Add your stops and get the quickest order to visit them.",
+  "plan.start": "Start",
+  "plan.addStop": "Add a stop (search a place)",
+  "plan.useMyLocation": "Use my location as the start",
+  "plan.roundTrip": "Return to the start",
+  "plan.optimize": "Find the best order",
+  "plan.working": "Working out the best order…",
+  "plan.needTwo": "Add at least two places (start + one stop).",
+  "plan.max": "Up to {n} places.",
+  "plan.result": "Best order",
+  "plan.total": "{distance} · {duration} driving in total",
+  "plan.leg": "{distance} · {duration}",
+  "plan.show": "Show on map",
+  "plan.remove": "Remove",
+  "plan.clear": "Start over",
+  "plan.failed": "Could not plan that route. Try again.",
+  "plan.noResults": "No places found.",
 } as const
 
 const en = { ...baseEn, ...MAP_EN } as const

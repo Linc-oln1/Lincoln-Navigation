@@ -68,23 +68,32 @@ export default function PricingPage() {
 
 function PricingContent() {
   const params = useSearchParams()
-  const { isPremium, expiresAt } = usePremium()
+  const { isPremium, isPro, expiresAt } = usePremium()
   const [email, setEmail] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [proEmail, setProEmail] = useState("")
+  const [proBusy, setProBusy] = useState(false)
+  const [proError, setProError] = useState<string | null>(null)
 
-  const welcome = params.get("welcome") === "1"
+  const welcomeParam = params.get("welcome")
+  const welcome = welcomeParam === "1"
+  const welcomePro = welcomeParam === "pro"
   const paymentError = params.get("error")
 
-  async function startCheckout(e: React.FormEvent) {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
+  async function checkout(
+    plan: "premium" | "pro",
+    address: string,
+    setBusyFlag: (b: boolean) => void,
+    setErr: (e: string | null) => void
+  ) {
+    setBusyFlag(true)
+    setErr(null)
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: address, plan }),
       })
       const data = (await res.json()) as { url?: string; error?: string }
       if (!res.ok || !data.url) {
@@ -92,9 +101,19 @@ function PricingContent() {
       }
       window.location.href = data.url
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.")
-      setBusy(false)
+      setErr(err instanceof Error ? err.message : "Something went wrong.")
+      setBusyFlag(false)
     }
+  }
+
+  function startCheckout(e: React.FormEvent) {
+    e.preventDefault()
+    void checkout("premium", email, setBusy, setError)
+  }
+
+  function startProCheckout(e: React.FormEvent) {
+    e.preventDefault()
+    void checkout("pro", proEmail, setProBusy, setProError)
   }
 
   return (
@@ -118,15 +137,20 @@ function PricingContent() {
             🎉 You&rsquo;re on Premium. Thank you for supporting the project!
           </div>
         )}
+        {welcomePro && (
+          <div className="mb-8 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm">
+            🎉 You&rsquo;re on Pro. Thank you — it includes everything in Premium.
+          </div>
+        )}
         {paymentError && (
           <div className="mb-8 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
             We couldn&rsquo;t confirm that payment ({paymentError}). You have not
             been charged for an incomplete transaction.
           </div>
         )}
-        {isPremium && !welcome && (
+        {isPremium && !welcome && !welcomePro && (
           <div className="mb-8 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-sm">
-            Your Premium plan is active
+            Your {isPro ? "Pro" : "Premium"} plan is active
             {expiresAt
               ? ` until ${new Date(expiresAt).toLocaleDateString()}`
               : ""}
@@ -175,7 +199,7 @@ function PricingContent() {
 
             {isPremium ? (
               <p className="mt-6 rounded-xl bg-primary/10 px-4 py-2.5 text-center text-sm font-semibold text-primary">
-                Active — you&rsquo;re all set
+                {isPro ? "Included in your Pro plan" : "Active — you\u2019re all set"}
               </p>
             ) : PREMIUM_ENABLED ? (
               <form onSubmit={startCheckout} className="mt-6 space-y-3">
@@ -211,14 +235,11 @@ function PricingContent() {
             )}
           </div>
 
-          {/* Pro — display only for now: no checkout, it routes to the business form */}
+          {/* Pro */}
           <div className="rounded-2xl border border-border bg-card p-6">
             <div className="flex items-center gap-2">
               <Briefcase className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-lg font-semibold">Pro</h2>
-              <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Coming soon
-              </span>
             </div>
             <p className="mt-1 text-2xl font-bold">
               {formatProPrice()}
@@ -228,19 +249,47 @@ function PricingContent() {
               </span>
             </p>
             <FeatureList
-              features={[{ text: "Everything in Premium" }, ...PRO_FEATURES]}
-              checkClass="text-muted-foreground"
+              features={PRO_FEATURES}
+              checkClass="text-primary"
+              lead="Everything in Premium, plus"
             />
+
+            {isPro ? (
+              <p className="mt-6 rounded-xl bg-primary/10 px-4 py-2.5 text-center text-sm font-semibold text-primary">
+                Active — you&rsquo;re all set
+              </p>
+            ) : PREMIUM_ENABLED ? (
+              <form onSubmit={startProCheckout} className="mt-6 space-y-3">
+                <input
+                  type="email"
+                  required
+                  value={proEmail}
+                  onChange={(e) => setProEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full rounded-xl border border-border bg-input px-4 py-2.5 text-sm outline-none focus:border-primary"
+                />
+                <button
+                  type="submit"
+                  disabled={proBusy}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:brightness-110 transition disabled:opacity-60"
+                >
+                  {proBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {proBusy ? "Starting checkout…" : "Get Pro"}
+                </button>
+                {proError && <p className="text-xs text-destructive">{proError}</p>}
+                <p className="text-center text-[11px] text-muted-foreground">
+                  Secure payment via Paystack · paid 31 days at a time, no auto-renewal
+                </p>
+                <AgreeLine className="text-center" />
+              </form>
+            ) : null}
+
             <Link
               href="/business#talk-to-us"
-              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-secondary/80 transition-colors"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-secondary/80 transition-colors"
             >
-              Talk to us
+              Talk to us about a team plan
             </Link>
-            <p className="mt-3 text-center text-[11px] text-muted-foreground">
-              We&rsquo;re building Pro with our first business partners. Tell us
-              what your team needs.
-            </p>
           </div>
         </div>
 

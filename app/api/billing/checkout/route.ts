@@ -12,6 +12,7 @@ import { NextResponse } from "next/server"
 import {
   PREMIUM_CURRENCY,
   PREMIUM_PRICE_PESEWAS,
+  PRO_PRICE_PESEWAS,
 } from "@/lib/monetization"
 
 export async function POST(req: Request) {
@@ -24,9 +25,11 @@ export async function POST(req: Request) {
   }
 
   let email = ""
+  let plan: "premium" | "pro" = "premium"
   try {
-    const body = (await req.json()) as { email?: string }
+    const body = (await req.json()) as { email?: string; plan?: string }
     email = (body.email || "").trim().toLowerCase()
+    if (body.plan === "pro") plan = "pro"
   } catch {
     /* fall through to validation below */
   }
@@ -50,10 +53,13 @@ export async function POST(req: Request) {
     },
     body: JSON.stringify({
       email,
-      amount: PREMIUM_PRICE_PESEWAS,
+      amount: plan === "pro" ? PRO_PRICE_PESEWAS : PREMIUM_PRICE_PESEWAS,
       currency: PREMIUM_CURRENCY,
       callback_url: `${origin}/api/billing/verify`,
-      metadata: { plan: "premium_monthly", product: "LincolnNavigation.com" },
+      metadata: {
+        plan: plan === "pro" ? "pro_monthly" : "premium_monthly",
+        product: "LincolnNavigation.com",
+      },
     }),
   })
 

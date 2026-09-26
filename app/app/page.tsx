@@ -22,6 +22,7 @@ import { usePremium } from "@/hooks/use-premium"
 import { TrafficToggle } from "@/components/map/traffic-toggle"
 import { OfflineMaps } from "@/components/map/offline-maps"
 import { RoadAlerts } from "@/components/map/road-alerts"
+import { RoutePlanner } from "@/components/map/route-planner"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -129,7 +130,7 @@ function MapNavigator() {
   // Device theme is the default
   const [mapStyle, setMapStyle] = useState<MapStyle>("device")
   // Live traffic overlay: Premium only; the choice is remembered on the device.
-  const { isPremium } = usePremium()
+  const { isPremium, isPro } = usePremium()
   const [trafficOn, setTrafficOn] = useState(false)
   useEffect(() => {
     try {
@@ -465,6 +466,20 @@ function MapNavigator() {
       />
 
       <OfflineMaps isPremium={isPremium} center={mapCenter} />
+      <RoutePlanner
+        isPro={isPro}
+        userLocation={userLocation}
+        onShowRoute={(points, planned) => {
+          setSelectedLocation(null)
+          setRoutePoints(points)
+          setMarkers(
+            planned.map((s, i) => ({
+              position: s.position,
+              title: `${i === 0 ? "Start" : i}. ${s.name}`,
+            }))
+          )
+        }}
+      />
       <RoadAlerts isPremium={isPremium} position={userLocation} onSelect={handleFocusHazard} />
 
       <MapControls

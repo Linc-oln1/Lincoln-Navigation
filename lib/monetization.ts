@@ -109,7 +109,7 @@ export const PRO_FEATURES: PlanFeature[] = [
   { text: "Advanced routing", soon: true },
   { text: "Business analytics", soon: true },
   { text: "Multiple vehicles", soon: true },
-  { text: "Route optimization", soon: true },
+  { text: "Route optimization — enter up to 12 stops, get the best order and route" },
 ]
 
 /* --------------------- entitlement gates --------------------- */

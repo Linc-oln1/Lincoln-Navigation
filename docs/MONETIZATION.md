@@ -142,6 +142,7 @@ its button goes to `/business#talk-to-us` until the Pro tools exist.
 | Offline maps | — | — | built — saves OpenFreeMap tiles to Cache Storage; SW `public/sw.js` serves them; UI-gated only |
 | Real-time road alerts | locked (upsell to /pricing) | bell with hazards within 5 km of the device, refreshed every minute, banner when a new one appears | `components/map/road-alerts.tsx`, `hooks/use-nearby-alerts.ts`; reads the public `/api/hazards` (UI-gated only). Crowd reports need Upstash; without it only forecast flood alerts appear |
 | Location intelligence (landmark search) | hint linking to /pricing when a search looks like a landmark description | search like "opposite the filling station" / "near the market" adds a "Landmark match" card: an estimated position with its accuracy radius | `components/map/search-panel.tsx`, `lib/geo-intelligence/landmark-query.ts` (client check), `app/api/geo/landmark/route.ts` (**server-gated** with `requirePremium`; Overpass anchor lookup within 3 km of the map centre, English phrasing only) |
+| Route optimization (Pro) | padlocked button → /pricing | Pro: route planner button; up to 12 stops → best visiting order, leg times, route on the map | `components/map/route-planner.tsx`, `app/api/optimize/route.ts` (**server-gated** with `requirePro`; OSRM `trip` solver, no key) |
 | Priority routing | — | — | not built |
 
 How to gate something:
@@ -162,3 +163,16 @@ the "No accounts yet" limitation. Someone editing `localStorage` or
 the cookie can lift a client limit; that's acceptable for
 save-count UX, but anything with real cost must use
 `requirePremium()` server-side.
+
+
+## Plans in the cookie (Pro)
+
+`ln_premium` now carries `plan: "premium" | "pro"` (absent = premium, so
+older cookies still work). Pro includes Premium: `requirePremium` passes
+for both, `requirePro` (lib/premium-guard) only for Pro. Checkout takes
+`{ email, plan }`; the plan and amount are set server-side, and
+`/api/billing/verify` only issues a Pro cookie if the Paystack transaction
+was tagged `pro_monthly` **and** the amount paid covers `PRO_PRICE_PESEWAS`.
+A later Premium purchase never replaces a still-valid Pro cookie.
+Still to build for Pro (shown "Coming soon"): professional navigation, fleet
+tools, advanced routing, business analytics, multiple vehicles.
