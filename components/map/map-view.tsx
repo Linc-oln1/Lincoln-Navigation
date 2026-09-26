@@ -1664,9 +1664,23 @@ export function MapView({
       // produces zero console output and just silently leaves the
       // map blank. This makes every one of those failures visible.
       map.on("error", (event: any) => {
+        const err = event?.error
+        // A single tile that fails to download (dropped connection, brief
+        // server hiccup) is routine on mobile networks — MapLibre simply
+        // retries it on the next move. Log those quietly instead of raising
+        // a console *error* (which pops the Next.js dev overlay); anything
+        // else (bad style, worker crash) stays loud.
+        const isTileNetworkFailure =
+          err?.name === "AJAXError" &&
+          (err.status === 0 || err.status >= 500) &&
+          Boolean(event?.tile || event?.sourceId)
+        if (isTileNetworkFailure) {
+          console.warn("[lincoln-map] tile failed to load:", err.message)
+          return
+        }
         console.error(
           "[lincoln-map] MapLibre error event:",
-          event?.error || event
+          err || event
         )
       })
 
