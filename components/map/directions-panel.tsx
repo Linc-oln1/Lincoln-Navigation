@@ -30,6 +30,7 @@ import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
 import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
 import { SpeedReader, isSpeedMode } from "@/components/map/speed-reader"
+import { StopNavigationDialog } from "@/components/map/stop-navigation-dialog"
 import {
   fetchHazards,
   hazardKindMeta,
@@ -199,6 +200,7 @@ export function DirectionsPanel({
   // route calculation.
   const hazardFetchIdRef = useRef(0)
 
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
   const routeScrollRef = useRef<HTMLDivElement>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
@@ -331,6 +333,7 @@ export function DirectionsPanel({
     if (!isNavigating) {
       setRerouteError(null)
       setRerouteBusy(false)
+      setConfirmCloseOpen(false)
     }
   }, [isNavigating])
 
@@ -926,9 +929,16 @@ export function DirectionsPanel({
   ======================================================= */
 
   const handleClose = () => {
+    setConfirmCloseOpen(false)
     stopNavigation()
     setIsLiveNavigation(false)
     onClose()
+  }
+
+  // Closing ends a running trip, so ask first.
+  const requestClose = () => {
+    if (isNavigating) setConfirmCloseOpen(true)
+    else handleClose()
   }
 
   if (!isOpen) {
@@ -977,7 +987,7 @@ export function DirectionsPanel({
 
             <button
               type="button"
-              onClick={handleClose}
+              onClick={requestClose}
               className="p-2 hover:bg-secondary rounded-lg transition-colors"
               aria-label="Close directions"
             >
@@ -1383,6 +1393,13 @@ export function DirectionsPanel({
         )}
         </div>
       )}
+      <StopNavigationDialog
+        open={confirmCloseOpen}
+        description="You're in the middle of a trip. Closing directions will end live navigation and turn off voice guidance."
+        stopLabel="Stop & close"
+        onKeep={() => setConfirmCloseOpen(false)}
+        onStop={handleClose}
+      />
     </div>
   )
 }

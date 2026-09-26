@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Search, Navigation, Layers, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSession } from "@/hooks/use-session"
+import { StopNavigationDialog } from "@/components/map/stop-navigation-dialog"
 
 interface HeaderProps {
   onSearchClick: () => void
@@ -21,14 +22,6 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
   const router = useRouter()
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  useEffect(() => {
-    if (!confirmOpen) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setConfirmOpen(false)
-    }
-    window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
-  }, [confirmOpen])
 
   // If navigation ends while the prompt is up, there's nothing to confirm.
   useEffect(() => {
@@ -153,46 +146,13 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
       </div>
     </header>
 
-    {confirmOpen && (
-      <div
-        className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 p-4"
-        onClick={() => setConfirmOpen(false)}
-      >
-        <div
-          role="alertdialog"
-          aria-modal="true"
-          aria-labelledby="exit-nav-title"
-          aria-describedby="exit-nav-desc"
-          onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        >
-          <h2 id="exit-nav-title" className="text-lg font-semibold text-foreground">
-            Stop navigation?
-          </h2>
-          <p id="exit-nav-desc" className="mt-2 text-sm text-muted-foreground">
-            You&apos;re in the middle of a trip. Leaving the map will end live
-            navigation and turn off voice guidance.
-          </p>
-          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button
-              type="button"
-              onClick={leave}
-              className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary active:scale-95"
-            >
-              Stop &amp; exit
-            </button>
-            <button
-              type="button"
-              autoFocus
-              onClick={() => setConfirmOpen(false)}
-              className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95"
-            >
-              Keep navigating
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+    <StopNavigationDialog
+      open={confirmOpen}
+      description="You're in the middle of a trip. Leaving the map will end live navigation and turn off voice guidance."
+      stopLabel="Stop & exit"
+      onKeep={() => setConfirmOpen(false)}
+      onStop={leave}
+    />
     </>
   )
 }
