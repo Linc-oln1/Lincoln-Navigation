@@ -116,6 +116,16 @@ sign/verify), `hooks/use-premium.ts` (client UI state).
 - Add a Paystack webhook endpoint and verify its signature with
   `PAYSTACK_SECRET_KEY`.
 
+### Plans on /pricing
+
+Three cards, defined in `lib/monetization.ts` (`FREE_FEATURES`,
+`PREMIUM_FEATURES`, `PRO_FEATURES`). Anything on a plan that isn't built yet
+carries `soon: true` and shows a "Coming soon" tag — flip it off when the
+feature ships. **Premium** is GHS 90/month (`NEXT_PUBLIC_PREMIUM_PRICE_PESEWAS`,
+default 9000; Paystack still sells 31 days at a time, no auto-renewal).
+**Pro** is GHS 225/month (`NEXT_PUBLIC_PRO_PRICE_PESEWAS`) but has no checkout:
+its button goes to `/business#talk-to-us` until the Pro tools exist.
+
 ### What's gated today
 
 | Feature | Free | Premium | Where |
@@ -124,7 +134,8 @@ sign/verify), `hooks/use-premium.ts` (client UI state).
 | Saved places | 10 | unlimited | `hooks/use-saved-places.ts` (`FREE_LIMITS.savedPlaces`) — 11th save shows an upgrade prompt |
 | Trip history | 5 | 50 | `hooks/use-recent-searches.ts` (`*_LIMITS.tripHistory`) |
 | Voice navigation | off (on-screen steps only) | on | `components/map/directions-panel.tsx` + `hooks/use-live-navigation.ts` (`speakNavigation`) |
-| Offline maps | — | — | not built |
+| Live View (AR camera) | locked (upsell to /pricing) | on | `components/map/directions-panel.tsx` (the Live View button) |
+| Offline maps | — | — | not built (shown "Coming soon" on /pricing) |
 | Priority routing | — | — | not built |
 
 How to gate something:

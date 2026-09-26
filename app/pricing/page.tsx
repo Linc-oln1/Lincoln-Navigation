@@ -5,15 +5,56 @@ import Link from "next/link"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { useSearchParams } from "next/navigation"
-import { Check, Loader2, Sparkles } from "lucide-react"
+import { Briefcase, Check, Clock, Loader2, Sparkles } from "lucide-react"
 import {
   FREE_FEATURES,
   PREMIUM_ENABLED,
   PREMIUM_FEATURES,
+  PRO_FEATURES,
   formatPremiumPrice,
+  formatProPrice,
+  type PlanFeature,
 } from "@/lib/monetization"
 import { usePremium } from "@/hooks/use-premium"
 import { AgreeLine } from "@/components/site-links"
+
+/** One plan's feature list. Unbuilt features carry a "Coming soon" tag. */
+function FeatureList({
+  features,
+  checkClass,
+  lead,
+}: {
+  features: PlanFeature[]
+  checkClass: string
+  lead?: string
+}) {
+  return (
+    <ul className="mt-5 space-y-2.5 text-sm">
+      {lead && (
+        <li className="pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {lead}
+        </li>
+      )}
+      {features.map((f) => (
+        <li key={f.text} className="flex items-start gap-2">
+          {f.soon ? (
+            <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground/60" aria-hidden />
+          ) : (
+            <Check className={`mt-0.5 h-4 w-4 flex-shrink-0 ${checkClass}`} aria-hidden />
+          )}
+          <span className={f.soon ? "text-muted-foreground" : undefined}>
+            {f.text}
+            {f.soon && (
+              <span className="ml-2 inline-block rounded-full border border-border px-2 py-0.5 align-middle text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Coming soon
+              </span>
+            )}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
 
 export default function PricingPage() {
   return (
@@ -59,15 +100,16 @@ function PricingContent() {
   return (
     <main className="flex min-h-screen flex-col bg-background text-foreground">
       <SiteHeader />
-      <div className="w-full flex-1 mx-auto max-w-4xl px-6 py-14">
+      <div className="w-full flex-1 mx-auto max-w-6xl px-6 py-14">
 
         <header className="mt-8 mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
             Simple pricing
           </h1>
           <p className="mt-3 text-muted-foreground max-w-xl">
-            The map, search and directions are free forever. Premium removes
-            ads and unlocks voice navigation and unlimited saved places.
+            The map, search and directions are free forever. Premium adds Live
+            View, voice navigation, no ads and unlimited saved places. Lincoln
+            Pro is for businesses and fleets.
           </p>
         </header>
 
@@ -92,7 +134,7 @@ function PricingContent() {
           </div>
         )}
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* Free */}
           <div className="rounded-2xl border border-border bg-card p-6">
             <h2 className="text-lg font-semibold">Free</h2>
@@ -103,14 +145,7 @@ function PricingContent() {
                 / forever
               </span>
             </p>
-            <ul className="mt-5 space-y-2.5 text-sm">
-              {FREE_FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
-                  {f}
-                </li>
-              ))}
-            </ul>
+            <FeatureList features={FREE_FEATURES} checkClass="text-muted-foreground" />
             <Link
               href="/app"
               className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-secondary/80 transition-colors"
@@ -129,17 +164,14 @@ function PricingContent() {
               {formatPremiumPrice()}
               <span className="text-sm font-normal text-muted-foreground">
                 {" "}
-                for 31 days
+                / month
               </span>
             </p>
-            <ul className="mt-5 space-y-2.5 text-sm">
-              {PREMIUM_FEATURES.map((f) => (
-                <li key={f} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                  {f}
-                </li>
-              ))}
-            </ul>
+            <FeatureList
+              features={PREMIUM_FEATURES}
+              checkClass="text-primary"
+              lead="Everything in Free, plus"
+            />
 
             {isPremium ? (
               <p className="mt-6 rounded-xl bg-primary/10 px-4 py-2.5 text-center text-sm font-semibold text-primary">
@@ -167,7 +199,7 @@ function PricingContent() {
                   <p className="text-xs text-destructive">{error}</p>
                 )}
                 <p className="text-center text-[11px] text-muted-foreground">
-                  Secure payment via Paystack · one-time payment, no auto-renewal
+                  Secure payment via Paystack · paid 31 days at a time, no auto-renewal
                 </p>
                 <AgreeLine className="text-center" />
               </form>
@@ -177,6 +209,38 @@ function PricingContent() {
                 enable it (see docs/MONETIZATION.md).
               </p>
             )}
+          </div>
+
+          {/* Pro — display only for now: no checkout, it routes to the business form */}
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <div className="flex items-center gap-2">
+              <Briefcase className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-lg font-semibold">Pro</h2>
+              <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Coming soon
+              </span>
+            </div>
+            <p className="mt-1 text-2xl font-bold">
+              {formatProPrice()}
+              <span className="text-sm font-normal text-muted-foreground">
+                {" "}
+                / month
+              </span>
+            </p>
+            <FeatureList
+              features={[{ text: "Everything in Premium" }, ...PRO_FEATURES]}
+              checkClass="text-muted-foreground"
+            />
+            <Link
+              href="/business#talk-to-us"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-secondary/80 transition-colors"
+            >
+              Talk to us
+            </Link>
+            <p className="mt-3 text-center text-[11px] text-muted-foreground">
+              We&rsquo;re building Pro with our first business partners. Tell us
+              what your team needs.
+            </p>
           </div>
         </div>
 

@@ -10,8 +10,10 @@
 //   2. Sponsored places  — local businesses pay to be pinned in
 //                           "Explore Nearby" results (see
 //                           lib/sponsored-places.ts).
-//   3. Premium            — a paid tier (ad-free, offline maps,
-//                           advanced routing) billed via Paystack.
+//   3. Premium / Pro      — paid tiers billed via Paystack. Premium is
+//                           live (dormant until keys are set); Pro is
+//                           display-only and routes to the business
+//                           enquiry form until its tools exist.
 
 /* ----------------------------- ads ----------------------------- */
 
@@ -45,7 +47,12 @@ export const PREMIUM_ENABLED = PAYSTACK_PUBLIC_KEY.startsWith("pk_")
 
 /** Price of the premium plan, in the smallest currency unit (pesewas). */
 export const PREMIUM_PRICE_PESEWAS = Number(
-  process.env.NEXT_PUBLIC_PREMIUM_PRICE_PESEWAS || 3000, // 100 pesewas = GHS 1 → GHS 30.00 / mo
+  process.env.NEXT_PUBLIC_PREMIUM_PRICE_PESEWAS || 9000, // 100 pesewas = GHS 1 → GHS 90.00 / mo
+)
+
+/** Price of Lincoln Pro (display only — there is no Pro checkout yet). */
+export const PRO_PRICE_PESEWAS = Number(
+  process.env.NEXT_PUBLIC_PRO_PRICE_PESEWAS || 22500, // GHS 225.00 / mo
 )
 
 export const PREMIUM_CURRENCY =
@@ -53,20 +60,56 @@ export const PREMIUM_CURRENCY =
 
 export const PREMIUM_PLAN_INTERVAL = "month" as const
 
-/** Human-readable price, e.g. "GHS 30.00". */
-export function formatPremiumPrice(): string {
-  const major = (PREMIUM_PRICE_PESEWAS / 100).toLocaleString(undefined, {
+function formatPrice(pesewas: number): string {
+  const major = (pesewas / 100).toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
   return `${PREMIUM_CURRENCY} ${major}`
 }
 
-/** What the paid tier unlocks — shown on /pricing. */
-export const PREMIUM_FEATURES: string[] = [
-  "No ads, anywhere",
-  "Turn-by-turn voice navigation",
-  "Unlimited saved places and trip history",
+/** Human-readable price, e.g. "GHS 90.00". */
+export function formatPremiumPrice(): string {
+  return formatPrice(PREMIUM_PRICE_PESEWAS)
+}
+
+/** Human-readable Pro price, e.g. "GHS 225.00". */
+export function formatProPrice(): string {
+  return formatPrice(PRO_PRICE_PESEWAS)
+}
+
+/**
+ * One line on a plan card. `soon` marks something that is on the plan but
+ * not built yet — shown with a "Coming soon" tag rather than presented as
+ * working. Flip it off (or delete it) when the feature ships.
+ */
+export interface PlanFeature {
+  text: string
+  soon?: boolean
+}
+
+/** What Lincoln Premium adds on top of Free — shown on /pricing. */
+export const PREMIUM_FEATURES: PlanFeature[] = [
+  { text: "AR / Live View camera navigation" },
+  { text: "No ads, anywhere" },
+  { text: "Turn-by-turn voice navigation" },
+  { text: "Multiple saved locations — unlimited saved places and trip history" },
+  { text: "Advanced traffic", soon: true },
+  { text: "Offline maps", soon: true },
+  { text: "Advanced route options", soon: true },
+  { text: "Real-time road alerts", soon: true },
+  { text: "Premium location intelligence", soon: true },
+  { text: "Advanced business discovery", soon: true },
+]
+
+/** What Lincoln Pro adds on top of Premium — shown on /pricing. */
+export const PRO_FEATURES: PlanFeature[] = [
+  { text: "Professional / business navigation", soon: true },
+  { text: "Fleet tools", soon: true },
+  { text: "Advanced routing", soon: true },
+  { text: "Business analytics", soon: true },
+  { text: "Multiple vehicles", soon: true },
+  { text: "Route optimization", soon: true },
 ]
 
 /* --------------------- entitlement gates --------------------- */
@@ -81,6 +124,7 @@ export const PREMIUM_FEATURES: string[] = [
  *   voiceNavigation      — LIVE, gated (see directions-panel + use-live-navigation)
  *   unlimitedSavedPlaces — LIVE, gated (see use-saved-places)
  *   unlimitedTripHistory — LIVE, gated (see use-recent-searches)
+ *   liveView             — LIVE, gated (see directions-panel: the Live View button)
  *   offlineMaps          — not built yet
  *   priorityRouting      — not built yet
  */
@@ -88,6 +132,7 @@ export type PremiumFeature =
   | "voiceNavigation"
   | "unlimitedSavedPlaces"
   | "unlimitedTripHistory"
+  | "liveView"
   | "offlineMaps"
   | "priorityRouting"
 
@@ -105,11 +150,14 @@ export const PREMIUM_LIMITS = {
 export type TierLimits = { savedPlaces: number; tripHistory: number }
 
 /** Feature list for the free tier — shown on /pricing. */
-export const FREE_FEATURES: string[] = [
-  "Full Ghana map and search",
-  "Driving, motorcycle, transit, cycling and walking directions",
-  "Explore nearby places",
-  `Up to ${FREE_LIMITS.savedPlaces} saved places`,
+export const FREE_FEATURES: PlanFeature[] = [
+  { text: "Turn-by-turn navigation" },
+  { text: "Live traffic", soon: true },
+  { text: "Full Ghana map and search" },
+  { text: "GPS positioning" },
+  { text: "Walking, driving, motorcycle, bus, bike, train and boat directions" },
+  { text: "Explore nearby places" },
+  { text: `Up to ${FREE_LIMITS.savedPlaces} saved places` },
 ]
 
 /* ------------------------ advertising ------------------------- */

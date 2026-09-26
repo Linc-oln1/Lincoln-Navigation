@@ -1235,7 +1235,22 @@ export function DirectionsPanel({
             </Button>
           )}
 
-          {routeInfo && isLiveViewMode(travelMode) && (
+          {routeInfo && isLiveViewMode(travelMode) && !hasVoice && (
+            // Live View is a Premium feature: free visitors see it locked and
+            // are sent to the pricing page instead of opening the camera.
+            <a
+              href="/pricing"
+              title={t("lv.premiumOnly")}
+              aria-label={t("lv.premiumOnly")}
+              className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-md border bg-background px-4 py-2 text-sm font-medium shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <Camera className="w-4 h-4" />
+              {t("dir.liveView")}
+              <Lock className="w-3.5 h-3.5 text-primary" aria-hidden />
+            </a>
+          )}
+
+          {routeInfo && isLiveViewMode(travelMode) && hasVoice && (
             <Button
               type="button"
               variant="outline"
@@ -1534,7 +1549,7 @@ export function DirectionsPanel({
         )}
         </div>
       )}
-      {liveViewOpen && isNavigating && (
+      {liveViewOpen && isNavigating && hasVoice && (
         <LiveView
           position={position}
           step={liveSteps[currentStepIndex]}
