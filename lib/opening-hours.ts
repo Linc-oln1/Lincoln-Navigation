@@ -9,8 +9,9 @@
 //   Mo,We,Fr 09:00-12:00,14:00-18:00
 //   Mo-Sa 08:00-18:00; Su off
 //
-// Anything fancier (sunrise/sunset, months, week numbers, holidays) makes it
-// return "unknown" rather than guess — a wrong "Open now" is worse than none.
+// Anything fancier (sunrise/sunset, months, week numbers) makes it return
+// "unknown" rather than guess — a wrong "Open now" is worse than none. Public
+// holiday rules ("PH off") are skipped: the regular hours are used.
 // Ghana doesn't use daylight saving, so "now" is simply UTC.
 
 export type OpenStatus =
@@ -103,6 +104,10 @@ export function openStatus(hours: string | undefined | null, now: Date = new Dat
   const rules: Rule[] = []
   for (const piece of hours.split(";")) {
     if (!piece.trim()) continue
+    // "PH off" / "SH off" (public / school holidays): very common, and we
+    // don't track holiday dates, so these are skipped and the regular hours
+    // decide. On an actual holiday a place may differ from what we show.
+    if (/^\s*(PH|SH)\b/.test(piece)) continue
     const rule = parseRule(piece)
     if (!rule) return { state: "unknown" }
     rules.push(rule)
