@@ -204,6 +204,8 @@ export function DirectionsPanel({
 
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
   const [liveViewOpen, setLiveViewOpen] = useState(false)
+  // Live View tapped before the trip started: open it once navigation is on.
+  const [liveViewPending, setLiveViewPending] = useState(false)
   const routeScrollRef = useRef<HTMLDivElement>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
@@ -338,8 +340,11 @@ export function DirectionsPanel({
       setRerouteBusy(false)
       setConfirmCloseOpen(false)
       setLiveViewOpen(false)
+    } else if (liveViewPending) {
+      setLiveViewPending(false)
+      setLiveViewOpen(true)
     }
-  }, [isNavigating])
+  }, [isNavigating, liveViewPending])
 
   /* =======================================================
      BUBBLE LIVE POSITION UP TO THE MAP
@@ -1122,15 +1127,23 @@ export function DirectionsPanel({
             </Button>
           )}
 
-          {isNavigating && travelMode === "walking" && (
+          {routeInfo && travelMode === "walking" && (
             <Button
               type="button"
               variant="outline"
-              onClick={() => setLiveViewOpen(true)}
+              disabled={!isNavigating && liveSteps.length === 0}
+              onClick={() => {
+                if (isNavigating) {
+                  setLiveViewOpen(true)
+                } else {
+                  setLiveViewPending(true)
+                  handleStartLiveNavigation()
+                }
+              }}
               className="w-full"
             >
               <Camera className="w-4 h-4 mr-2" />
-              Live View
+              Live View (camera)
             </Button>
           )}
 
