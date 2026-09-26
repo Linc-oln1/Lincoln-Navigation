@@ -105,7 +105,7 @@ export const PREMIUM_FEATURES: PlanFeature[] = [
 /** What Lincoln Pro adds on top of Premium — shown on /pricing. */
 export const PRO_FEATURES: PlanFeature[] = [
   { text: "Professional / business navigation", soon: true },
-  { text: "Fleet tools", soon: true },
+  { text: "Fleet tools — your vehicles and where each one is, live" },
   { text: "Advanced routing", soon: true },
   { text: "Business analytics", soon: true },
   { text: "Multiple vehicles", soon: true },

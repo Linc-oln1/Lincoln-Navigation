@@ -23,6 +23,7 @@ import { TrafficToggle } from "@/components/map/traffic-toggle"
 import { OfflineMaps } from "@/components/map/offline-maps"
 import { RoadAlerts } from "@/components/map/road-alerts"
 import { RoutePlanner } from "@/components/map/route-planner"
+import { FleetPanel } from "@/components/map/fleet-panel"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -479,6 +480,11 @@ function MapNavigator() {
             }))
           )
         }}
+      />
+      <FleetPanel
+        isPro={isPro}
+        onTrack={(vehicles) => setMarkers(vehicles ?? [])}
+        onCenter={setMapCenter}
       />
       <RoadAlerts isPremium={isPremium} position={userLocation} onSelect={handleFocusHazard} />
 
