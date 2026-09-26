@@ -139,6 +139,7 @@ its button goes to `/business#talk-to-us` until the Pro tools exist.
 | Route options | locked (upsell to /pricing) | fastest/shortest, avoid highways/tolls/ferries, choose between routes | `components/map/directions-panel.tsx` + `app/api/directions/route.ts` (needs `ORS_API_KEY`; without it the standard route is shown with a notice) |
 | Live View (AR camera) | locked (upsell to /pricing) | on | `components/map/directions-panel.tsx` (the Live View button) |
 | Offline maps | — | — | built — saves OpenFreeMap tiles to Cache Storage; SW `public/sw.js` serves them; UI-gated only |
+| Real-time road alerts | locked (upsell to /pricing) | bell with hazards within 5 km of the device, refreshed every minute, banner when a new one appears | `components/map/road-alerts.tsx`, `hooks/use-nearby-alerts.ts`; reads the public `/api/hazards` (UI-gated only). Crowd reports need Upstash; without it only forecast flood alerts appear |
 | Priority routing | — | — | not built |
 
 How to gate something:

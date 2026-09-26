@@ -97,7 +97,7 @@ export const PREMIUM_FEATURES: PlanFeature[] = [
   { text: "Advanced traffic — live traffic on the map and traffic-aware travel times" },
   { text: "Offline maps (save areas to your phone)" },
   { text: "Advanced route options — fastest or shortest, avoid highways, tolls and ferries, and route choices" },
-  { text: "Real-time road alerts", soon: true },
+  { text: "Real-time road alerts — hazards within 5 km of you, as they are reported" },
   { text: "Premium location intelligence", soon: true },
   { text: "Advanced business discovery — opening hours, phone, website, distance and filters on nearby places" },
 ]

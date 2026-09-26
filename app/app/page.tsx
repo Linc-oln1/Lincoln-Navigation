@@ -21,6 +21,7 @@ import { useI18n } from "@/components/i18n/language-provider"
 import { usePremium } from "@/hooks/use-premium"
 import { TrafficToggle } from "@/components/map/traffic-toggle"
 import { OfflineMaps } from "@/components/map/offline-maps"
+import { RoadAlerts } from "@/components/map/road-alerts"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -464,6 +465,7 @@ function MapNavigator() {
       />
 
       <OfflineMaps isPremium={isPremium} center={mapCenter} />
+      <RoadAlerts isPremium={isPremium} position={userLocation} onSelect={handleFocusHazard} />
 
       <MapControls
         currentStyle={mapStyle}
