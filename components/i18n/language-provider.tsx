@@ -20,13 +20,13 @@ import { translate, type MessageKey } from "@/lib/i18n/messages"
 interface I18n {
   lang: LangCode
   setLang: (lang: LangCode) => void
-  t: (key: MessageKey) => string
+  t: (key: MessageKey, params?: Record<string, string | number>) => string
 }
 
 const I18nContext = createContext<I18n>({
   lang: DEFAULT_LANG,
   setLang: () => {},
-  t: (key) => translate(DEFAULT_LANG, key),
+  t: (key, params) => translate(DEFAULT_LANG, key, params),
 })
 
 export function useI18n() {
@@ -70,7 +70,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const value = useMemo<I18n>(
-    () => ({ lang, setLang, t: (key) => translate(lang, key) }),
+    () => ({ lang, setLang, t: (key, params) => translate(lang, key, params) }),
     [lang, setLang],
   )
 

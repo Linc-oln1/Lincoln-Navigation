@@ -1,5 +1,8 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import { useEffect, useState } from "react"
 import { Crosshair, Loader2, MapPin, X } from "lucide-react"
 
@@ -32,6 +35,7 @@ export function ReportHazardSheet({
   userLocation,
   onReported,
 }: ReportHazardSheetProps) {
+  const { t } = useI18n()
   const [kind, setKind] = useState<HazardKind | null>(null)
   const [useGps, setUseGps] = useState(false)
   const [note, setNote] = useState("")
@@ -77,7 +81,7 @@ export function ReportHazardSheet({
 
     setError(
       result.status === 429
-        ? "You've reported a lot recently. Try again in a bit."
+        ? t("report.tooMany")
         : result.error
     )
   }
@@ -85,11 +89,11 @@ export function ReportHazardSheet({
   return (
     <div className="absolute inset-x-0 bottom-0 md:inset-x-auto md:right-4 md:bottom-4 md:w-[380px] z-[1002] bg-card/95 backdrop-blur-xl border border-border rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
       <div className="flex items-center justify-between p-4 border-b border-border">
-        <h2 className="text-lg font-bold">Report a hazard</h2>
+        <h2 className="text-lg font-bold">{t("report.title")}</h2>
         <button
           onClick={onClose}
           className="p-2 hover:bg-secondary rounded-lg transition-colors"
-          aria-label="Close"
+          aria-label={t("common.close")}
         >
           <X className="w-5 h-5" />
         </button>
@@ -113,7 +117,7 @@ export function ReportHazardSheet({
                 {meta.emoji}
               </span>
               <span className="text-[11px] font-medium leading-tight">
-                {meta.label}
+                {t(`hazard.${meta.kind}` as MessageKey)}
               </span>
             </button>
           ))}
@@ -121,7 +125,7 @@ export function ReportHazardSheet({
 
         {kind && (
           <p className="text-xs text-muted-foreground -mt-1">
-            {HAZARD_KIND_LIST.find((m) => m.kind === kind)?.hint}
+            {t(`hazard.hint.${kind}` as MessageKey)}
           </p>
         )}
 
@@ -138,7 +142,7 @@ export function ReportHazardSheet({
               )}
             >
               <MapPin className="w-4 h-4" />
-              Map center
+              {t("report.mapCenter")}
             </button>
             <button
               onClick={() => userLocation && setUseGps(true)}
@@ -151,7 +155,7 @@ export function ReportHazardSheet({
               )}
             >
               <Crosshair className="w-4 h-4" />
-              My location
+              {t("report.myLocation")}
             </button>
           </div>
           <p className="text-[11px] text-muted-foreground">
@@ -165,7 +169,7 @@ export function ReportHazardSheet({
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX))}
-            placeholder="Add a detail (optional) — e.g. “knee-deep past the traffic light”"
+            placeholder={t("report.notePlaceholder")}
             rows={2}
             className="w-full resize-none rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
           />
@@ -184,16 +188,15 @@ export function ReportHazardSheet({
           {submitting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Sending…
+              {t("report.sending")}
             </>
           ) : (
-            "Send report"
+            t("report.send")
           )}
         </Button>
 
         <p className="text-[10px] text-muted-foreground text-center">
-          Reports are anonymous and expire on their own. Please don&rsquo;t
-          report while driving.
+          {t("report.footer")}
         </p>
       </div>
     </div>

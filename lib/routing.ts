@@ -17,6 +17,9 @@
 // server if you have one; otherwise it falls back to the public demo
 // server, which is fine for light/personal use.
 
+import type { LangCode } from "@/lib/i18n/languages"
+import { translate, type MessageKey } from "@/lib/i18n/messages"
+
 export type TravelMode =
   | "driving"
   | "driving-traffic"
@@ -38,6 +41,8 @@ export interface RoutingOptions {
   // exclusion is actually honoured; without ORS_API_KEY the caller
   // gets a normal route and should check whether it dodged them.
   avoidAreas?: Array<{ lat: number; lng: number; radiusM?: number }>
+  // Language for the turn-by-turn sentences (defaults to English).
+  lang?: LangCode
 }
 
 export interface RouteStep {
@@ -245,166 +250,118 @@ function buildInstruction(
     location?: Coordinate
     exit?: number
   },
-  roadName?: string
+  roadName?: string,
+  lang: LangCode = "en"
 ): string {
   const type = maneuver.type ?? ""
   const modifier = maneuver.modifier ?? ""
   const road = roadName?.trim()
 
-  if (type === "depart") {
-    return road
-      ? `Start on ${road}`
-      : "Start your journey"
-  }
+  // One sentence per maneuver, with and without a road name; the
+  // wording for each language lives in lib/i18n/map-messages.ts.
+  const say = (
+    plain: MessageKey,
+    onto: MessageKey,
+    extra: Record<string, string | number> = {}
+  ) =>
+    road
+      ? translate(lang, onto, { road, ...extra })
+      : translate(lang, plain, extra)
 
-  if (type === "arrive") {
-    return "You have arrived at your destination"
-  }
+  if (type === "depart") return say("ins.start", "ins.startRoad")
+
+  if (type === "arrive") return translate(lang, "ins.arrive")
 
   if (type === "turn") {
-    if (modifier === "left") {
-      return road
-        ? `Turn left onto ${road}`
-        : "Turn left"
-    }
-
-    if (modifier === "right") {
-      return road
-        ? `Turn right onto ${road}`
-        : "Turn right"
-    }
-
-    if (modifier === "slight left") {
-      return road
-        ? `Bear slightly left onto ${road}`
-        : "Bear slightly left"
-    }
-
-    if (modifier === "slight right") {
-      return road
-        ? `Bear slightly right onto ${road}`
-        : "Bear slightly right"
-    }
-
-    if (modifier === "sharp left") {
-      return road
-        ? `Turn sharply left onto ${road}`
-        : "Turn sharply left"
-    }
-
-    if (modifier === "sharp right") {
-      return road
-        ? `Turn sharply right onto ${road}`
-        : "Turn sharply right"
-    }
-
-    return road
-      ? `Turn onto ${road}`
-      : "Turn"
+    if (modifier === "left") return say("ins.turnLeft", "ins.turnLeftRoad")
+    if (modifier === "right") return say("ins.turnRight", "ins.turnRightRoad")
+    if (modifier === "slight left")
+      return say("ins.slightLeft", "ins.slightLeftRoad")
+    if (modifier === "slight right")
+      return say("ins.slightRight", "ins.slightRightRoad")
+    if (modifier === "sharp left")
+      return say("ins.sharpLeft", "ins.sharpLeftRoad")
+    if (modifier === "sharp right")
+      return say("ins.sharpRight", "ins.sharpRightRoad")
+    return say("ins.turn", "ins.turnRoad")
   }
 
-  if (type === "continue") {
-    return road
-      ? `Continue on ${road}`
-      : "Continue straight"
-  }
+  if (type === "continue") return say("ins.straight", "ins.straightRoad")
 
-  if (type === "merge") {
-    return road
-      ? `Merge onto ${road}`
-      : "Merge"
-  }
+  if (type === "merge") return say("ins.merge", "ins.mergeRoad")
 
   if (type === "fork") {
-    if (modifier === "left") {
-      return road
-        ? `Keep left onto ${road}`
-        : "Keep left"
-    }
-
-    if (modifier === "right") {
-      return road
-        ? `Keep right onto ${road}`
-        : "Keep right"
-    }
-
-    return road
-      ? `Take the fork onto ${road}`
-      : "Take the fork"
+    if (modifier === "left") return say("ins.keepLeft", "ins.keepLeftRoad")
+    if (modifier === "right") return say("ins.keepRight", "ins.keepRightRoad")
+    return say("ins.fork", "ins.forkRoad")
   }
 
   if (type === "roundabout" || type === "roundabout turn") {
-    if (maneuver.exit) {
-      return road
-        ? `Take exit ${maneuver.exit} onto ${road}`
-        : `Take exit ${maneuver.exit}`
-    }
-
-    return road
-      ? `Enter the roundabout and continue onto ${road}`
-      : "Enter the roundabout"
+    if (maneuver.exit)
+      return say("ins.exit", "ins.exitRoad", { n: maneuver.exit })
+    return say("ins.roundabout", "ins.roundaboutRoad")
   }
 
   if (type === "rotary") {
-    if (maneuver.exit) {
-      return road
-        ? `Take exit ${maneuver.exit} onto ${road}`
-        : `Take exit ${maneuver.exit}`
-    }
-
-    return "Enter the rotary"
+    if (maneuver.exit)
+      return say("ins.exit", "ins.exitRoad", { n: maneuver.exit })
+    return translate(lang, "ins.rotary")
   }
 
-  if (type === "new name") {
-    return road
-      ? `Continue onto ${road}`
-      : "Continue"
-  }
+  if (type === "new name") return say("ins.continue", "ins.continueRoad")
 
-  if (type === "on ramp") {
-    return road
-      ? `Take the ramp onto ${road}`
-      : "Take the ramp"
-  }
+  if (type === "on ramp") return say("ins.ramp", "ins.rampRoad")
 
-  if (type === "off ramp") {
-    return road
-      ? `Take the exit onto ${road}`
-      : "Take the exit"
-  }
+  if (type === "off ramp") return say("ins.exitRamp", "ins.exitRampRoad")
 
   if (type === "end of road") {
-    if (modifier === "left") {
-      return road
-        ? `Turn left onto ${road}`
-        : "Turn left at the end of the road"
-    }
-
-    if (modifier === "right") {
-      return road
-        ? `Turn right onto ${road}`
-        : "Turn right at the end of the road"
-    }
-
-    return road
-      ? `Continue onto ${road}`
-      : "Continue at the end of the road"
+    if (modifier === "left") return say("ins.endLeft", "ins.turnLeftRoad")
+    if (modifier === "right") return say("ins.endRight", "ins.turnRightRoad")
+    return say("ins.endContinue", "ins.continueRoad")
   }
 
-  if (type === "uturn") {
-    return "Make a U-turn"
-  }
+  if (type === "uturn") return translate(lang, "ins.uturn")
 
-  return road
-    ? `Continue onto ${road}`
-    : "Continue"
+  return say("ins.continue", "ins.continueRoad")
+}
+
+/**
+ * OpenRouteService hands back English sentences, but it also gives the
+ * maneuver type and street name — so for any other language, rebuild
+ * each step's text from those.
+ */
+function localizeSteps(result: RoutingResult, lang: LangCode): RoutingResult {
+  if (lang === "en") return result
+  return {
+    ...result,
+    routes: result.routes.map((route) => ({
+      ...route,
+      steps: route.steps.map((step) => {
+        const text = buildInstruction(step.maneuver, step.name, lang)
+        return { ...step, instruction: text, voiceInstruction: text }
+      }),
+    })),
+  }
 }
 
 /**
  * Format seconds into a human-readable ETA.
  */
+export interface DurationLabels {
+  min: string
+  hr: string
+  lessThanMin: string
+}
+
+const EN_DURATION_LABELS: DurationLabels = {
+  min: "min",
+  hr: "hr",
+  lessThanMin: "Less than 1 min",
+}
+
 export function formatDuration(
-  seconds: number
+  seconds: number,
+  labels: DurationLabels = EN_DURATION_LABELS
 ): string {
   if (!Number.isFinite(seconds)) {
     return "—"
@@ -416,21 +373,21 @@ export function formatDuration(
   )
 
   if (totalMinutes < 1) {
-    return "Less than 1 min"
+    return labels.lessThanMin
   }
 
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
 
   if (hours === 0) {
-    return `${minutes} min`
+    return `${minutes} ${labels.min}`
   }
 
   if (minutes === 0) {
-    return `${hours} hr`
+    return `${hours} ${labels.hr}`
   }
 
-  return `${hours} hr ${minutes} min`
+  return `${hours} ${labels.hr} ${minutes} ${labels.min}`
 }
 
 /**
@@ -534,7 +491,7 @@ export async function calculateRoute(
 ): Promise<RoutingResult> {
   const orsResult = await tryOpenRouteService(coordinates, options)
 
-  if (orsResult) return orsResult
+  if (orsResult) return localizeSteps(orsResult, options.lang ?? "en")
 
   const url = buildDirectionsUrl(
     coordinates,
@@ -603,7 +560,8 @@ export async function calculateRoute(
           const instruction =
             buildInstruction(
               maneuver,
-              step.name
+              step.name,
+              options.lang ?? "en"
             )
 
           steps.push({

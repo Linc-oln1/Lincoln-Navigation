@@ -1,5 +1,7 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+
 import { Car, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -9,6 +11,7 @@ interface TrafficToggleProps {
 }
 
 export function TrafficToggle({ showTraffic, onToggle }: TrafficToggleProps) {
+  const { t } = useI18n()
   return (
     <button
       onClick={onToggle}
@@ -20,7 +23,7 @@ export function TrafficToggle({ showTraffic, onToggle }: TrafficToggleProps) {
       )}
     >
       <Car className="w-4 h-4" />
-      <span className="text-sm font-medium">Traffic</span>
+      <span className="text-sm font-medium">{t("traffic.label")}</span>
       {showTraffic && (
         <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
       )}

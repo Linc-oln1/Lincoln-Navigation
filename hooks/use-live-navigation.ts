@@ -1,5 +1,9 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import { SPEECH_LANG, type LangCode } from "@/lib/i18n/languages"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import {
   useCallback,
   useEffect,
@@ -61,19 +65,28 @@ const HAZARD_AHEAD_PASSED_METERS = -30
 // navigation we're committing to "this is on the road right now".
 const HAZARD_AHEAD_CORRIDOR_METERS = 120
 
-function hazardAheadLine(hazard: Hazard, gapMeters: number): string {
-  const label = hazardKindMeta(hazard.kind).label.toLowerCase()
+type Translate = (
+  key: MessageKey,
+  params?: Record<string, string | number>
+) => string
+
+function hazardAheadLine(
+  hazard: Hazard,
+  gapMeters: number,
+  t: Translate
+): string {
+  const label = t(`hazard.${hazard.kind}` as MessageKey).toLowerCase()
 
   if (hazard.source !== "crowd_report") {
-    return `Heads up — ${label}-prone area ahead.`
+    return t("hz.prone", { label })
   }
 
   if (gapMeters <= 150) {
-    return `Heads up — reported ${label} ahead.`
+    return t("hz.reportedNear", { label })
   }
 
   const rounded = Math.round(gapMeters / 100) * 100
-  return `Heads up — reported ${label} in ${rounded} metres.`
+  return t("hz.reportedIn", { label, n: rounded })
 }
 
 interface NavigationPosition {
@@ -561,7 +574,8 @@ function calculateBearing(
 ========================================================= */
 
 function speakNavigation(
-  text: string
+  text: string,
+  lang: LangCode = "en"
 ): void {
   if (
     !text ||
@@ -591,7 +605,7 @@ function speakNavigation(
         text
       )
 
-    utterance.lang = "en-US"
+    utterance.lang = SPEECH_LANG[lang]
     utterance.rate = 0.95
     utterance.pitch = 1
     utterance.volume = 1
@@ -612,7 +626,8 @@ function speakNavigation(
 ========================================================= */
 
 function getGpsErrorMessage(
-  error: GeolocationPositionError
+  error: GeolocationPositionError,
+  t: Translate
 ): string {
   /*
    * Do not rely on JSON.stringify(error).
@@ -633,31 +648,16 @@ function getGpsErrorMessage(
    */
   switch (error?.code) {
     case error?.PERMISSION_DENIED:
-      return (
-        "Location permission was denied. " +
-        "Please allow location access for localhost:3000 " +
-        "in your browser settings and try again."
-      )
+      return t("gps.denied")
 
     case error?.POSITION_UNAVAILABLE:
-      return (
-        "Your current GPS position is unavailable. " +
-        "Make sure Location Services are enabled and try again."
-      )
+      return t("gps.unavailable")
 
     case error?.TIMEOUT:
-      return (
-        "GPS location timed out. " +
-        "Please wait a moment and try again."
-      )
+      return t("gps.timeout")
 
     default:
-      return (
-        "Unable to receive your current GPS location. " +
-        "If this keeps happening, location access may be blocked " +
-        "for this page (check your browser's site settings) or " +
-        "unavailable in this environment."
-      )
+      return t("gps.default")
   }
 }
 
@@ -708,6 +708,17 @@ export function useLiveNavigation({
   routePath,
   hazards,
 }: UseLiveNavigationOptions) {
+  /* =======================================================
+     LANGUAGE — kept in refs so the long-lived GPS callbacks
+     always speak/show the language currently selected.
+  ======================================================= */
+
+  const { t, lang } = useI18n()
+  const tRef = useRef(t)
+  tRef.current = t
+  const langRef = useRef(lang)
+  langRef.current = lang
+
   /* =======================================================
      REFS
   ======================================================= */
@@ -948,7 +959,7 @@ export function useLiveNavigation({
       lastSpokenTimeRef.current =
         now
 
-      speakNavigation(message)
+      speakNavigation(message, langRef.current)
     },
     []
   )
@@ -1098,7 +1109,7 @@ export function useLiveNavigation({
               true
 
             const message =
-              "You have arrived at your destination."
+              tRef.current("ins.arrive")
 
             setNavigationMessage(
               message
@@ -1265,7 +1276,7 @@ export function useLiveNavigation({
 
             if (!announcedHazardsRef.current.has(next.hazard.id)) {
               announcedHazardsRef.current.add(next.hazard.id)
-              speakMessage(hazardAheadLine(next.hazard, gap))
+              speakMessage(hazardAheadLine(next.hazard, gap, tRef.current))
             }
           } else {
             setHazardAhead(null)
@@ -1328,7 +1339,7 @@ export function useLiveNavigation({
               now
 
             const message =
-              "You appear to be off route. Recalculating..."
+              tRef.current("nav.offRoute")
 
             setNavigationMessage(
               message
@@ -1376,7 +1387,10 @@ export function useLiveNavigation({
             )
 
           const warning =
-            `In approximately ${roundedDistance} meters, ${instruction}`
+            tRef.current("nav.inDistance", {
+              n: roundedDistance,
+              instruction,
+            })
 
           setNavigationMessage(
             warning
@@ -1490,7 +1504,8 @@ export function useLiveNavigation({
 
         const message =
           getGpsErrorMessage(
-            error
+            error,
+            tRef.current
           )
 
         setGpsError(
@@ -1535,14 +1550,14 @@ export function useLiveNavigation({
             false
 
           setNavigationMessage(
-            "GPS permission is required for live navigation."
+            tRef.current("nav.gpsRequired")
           )
 
           return
         }
 
         setNavigationMessage(
-          "Searching for GPS signal..."
+          tRef.current("nav.searchingSignal")
         )
       },
       []
@@ -1574,7 +1589,7 @@ export function useLiveNavigation({
         !routeSteps.length
       ) {
         setGpsError(
-          "Calculate a route before starting live navigation."
+          tRef.current("nav.needRoute")
         )
 
         return
@@ -1584,7 +1599,7 @@ export function useLiveNavigation({
         !routeDestination
       ) {
         setGpsError(
-          "Destination coordinates are missing. Calculate the route again."
+          tRef.current("dir.destMissing")
         )
 
         return
@@ -1601,7 +1616,7 @@ export function useLiveNavigation({
           "undefined"
       ) {
         setGpsError(
-          "Live navigation must run in a browser."
+          tRef.current("nav.browserOnly")
         )
 
         return
@@ -1682,7 +1697,7 @@ export function useLiveNavigation({
       setGpsError(null)
 
       setNavigationMessage(
-        "Searching for your GPS location..."
+        tRef.current("nav.searchingLoc")
       )
 
       /*

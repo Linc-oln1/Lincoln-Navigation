@@ -1,5 +1,8 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import { useMemo, useState } from "react"
 import {
   Cloud,
@@ -76,7 +79,40 @@ function ConditionIcon({
   }
 }
 
+/* describeWeatherCode() returns English labels; this maps them to
+   translation keys (anything unmapped is shown as-is). */
+const WX_KEYS: Record<string, MessageKey> = {
+  "Clear sky": "wx.clear",
+  "Mainly clear": "wx.mainlyClear",
+  "Partly cloudy": "wx.partlyCloudy",
+  Overcast: "wx.overcast",
+  Cloudy: "wx.cloudy",
+  Fog: "wx.fog",
+  "Rime fog": "wx.rimeFog",
+  "Light drizzle": "wx.lightDrizzle",
+  Drizzle: "wx.drizzle",
+  "Heavy drizzle": "wx.heavyDrizzle",
+  "Freezing drizzle": "wx.freezingDrizzle",
+  "Light rain": "wx.lightRain",
+  Rain: "wx.rain",
+  "Heavy rain": "wx.heavyRain",
+  "Freezing rain": "wx.freezingRain",
+  "Light snow": "wx.lightSnow",
+  Snow: "wx.snow",
+  "Heavy snow": "wx.heavySnow",
+  "Snow grains": "wx.snowGrains",
+  "Light showers": "wx.lightShowers",
+  Showers: "wx.showers",
+  "Violent showers": "wx.violentShowers",
+  "Snow showers": "wx.snowShowers",
+  "Heavy snow showers": "wx.heavySnowShowers",
+  Thunderstorm: "wx.thunderstorm",
+  "Thunderstorm with hail": "wx.thunderstormHail",
+}
+
 export function WeatherWidget({ center }: WeatherWidgetProps) {
+  const { t, lang } = useI18n()
+  const wx = (label: string) => (WX_KEYS[label] ? t(WX_KEYS[label]) : label)
   const [expanded, setExpanded] = useState(false)
   const { weather, isLoading, error, refresh } = useWeather(center)
 
@@ -95,7 +131,7 @@ export function WeatherWidget({ center }: WeatherWidgetProps) {
         <button
           onClick={() => setExpanded(true)}
           className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card/90 backdrop-blur-sm border border-border shadow-lg text-foreground hover:bg-card transition-colors"
-          aria-label="Show weather"
+          aria-label={t("wx.show")}
         >
           {current && info ? (
             <>
@@ -107,21 +143,21 @@ export function WeatherWidget({ center }: WeatherWidgetProps) {
                 {current.temp}°
               </span>
               <span className="text-xs text-muted-foreground hidden sm:inline">
-                {info.label}
+                {wx(info.label)}
               </span>
             </>
           ) : isLoading ? (
             <>
               <Cloud className="w-5 h-5 text-muted-foreground animate-pulse" />
               <span className="text-xs text-muted-foreground">
-                Loading weather…
+                {t("wx.loading")}
               </span>
             </>
           ) : (
             <>
               <Cloud className="w-5 h-5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">
-                Weather unavailable
+                {t("wx.unavailable")}
               </span>
             </>
           )}
@@ -132,13 +168,13 @@ export function WeatherWidget({ center }: WeatherWidgetProps) {
           <div className="flex items-center justify-between px-4 pt-3 pb-2">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Weather here
+                {t("wx.here")}
               </span>
             </div>
             <div className="flex items-center gap-0.5">
               <button
                 onClick={refresh}
-                aria-label="Refresh weather"
+                aria-label={t("wx.refresh")}
                 className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
               >
                 <RefreshCw
@@ -150,7 +186,7 @@ export function WeatherWidget({ center }: WeatherWidgetProps) {
               </button>
               <button
                 onClick={() => setExpanded(false)}
-                aria-label="Collapse weather"
+                aria-label={t("wx.collapse")}
                 className="p-1.5 rounded-lg hover:bg-secondary transition-colors"
               >
                 <CloseIcon className="w-3.5 h-3.5 text-muted-foreground" />
@@ -179,10 +215,10 @@ export function WeatherWidget({ center }: WeatherWidgetProps) {
                     </span>
                   </div>
                   <div className="text-sm text-foreground mt-0.5">
-                    {info.label}
+                    {wx(info.label)}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Feels like {current.feelsLike}°
+                    {t("wx.feels", { temp: current.feelsLike })}
                   </div>
                 </div>
               </div>
@@ -211,7 +247,8 @@ export function WeatherWidget({ center }: WeatherWidgetProps) {
                         <span className="text-[11px] text-muted-foreground">
                           {localHourLabel(
                             h.time,
-                            weather.utcOffsetSeconds
+                            weather.utcOffsetSeconds,
+                            lang
                           )}
                         </span>
                         <span className="text-base leading-none">
@@ -242,7 +279,7 @@ export function WeatherWidget({ center }: WeatherWidgetProps) {
                         className="flex items-center gap-3 py-1.5 text-sm"
                       >
                         <span className="w-10 text-muted-foreground">
-                          {i === 0 ? "Today" : localDayLabel(d.date)}
+                          {i === 0 ? t("wx.today") : localDayLabel(d.date, lang)}
                         </span>
                         <ConditionIcon
                           condition={dayInfo.condition}
@@ -271,9 +308,10 @@ export function WeatherWidget({ center }: WeatherWidgetProps) {
               {/* ATTRIBUTION */}
               <div className="px-4 py-2 border-t border-border">
                 <p className="text-[10px] text-muted-foreground">
-                  {weather.provider === "openweather"
-                    ? "Weather by OpenWeather"
-                    : "Weather by Open-Meteo"}
+                  {t("wx.by", {
+                    provider:
+                      weather.provider === "openweather" ? "OpenWeather" : "Open-Meteo",
+                  })}
                 </p>
               </div>
             </>

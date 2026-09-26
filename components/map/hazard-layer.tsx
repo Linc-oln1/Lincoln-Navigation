@@ -1,5 +1,8 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import { useEffect, useRef } from "react"
 import * as maplibregl from "maplibre-gl"
 
@@ -20,7 +23,11 @@ interface HazardLayerProps {
 // MapLibre owns the transform on the element it's given (it writes
 // the translate() that positions the marker), so the visible dot —
 // and its selection scale — live on an inner child instead.
-function buildMarkerElement(hazard: Hazard, selected: boolean): HTMLDivElement {
+function buildMarkerElement(
+  hazard: Hazard,
+  selected: boolean,
+  t: (key: MessageKey, params?: Record<string, string | number>) => string
+): HTMLDivElement {
   const meta = hazardKindMeta(hazard.kind)
 
   const el = document.createElement("div")
@@ -29,13 +36,14 @@ function buildMarkerElement(hazard: Hazard, selected: boolean): HTMLDivElement {
   el.setAttribute("role", "button")
   el.setAttribute(
     "aria-label",
-    `${meta.label}${
+    t(
       hazard.source === "crowd_report"
-        ? " reported by a driver"
+        ? "haz.ariaCrowd"
         : hazard.source === "forecast"
-          ? " — heavy rain forecast"
-          : " — known area"
-    }`
+          ? "haz.ariaForecast"
+          : "haz.ariaKnown",
+      { label: t(`hazard.${hazard.kind}` as MessageKey) }
+    )
   )
 
   const dot = document.createElement("div")
@@ -106,6 +114,7 @@ export function HazardLayer({
   selectedId,
   onSelect,
 }: HazardLayerProps) {
+  const { t } = useI18n()
   const markersRef = useRef<
     Map<string, { marker: maplibregl.Marker; sig: string }>
   >(new Map())
@@ -140,7 +149,7 @@ export function HazardLayer({
     }
 
     const addMarker = (hazard: Hazard, selected: boolean) => {
-      const el = buildMarkerElement(hazard, selected)
+      const el = buildMarkerElement(hazard, selected, t)
       el.addEventListener("click", (e) => {
         e.stopPropagation()
         // Read the current hazard object, not the one captured here.

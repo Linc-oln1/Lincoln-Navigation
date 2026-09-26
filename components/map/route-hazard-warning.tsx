@@ -1,10 +1,13 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import { useState } from "react"
 import { ChevronDown, Loader2, TriangleAlert, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { alongRouteLabel, type OnRouteHazard } from "@/lib/hazard-geometry"
+import { type OnRouteHazard } from "@/lib/hazard-geometry"
 import { hazardKindMeta, relativeTime, type Hazard } from "@/lib/hazards"
 
 interface SaferRoute {
@@ -29,16 +32,25 @@ interface RouteHazardWarningProps {
   routeAroundError?: string | null
 }
 
-function saferLabel(safer: SaferRoute): string {
+type Translate = (key: MessageKey, params?: Record<string, string | number>) => string
+
+function saferLabel(safer: SaferRoute, t: Translate): string {
   const mins = Math.round(safer.extraSeconds / 60)
   const what =
     safer.avoidedCount >= 2
-      ? `${safer.avoidedCount} hazards`
+      ? t("rhw.whatMany", { n: safer.avoidedCount })
       : safer.avoidedCount === 1
-        ? "it"
-        : "fewer hazards"
-  if (mins <= 0) return `A route avoiding ${what} takes about the same time`
-  return `A route avoiding ${what} adds ${mins} min`
+        ? t("rhw.whatOne")
+        : t("rhw.whatFewer")
+  if (mins <= 0) return t("rhw.saferSame", { what })
+  return t("rhw.saferAdds", { what, mins })
+}
+
+/** "820 m" / "1.2 km" along the route, for the "{dist} in" label. */
+function alongDistance(metres: number): string {
+  return metres < 950
+    ? `${Math.round(metres / 10) * 10} m`
+    : `${(metres / 1000).toFixed(1)} km`
 }
 
 export function RouteHazardWarning({
@@ -51,6 +63,7 @@ export function RouteHazardWarning({
   routeAroundBusy,
   routeAroundError,
 }: RouteHazardWarningProps) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
 
   if (items.length === 0 && !saferRoute) return null
@@ -82,7 +95,7 @@ export function RouteHazardWarning({
           )}
         />
         <span className="text-sm font-medium flex-1">
-          {items.length} hazard{items.length === 1 ? "" : "s"} on this route
+          {items.length === 1 ? t("rhw.one") : t("rhw.many", { n: items.length })}
         </span>
         <ChevronDown
           className={cn(
@@ -108,14 +121,14 @@ export function RouteHazardWarning({
                   </span>
                   <span className="flex-1 min-w-0">
                     <span className="block text-sm font-medium truncate">
-                      {meta.label}
+                      {t(`hazard.${hazard.kind}` as MessageKey)}
                     </span>
                     <span className="block text-xs text-muted-foreground">
                       {hazard.source === "crowd_report"
-                        ? `reported ${relativeTime(hazard.createdAt)}`
-                        : "known area"}
+                        ? t("rhw.reported", { when: relativeTime(hazard.createdAt, t) })
+                        : t("rhw.known")}
                       {" · "}
-                      {alongRouteLabel(metresAlongRoute)}
+                      {t("rhw.in", { dist: alongDistance(metresAlongRoute) })}
                     </span>
                   </span>
                 </button>
@@ -128,19 +141,19 @@ export function RouteHazardWarning({
       {saferRoute && (
         <div className="border-t border-border/50 p-3 flex items-center gap-2">
           <span className="flex-1 text-xs text-muted-foreground">
-            {saferLabel(saferRoute)}
+            {saferLabel(saferRoute, t)}
           </span>
           <button
             type="button"
             onClick={onUseSaferRoute}
             className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity"
           >
-            Use it
+            {t("rhw.useIt")}
           </button>
           <button
             type="button"
             onClick={onDismissSafer}
-            aria-label="Keep the fastest route"
+            aria-label={t("rhw.keepFastest")}
             className="p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
           >
             <X className="w-3.5 h-3.5 text-muted-foreground" />
@@ -155,9 +168,7 @@ export function RouteHazardWarning({
           ) : (
             <div className="flex items-center gap-2">
               <span className="flex-1 text-xs text-muted-foreground">
-                {items.length === 1
-                  ? "Try to route around it?"
-                  : "Try to route around them?"}
+                {items.length === 1 ? t("rhw.tryOne") : t("rhw.tryMany")}
               </span>
               <button
                 type="button"
@@ -168,7 +179,7 @@ export function RouteHazardWarning({
                 {routeAroundBusy && (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 )}
-                Route around it
+                {t("rhw.routeAround")}
               </button>
             </div>
           )}

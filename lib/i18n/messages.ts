@@ -1,10 +1,11 @@
 import type { LangCode } from "@/lib/i18n/languages"
+import { MAP_EN, MAP_TR } from "@/lib/i18n/map-messages"
 
 /**
  * English is the source of truth. Every other language may leave a key out
  * and it falls back to English, so a half-translated screen never breaks.
  */
-const en = {
+const baseEn = {
   "map.report": "Report",
   "map.exitShort": "Exit",
   "nav.search": "Search",
@@ -82,6 +83,8 @@ const en = {
   "lv.rideNote":
     "Mount your phone securely before you ride. Never hold or touch it while riding.",
 } as const
+
+const en = { ...baseEn, ...MAP_EN } as const
 
 export type MessageKey = keyof typeof en
 
@@ -1114,7 +1117,7 @@ const ht: Dict = {
   "lv.rideNote": "Fikse telefòn ou byen anvan w monte. Pa janm kenbe l oswa touche l pandan w ap kondwi motosiklèt la.",
 }
 
-export const MESSAGES: Record<LangCode, Dict> = {
+const BASE: Record<LangCode, Dict> = {
   en,
   tw,
   fr,
@@ -1133,6 +1136,22 @@ export const MESSAGES: Record<LangCode, Dict> = {
   ht,
 }
 
-export function translate(lang: LangCode, key: MessageKey): string {
-  return MESSAGES[lang][key] ?? en[key]
+export const MESSAGES: Record<LangCode, Dict> = Object.fromEntries(
+  (Object.keys(BASE) as LangCode[]).map((code) => [
+    code,
+    { ...BASE[code], ...(MAP_TR[code] ?? {}) },
+  ]),
+) as Record<LangCode, Dict>
+
+/** Looks a key up in `lang` (falling back to English) and fills {name} placeholders. */
+export function translate(
+  lang: LangCode,
+  key: MessageKey,
+  params?: Record<string, string | number>,
+): string {
+  const text = MESSAGES[lang][key] ?? en[key]
+  if (!params) return text
+  return text.replace(/\{(\w+)\}/g, (_, name) =>
+    name in params ? String(params[name]) : `{${name}}`,
+  )
 }

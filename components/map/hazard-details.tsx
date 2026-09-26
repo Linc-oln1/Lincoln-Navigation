@@ -1,5 +1,8 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import { useState } from "react"
 import { Check, ExternalLink, MapPin, ShieldAlert, X } from "lucide-react"
 
@@ -20,7 +23,9 @@ interface HazardDetailsProps {
 }
 
 export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) {
+  const { t } = useI18n()
   const meta = hazardKindMeta(hazard.kind)
+  const kindLabel = t(`hazard.${hazard.kind}` as MessageKey)
   const isCrowd = hazard.source === "crowd_report"
   const isForecast = hazard.source === "forecast"
   const isOfficial = hazard.source === "official"
@@ -39,13 +44,13 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
       onVoted(updated)
       setMessage(
         !counted
-          ? "You already voted on this one."
+          ? t("haz.alreadyVoted")
           : vote === "confirm"
-            ? "Thanks — marked as still there."
-            : "Thanks — marked as cleared."
+            ? t("haz.thanksStill")
+            : t("haz.thanksCleared")
       )
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Could not record that.")
+      setMessage(err instanceof Error ? err.message : t("haz.voteFail"))
     } finally {
       setBusy(null)
     }
@@ -66,17 +71,17 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
             </span>
             <div className="min-w-0">
               <h2 className="text-lg font-bold text-foreground truncate">
-                {meta.label}
+                {kindLabel}
               </h2>
               <p className="text-xs text-muted-foreground">
                 {isCrowd ? (
-                  <>Reported by a driver · {relativeTime(hazard.createdAt)}</>
+                  <>{t("haz.reportedBy", { when: relativeTime(hazard.createdAt, t) })}</>
                 ) : isForecast ? (
-                  <>Heavy rain forecast</>
+                  <>{t("haz.forecast")}</>
                 ) : isOfficial ? (
-                  <>Official regional alert</>
+                  <>{t("haz.official")}</>
                 ) : (
-                  <>Known {meta.label.toLowerCase()} area</>
+                  <>{t("haz.known", { kind: kindLabel })}</>
                 )}
               </p>
             </div>
@@ -84,7 +89,7 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
           <button
             onClick={onClose}
             className="p-2 hover:bg-secondary rounded-lg transition-colors shrink-0"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -106,8 +111,8 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
 
         {isCrowd && (hazard.confirmedCount > 0 || hazard.clearedCount > 0) && (
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span>{hazard.confirmedCount} confirmed still there</span>
-            <span>{hazard.clearedCount} said cleared</span>
+            <span>{t("haz.confirmed", { n: hazard.confirmedCount })}</span>
+            <span>{t("haz.saidCleared", { n: hazard.clearedCount })}</span>
           </div>
         )}
 
@@ -116,23 +121,11 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
             <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
             <span>
               {isForecast ? (
-                <>
-                  A flood-prone spot with heavy rain in the next few hours&rsquo;
-                  forecast — a warning based on the weather, not a live
-                  confirmation that it&rsquo;s flooding right now.
-                </>
+                <>{t("haz.forecastBody")}</>
               ) : isOfficial ? (
-                <>
-                  A wide-area flood alert for this region, from an official
-                  agency. The marker is a regional centre point, not a
-                  street-level report — check the report for what&rsquo;s
-                  actually affected.
-                </>
+                <>{t("haz.officialBody")}</>
               ) : (
-                <>
-                  A spot that&rsquo;s flagged this way often, from local reports —
-                  not a live confirmation that it&rsquo;s happening right now.
-                </>
+                <>{t("haz.knownBody")}</>
               )}
             </span>
           </div>
@@ -146,7 +139,7 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
             className="flex items-center gap-2 text-sm text-primary hover:underline"
           >
             <ExternalLink className="w-4 h-4 shrink-0" />
-            View the full report
+            {t("haz.viewReport")}
           </a>
         )}
       </div>
@@ -167,7 +160,7 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
                 onClick={() => handleVote("confirm")}
               >
                 <Check className="w-4 h-4 mr-2" />
-                Still there
+                {t("haz.stillThere")}
               </Button>
               <Button
                 variant="secondary"
@@ -176,7 +169,7 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
                 onClick={() => handleVote("clear")}
               >
                 <X className="w-4 h-4 mr-2" />
-                Cleared
+                {t("haz.cleared")}
               </Button>
             </div>
           )}

@@ -1,5 +1,7 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+
 import { useState, useEffect, useRef } from "react"
 import { Search, X, MapPin, Clock, Star, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -62,6 +64,7 @@ function toSearchResult(result: GeocodeResult): SearchResult {
 }
 
 export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelProps) {
+  const { t } = useI18n()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -126,7 +129,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
           setError(
             err instanceof Error
               ? err.message
-              : "Search is temporarily unavailable."
+              : t("search.unavailable")
           )
         }
       } finally {
@@ -159,7 +162,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
           <button
             onClick={onClose}
             className="p-2 hover:bg-secondary rounded-lg transition-colors"
-            aria-label="Close search"
+            aria-label={t("search.close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -168,7 +171,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
             <Input
               ref={inputRef}
               type="text"
-              placeholder="Search anywhere..."
+              placeholder={t("map.search")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-10 bg-secondary border-0 focus-visible:ring-primary"
@@ -193,7 +196,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
           {showResults && results.length > 0 && (
             <div className="mb-6">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Search Results
+                {t("search.results")}
               </h3>
               <div className="space-y-1">
                 {results.map((result) => (
@@ -234,7 +237,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
                 <div className="mb-6">
                   <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                     <Clock className="w-3 h-3" />
-                    Recent
+                    {t("search.recent")}
                   </h3>
                   <div className="space-y-1">
                     {recentSearches.map((place) => (
@@ -260,7 +263,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
               <div>
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Star className="w-3 h-3" />
-                  Popular in Ghana
+                  {t("search.popular")}
                 </h3>
                 <div className="space-y-1">
                   {POPULAR_PLACES.slice(0, 8).map((place) => (

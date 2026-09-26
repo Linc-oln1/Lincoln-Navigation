@@ -21,20 +21,25 @@ import { useI18n } from "@/components/i18n/language-provider"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
+function MapLoading({ className }: { className: string }) {
+  const { t } = useI18n()
+  return (
+    <div className={`${className} bg-background flex items-center justify-center`}>
+      <div className="text-center">
+        <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-4 animate-pulse">
+          <span className="text-2xl">🗺️</span>
+        </div>
+        <p className="text-muted-foreground">{t("page.loading")}</p>
+      </div>
+    </div>
+  )
+}
+
 const MapView = dynamic(
   () => import("@/components/map/map-view").then((mod) => mod.MapView),
   {
     ssr: false,
-    loading: () => (
-      <div className="h-full w-full bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-4 animate-pulse">
-            <span className="text-2xl">🗺️</span>
-          </div>
-          <p className="text-muted-foreground">Loading map...</p>
-        </div>
-      </div>
-    ),
+    loading: () => <MapLoading className="h-full w-full" />,
   }
 )
 
@@ -559,24 +564,24 @@ function MapNavigator() {
         <div className="absolute inset-x-4 bottom-24 md:inset-x-auto md:right-4 md:bottom-4 md:w-[360px] z-[1002] bg-card border border-primary/40 rounded-2xl shadow-2xl p-4">
           <button
             onClick={() => setSavedLimitHit(false)}
-            aria-label="Dismiss"
+            aria-label={t("page.dismiss")}
             className="absolute top-2.5 right-2.5 p-1.5 rounded-lg hover:bg-secondary transition-colors"
           >
             <CloseIcon className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-primary" />
-            <p className="font-semibold text-sm">Saved-places limit reached</p>
+            <p className="font-semibold text-sm">{t("page.limitTitle")}</p>
           </div>
           <p className="text-sm text-muted-foreground mt-1.5">
-            Free accounts can save up to {savedPlaces.favoritesLimit} places.
-            Premium gives you unlimited saved places and trip history.
+            {t("page.limitFree", { n: savedPlaces.favoritesLimit })}{" "}
+            {t("page.limitBody")}
           </p>
           <a
             href="/pricing"
             className="mt-3 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:brightness-110 transition"
           >
-            See Premium
+            {t("page.seePremium")}
           </a>
         </div>
       )}
@@ -588,16 +593,7 @@ function MapNavigator() {
 export default function MapNavigatorPage() {
   return (
     <Suspense
-      fallback={
-        <div className="h-screen w-screen bg-background flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <span className="text-2xl">🗺️</span>
-            </div>
-            <p className="text-muted-foreground">Loading map...</p>
-          </div>
-        </div>
-      }
+      fallback={<MapLoading className="h-screen w-screen" />}
     >
       <MapNavigator />
     </Suspense>

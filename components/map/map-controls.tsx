@@ -1,5 +1,8 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import { useEffect, useRef, useState } from "react"
 import {
   Map,
@@ -56,6 +59,7 @@ export function MapControls({
   currentStyle,
   onStyleChange,
 }: MapControlsProps) {
+  const { t } = useI18n()
   // This used to render the full style list permanently — no toggle
   // button existed anywhere to hide it, so it sat over the map on
   // every load, on every device, for every visitor (worst on small
@@ -82,7 +86,7 @@ export function MapControls({
     <div ref={containerRef} className="absolute top-20 right-4 z-[1000]">
       <button
         onClick={() => setIsOpen((open) => !open)}
-        aria-label={isOpen ? "Hide map style options" : "Change map style"}
+        aria-label={isOpen ? t("style.hide") : t("style.change")}
         aria-expanded={isOpen}
         className="w-10 h-10 rounded-xl bg-card/90 backdrop-blur-sm border border-border shadow-lg flex items-center justify-center text-foreground hover:bg-secondary transition-colors"
       >
@@ -91,7 +95,7 @@ export function MapControls({
 
       {isOpen && (
         <div className="mt-2 bg-card/90 backdrop-blur-sm rounded-xl border border-border shadow-lg overflow-hidden">
-          {STYLES.map(({ id, label, icon: Icon }) => (
+          {STYLES.map(({ id, icon: Icon }) => (
             <button
               key={id}
               onClick={() => {
@@ -108,7 +112,7 @@ export function MapControls({
               <Icon className="w-4 h-4" />
 
               <span className="text-sm font-medium">
-                {label}
+                {t(`style.${id}` as MessageKey)}
               </span>
             </button>
           ))}

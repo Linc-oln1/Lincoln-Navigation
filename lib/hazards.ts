@@ -1,3 +1,4 @@
+import type { MessageKey } from "@/lib/i18n/messages"
 // lib/hazards.ts
 //
 // Shared vocabulary + client helpers for community hazard reports —
@@ -154,16 +155,20 @@ export function isHazardKind(value: unknown): value is HazardKind {
 /**
  * "12 min ago" / "3 hr ago" / "just now" for a hazard's report time.
  */
-export function relativeTime(iso: string): string {
+export function relativeTime(
+  iso: string,
+  t?: (key: MessageKey, params?: Record<string, string | number>) => string
+): string {
   const then = new Date(iso).getTime()
   if (!Number.isFinite(then)) return ""
   const diffMs = Date.now() - then
   const mins = Math.round(diffMs / 60000)
-  if (mins < 1) return "just now"
-  if (mins < 60) return `${mins} min ago`
+  if (mins < 1) return t ? t("rel.justNow") : "just now"
+  if (mins < 60) return t ? t("rel.minAgo", { n: mins }) : `${mins} min ago`
   const hrs = Math.round(mins / 60)
-  if (hrs < 24) return `${hrs} hr ago`
+  if (hrs < 24) return t ? t("rel.hrAgo", { n: hrs }) : `${hrs} hr ago`
   const days = Math.round(hrs / 24)
+  if (t) return t(days === 1 ? "rel.dayAgo" : "rel.daysAgo", { n: days })
   return `${days} day${days === 1 ? "" : "s"} ago`
 }
 

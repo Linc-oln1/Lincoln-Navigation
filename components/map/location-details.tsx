@@ -1,5 +1,7 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+
 import { X, Navigation, Share2, Star, MapPin, Phone, Globe, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -27,6 +29,7 @@ export function LocationDetails({
   onClose,
   onGetDirections,
 }: LocationDetailsProps) {
+  const { t } = useI18n()
   if (!location) return null
 
   const handleShare = async () => {
@@ -57,7 +60,7 @@ export function LocationDetails({
               <h2 className="text-xl font-bold text-foreground truncate">{location.name}</h2>
               {location.sponsored && (
                 <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-wider text-primary border border-primary/40 rounded px-1 py-0.5">
-                  Sponsored
+                  {t("places.sponsored")}
                 </span>
               )}
             </div>
@@ -71,7 +74,7 @@ export function LocationDetails({
           <button
             onClick={onClose}
             className="p-2 hover:bg-secondary rounded-lg transition-colors flex-shrink-0"
-            aria-label="Close details"
+            aria-label={t("loc.closeDetails")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -86,7 +89,7 @@ export function LocationDetails({
             className="flex-1 bg-primary hover:bg-primary/90"
           >
             <Navigation className="w-4 h-4 mr-2" />
-            Directions
+            {t("dir.title")}
           </Button>
           <Button
             variant="secondary"
@@ -99,7 +102,7 @@ export function LocationDetails({
             variant="secondary"
             onClick={onToggleFavorite}
             aria-pressed={isFavorite}
-            aria-label={isFavorite ? "Remove from favorites" : "Save to favorites"}
+            aria-label={isFavorite ? t("loc.removeFav") : t("loc.saveFav")}
             className="px-4"
           >
             <Star className={cn("w-4 h-4", isFavorite && "fill-current text-primary")} />
@@ -121,7 +124,7 @@ export function LocationDetails({
             className="flex items-center gap-3 text-sm text-primary hover:underline"
           >
             <Globe className="w-4 h-4 flex-shrink-0" />
-            <span className="truncate">Visit website</span>
+            <span className="truncate">{t("loc.website")}</span>
           </a>
         )}
       </div>
@@ -130,7 +133,7 @@ export function LocationDetails({
       <div className="px-4 pb-4">
         <div className="bg-secondary/50 rounded-xl p-3">
           <p className="text-xs text-muted-foreground">
-            Tap &quot;Directions&quot; to navigate to this location. You can also share this place with others.
+            {t("loc.hint")}
           </p>
         </div>
       </div>

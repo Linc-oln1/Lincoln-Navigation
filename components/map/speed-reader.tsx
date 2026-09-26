@@ -1,5 +1,8 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import { Bus, Car, Motorbike } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -33,7 +36,12 @@ export function SpeedReader({
   speedMps: number | null
   compact?: boolean
 }) {
-  const { label, icon: Icon, gaugeMaxKmh, fastKmh } = MODE_INFO[mode]
+  const { t } = useI18n()
+  const { icon: Icon, gaugeMaxKmh, fastKmh } = MODE_INFO[mode]
+  const label = t(
+    (mode === "driving" ? "speed.car" : mode === "motorcycle" ? "speed.moto" : "speed.bus") as MessageKey,
+  )
+  const speedAria = t("speed.aria", { mode: label })
   const kmh = toKmh(speedMps)
   const pct = kmh === null ? 0 : Math.min(100, (kmh / gaugeMaxKmh) * 100)
   const fast = kmh !== null && kmh >= fastKmh
@@ -43,7 +51,7 @@ export function SpeedReader({
       <div
         className="flex items-center gap-3"
         role="status"
-        aria-label={`${label} speed`}
+        aria-label={speedAria}
       >
         <Icon className="h-5 w-5 shrink-0" />
         <span className="w-14 text-right text-2xl font-extrabold tabular-nums leading-none">
@@ -70,7 +78,7 @@ export function SpeedReader({
     <div
       className="mt-3 rounded-lg bg-black/20 px-3 py-2.5"
       role="status"
-      aria-label={`${label} speed`}
+      aria-label={speedAria}
     >
       <div className="flex items-center gap-3">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
@@ -97,7 +105,7 @@ export function SpeedReader({
         />
       </div>
       {kmh === null && (
-        <p className="mt-1.5 text-[11px] opacity-70">Waiting for GPS speed…</p>
+        <p className="mt-1.5 text-[11px] opacity-70">{t("speed.waiting")}</p>
       )}
     </div>
   )

@@ -1,5 +1,7 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+
 import { X, Star, Home, Briefcase, Heart, Pencil } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import type { SavedPlaceEntry } from "@/hooks/use-saved-places"
@@ -45,6 +47,7 @@ export function SavedPlacesPanel({
   onRemoveFavorite,
   onRequestSetHomeWork,
 }: SavedPlacesPanelProps) {
+  const { t } = useI18n()
   if (!isOpen) return null
 
   const capped = Number.isFinite(favoritesLimit)
@@ -60,11 +63,11 @@ export function SavedPlacesPanel({
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Saved Places</h2>
+          <h2 className="text-lg font-semibold">{t("saved.title")}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-secondary rounded-lg transition-colors"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -82,12 +85,12 @@ export function SavedPlacesPanel({
           {/* Quick Access */}
           <div className="mb-6">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-              Quick Access
+              {t("saved.quick")}
             </h3>
             <div className="grid grid-cols-2 gap-3">
               {quickAccess.map(({ target, place }) => {
                 const Icon = target === "home" ? Home : Briefcase
-                const label = target === "home" ? "Home" : "Work"
+                const label = t(target === "home" ? "saved.home" : "saved.work")
                 return (
                   <div key={target} className="relative">
                     <button
@@ -104,7 +107,7 @@ export function SavedPlacesPanel({
                       <div className="flex-1 min-w-0 pr-5">
                         <p className="font-medium text-foreground">{label}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {place ? place.address : `Set your ${label.toLowerCase()} address`}
+                          {place ? place.address : t(target === "home" ? "saved.setHome" : "saved.setWork")}
                         </p>
                       </div>
                     </button>
@@ -113,7 +116,7 @@ export function SavedPlacesPanel({
                     {place && (
                       <button
                         onClick={() => onRequestSetHomeWork(target)}
-                        aria-label={`Change ${label.toLowerCase()} address`}
+                        aria-label={t(target === "home" ? "saved.changeHome" : "saved.changeWork")}
                         className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-card/80 text-muted-foreground opacity-70 hover:opacity-100 hover:bg-card transition-opacity"
                       >
                         <Pencil className="w-3 h-3" />
@@ -130,7 +133,7 @@ export function SavedPlacesPanel({
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                 <Star className="w-3 h-3" />
-                Favorites
+                {t("saved.favorites")}
               </h3>
               {capped && (
                 <span
@@ -150,8 +153,7 @@ export function SavedPlacesPanel({
                 className="mb-3 flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/[0.06] px-3 py-2 text-xs text-primary hover:bg-primary/10 transition-colors"
               >
                 <Star className="w-3.5 h-3.5 flex-shrink-0" />
-                You&rsquo;ve hit the free limit — go Premium for unlimited saved
-                places →
+                {t("saved.limit")}
               </a>
             )}
             {favorites.length > 0 ? (
@@ -174,7 +176,7 @@ export function SavedPlacesPanel({
                         on touch devices, which have no hover state. */}
                     <button
                       onClick={() => onRemoveFavorite(place.id)}
-                      aria-label={`Remove ${place.name} from favorites`}
+                      aria-label={t("saved.remove", { name: place.name })}
                       className="p-2 rounded-lg text-muted-foreground opacity-70 hover:opacity-100 hover:bg-secondary hover:text-destructive transition-colors flex-shrink-0"
                     >
                       <X className="w-4 h-4" />
@@ -185,9 +187,9 @@ export function SavedPlacesPanel({
             ) : (
               <div className="text-center py-8">
                 <Star className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No saved places yet</p>
+                <p className="text-muted-foreground">{t("saved.empty")}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Tap the star icon on any place to save it here
+                  {t("saved.emptyHint")}
                 </p>
               </div>
             )}

@@ -1,5 +1,6 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
 import { useEffect, useRef, useState } from "react"
 import * as maplibregl from "maplibre-gl"
 import type {
@@ -1473,6 +1474,7 @@ export function MapView({
   mapStyle = "device",
   liveNavigation,
 }: MapViewProps) {
+  const { t } = useI18n()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<maplibregl.Map | null>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
@@ -2124,7 +2126,7 @@ export function MapView({
           type="button"
           onClick={handleZoomIn}
           className="w-10 h-10 bg-card/90 backdrop-blur-sm rounded-lg flex items-center justify-center text-foreground hover:bg-card transition-colors border border-border shadow-lg"
-          aria-label="Zoom in"
+          aria-label={t("map.zoomIn")}
         >
           <Plus className="w-4 h-4" />
         </button>
@@ -2133,7 +2135,7 @@ export function MapView({
           type="button"
           onClick={handleZoomOut}
           className="w-10 h-10 bg-card/90 backdrop-blur-sm rounded-lg flex items-center justify-center text-foreground hover:bg-card transition-colors border border-border shadow-lg"
-          aria-label="Zoom out"
+          aria-label={t("map.zoomOut")}
         >
           <Minus className="w-4 h-4" />
         </button>
@@ -2142,7 +2144,7 @@ export function MapView({
           type="button"
           onClick={handleCenterOnUser}
           className="w-10 h-10 bg-card/90 backdrop-blur-sm rounded-lg flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-colors border border-border shadow-lg"
-          aria-label="Center on my location"
+          aria-label={t("map.center")}
         >
           <Navigation2 className="w-4 h-4" />
         </button>

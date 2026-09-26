@@ -149,12 +149,13 @@ export function weatherEmoji(code: number, isDay = true): string {
  */
 export function localHourLabel(
   utcIso: string,
-  utcOffsetSeconds: number
+  utcOffsetSeconds: number,
+  locale?: string
 ): string {
   const shifted = new Date(
     new Date(utcIso).getTime() + utcOffsetSeconds * 1000
   )
-  return shifted.toLocaleTimeString([], {
+  return shifted.toLocaleTimeString(locale ? [locale] : [], {
     hour: "numeric",
     timeZone: "UTC",
   })
@@ -164,8 +165,8 @@ export function localHourLabel(
  * Weekday label ("Mon") for a YYYY-MM-DD date already expressed in
  * the map location's local calendar.
  */
-export function localDayLabel(localDate: string): string {
-  return new Date(`${localDate}T00:00:00Z`).toLocaleDateString([], {
+export function localDayLabel(localDate: string, locale?: string): string {
+  return new Date(`${localDate}T00:00:00Z`).toLocaleDateString(locale ? [locale] : [], {
     weekday: "short",
     timeZone: "UTC",
   })

@@ -1,5 +1,8 @@
 "use client"
 
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
+
 import { useState, useEffect, useRef } from "react"
 import {
   X,
@@ -79,6 +82,7 @@ const CATEGORIES = [
 ] as const
 
 export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: PlacesPanelProps) {
+  const { t } = useI18n()
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [places, setPlaces] = useState<Place[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -115,7 +119,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
       setPlaces(found)
 
       if (found.length === 0) {
-        setError("No places found in this area for this category.")
+        setError(t("places.noneCategory"))
       }
     } catch (err) {
       if (controller.signal.aborted) return
@@ -131,7 +135,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
       setError(
         err instanceof Error
           ? err.message
-          : "Could not load nearby places. Please try again."
+          : t("places.loadError")
       )
     } finally {
       if (!controller.signal.aborted) {
@@ -154,11 +158,11 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
       {/* Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Explore Nearby</h2>
+          <h2 className="text-lg font-semibold">{t("places.title")}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-secondary rounded-lg transition-colors"
-            aria-label="Close places"
+            aria-label={t("places.close")}
           >
             <X className="w-5 h-5" />
           </button>
@@ -175,7 +179,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
         <div className="p-4" style={{ contain: "inline-size" }}>
           {/* Categories Grid */}
           <div className="grid grid-cols-4 gap-2 mb-6">
-            {CATEGORIES.map(({ id, label, icon: Icon }) => (
+            {CATEGORIES.map(({ id, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => searchCategory(id)}
@@ -187,7 +191,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
                 )}
               >
                 <Icon className="w-5 h-5" />
-                <span className="text-xs font-medium text-center leading-tight">{label}</span>
+                <span className="text-xs font-medium text-center leading-tight">{t(`cat.${id}` as MessageKey)}</span>
               </button>
             ))}
           </div>
@@ -196,7 +200,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
           {isLoading && (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-              <p className="text-muted-foreground">Finding places nearby...</p>
+              <p className="text-muted-foreground">{t("places.loading")}</p>
             </div>
           )}
 
@@ -225,7 +229,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
                         {place.name}
                       </p>
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-primary border border-primary/40 rounded px-1 py-0.5 flex-shrink-0">
-                        Sponsored
+                        {t("places.sponsored")}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground truncate">
@@ -246,7 +250,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
             <div className="text-center py-12">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">
-                {error || "No places found in this area"}
+                {error || t("places.none")}
               </p>
             </div>
           )}
@@ -295,7 +299,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
           {/* Initial state */}
           {!selectedCategory && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">Select a category to find places nearby</p>
+              <p className="text-muted-foreground">{t("places.prompt")}</p>
             </div>
           )}
 

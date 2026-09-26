@@ -77,7 +77,7 @@ export function LiveView({
 }: LiveViewProps) {
   const { t } = useI18n()
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [cameraError, setCameraError] = useState<string | null>(null)
+  const [cameraError, setCameraError] = useState<"noSupport" | "blocked" | "none" | null>(null)
   const [compassHeading, setHeading] = useState<number | null>(null)
   const [needsCompassTap, setNeedsCompassTap] = useState(false)
   const [compassBlocked, setCompassBlocked] = useState(false)
@@ -91,7 +91,7 @@ export function LiveView({
 
     async function start() {
       if (!navigator.mediaDevices?.getUserMedia) {
-        setCameraError("This browser can't open the camera.")
+        setCameraError("noSupport")
         return
       }
       try {
@@ -111,11 +111,7 @@ export function LiveView({
         const denied =
           err instanceof DOMException &&
           (err.name === "NotAllowedError" || err.name === "SecurityError")
-        setCameraError(
-          denied
-            ? "Camera access is blocked. Allow the camera for this site in your browser settings, then try again."
-            : "No camera was found on this device."
-        )
+        setCameraError(denied ? "blocked" : "none")
       }
     }
 
@@ -231,16 +227,16 @@ export function LiveView({
       <div className="absolute inset-x-0 top-0 flex items-start gap-3 p-4">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-white/70">
-            Live View
+            {t("lv.title")}
           </p>
           <p className="mt-0.5 text-lg font-semibold leading-snug drop-shadow">
-            {step?.instruction ?? "Following route…"}
+            {step?.instruction ?? t("lv.following")}
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close Live View"
+          aria-label={t("lv.close")}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black/55 backdrop-blur active:scale-95"
         >
           <X className="h-5 w-5" />
@@ -269,7 +265,7 @@ export function LiveView({
             </div>
           ) : arrived ? (
             <div className="rounded-full bg-[#ffd34d] px-5 py-2 text-sm font-bold text-black shadow-xl">
-              Your turn is here
+              {t("lv.arrived")}
             </div>
           ) : null}
         </div>
@@ -296,7 +292,15 @@ export function LiveView({
         {cameraError && (
           <div className="mx-auto max-w-sm rounded-2xl bg-black/70 p-5 backdrop-blur">
             <CameraOff className="mx-auto mb-2 h-8 w-8 text-white/80" />
-            <p className="text-sm">{cameraError}</p>
+            <p className="text-sm">
+              {t(
+                cameraError === "noSupport"
+                  ? "lv.camNoSupport"
+                  : cameraError === "blocked"
+                    ? "lv.camBlocked"
+                    : "lv.camNone"
+              )}
+            </p>
           </div>
         )}
         {needsCompassTap && !useGps && (
@@ -311,18 +315,17 @@ export function LiveView({
         )}
         {compassBlocked && (
           <p className="mx-auto max-w-xs rounded-xl bg-black/70 p-3 text-sm backdrop-blur">
-            Compass access was denied, so the arrow can&apos;t point the way. Follow the
-            instruction at the top instead.
+            {t("lv.compassDenied")}
           </p>
         )}
         {!needsCompassTap && !compassBlocked && !hasCompass && !cameraError && (
           <p className="mx-auto max-w-xs rounded-xl bg-black/60 p-3 text-sm backdrop-blur">
-            Hold your phone upright and move it slightly to calibrate the compass…
+            {t("lv.calibrate")}
           </p>
         )}
         {!position && (
           <p className="mx-auto max-w-xs rounded-xl bg-black/60 p-3 text-sm backdrop-blur">
-            Waiting for your location…
+            {t("lv.waitingLoc")}
           </p>
         )}
       </div>

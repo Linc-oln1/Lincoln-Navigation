@@ -33,6 +33,7 @@ import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
 import { SpeedReader, isSpeedMode } from "@/components/map/speed-reader"
 import type { MessageKey } from "@/lib/i18n/messages"
 import { useI18n } from "@/components/i18n/language-provider"
+import { SPEECH_LANG } from "@/lib/i18n/languages"
 import { LiveView, isLiveViewMode } from "@/components/map/live-view"
 import { StopNavigationDialog } from "@/components/map/stop-navigation-dialog"
 import {
@@ -204,7 +205,13 @@ export function DirectionsPanel({
   // route calculation.
   const hazardFetchIdRef = useRef(0)
 
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
+  const durationLabels = {
+    min: t("unit.min"),
+    hr: t("unit.hr"),
+    lessThanMin: t("unit.lessThanMin"),
+  }
+  const hazardLabel = (kind: string) => t(`hazard.${kind}` as MessageKey)
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
   const [liveViewOpen, setLiveViewOpen] = useState(false)
   // Live View tapped before the trip started: open it once navigation is on.
@@ -444,7 +451,7 @@ export function DirectionsPanel({
     window.speechSynthesis.cancel()
 
     const utterance = new SpeechSynthesisUtterance(text)
-    utterance.lang = "en-US"
+    utterance.lang = SPEECH_LANG[lang]
     utterance.rate = 0.95
     utterance.pitch = 1
     utterance.volume = 1
@@ -460,11 +467,11 @@ export function DirectionsPanel({
     setError(null)
 
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setError("Location services are not available on this device.")
+      setError(t("dir.locUnavailable"))
       return
     }
 
-    setOrigin("Finding your location...")
+    setOrigin(t("dir.finding"))
 
     navigator.geolocation.getCurrentPosition(
       async (currentPosition) => {
@@ -474,17 +481,15 @@ export function DirectionsPanel({
 
         try {
           const place = await reverseGeocode(latitude, longitude)
-          setOrigin(place?.address || "Current Location")
+          setOrigin(place?.address || t("dir.currentLocation"))
         } catch {
-          setOrigin("Current Location")
+          setOrigin(t("dir.currentLocation"))
         }
       },
       () => {
         setOrigin("")
         setOriginCoordinates(null)
-        setError(
-          "Unable to get your current location. Please allow location access."
-        )
+        setError(t("dir.locError"))
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
     )
@@ -511,7 +516,7 @@ export function DirectionsPanel({
     const steps: RouteStepView[] = route.steps.map((step) => ({
       instruction: step.instruction,
       distance: formatRouteDistance(step.distance),
-      duration: formatRouteDuration(step.duration),
+      duration: formatRouteDuration(step.duration, durationLabels),
       voiceInstruction: step.voiceInstruction,
     }))
 
@@ -527,7 +532,7 @@ export function DirectionsPanel({
 
     setRouteInfo({
       distance: formatRouteDistance(route.distance),
-      duration: formatRouteDuration(route.duration),
+      duration: formatRouteDuration(route.duration, durationLabels),
       steps: steps.slice(0, 40),
     })
 
@@ -653,7 +658,7 @@ export function DirectionsPanel({
     try {
       const result = await calculateRoute(
         [originCoordinates, destinationCoordinates],
-        { mode: travelMode, avoidAreas, steps: true }
+        { mode: travelMode, avoidAreas, steps: true, lang }
       )
 
       const route = result.routes?.[0]
@@ -682,10 +687,10 @@ export function DirectionsPanel({
       const reason = err instanceof Error ? err.message : ""
       setRouteAroundError(
         reason === "too-long"
-          ? "The only way around is much too long."
+          ? t("dir.aroundTooLong")
           : reason === "still-on"
-            ? "Couldn't find a route that clears it."
-            : "Couldn't find a way around right now."
+            ? t("dir.noClear")
+            : t("dir.noAround")
       )
     } finally {
       setRouteAroundBusy(false)
@@ -731,6 +736,7 @@ export function DirectionsPanel({
         mode: travelMode,
         avoidAreas: avoidAreas.length > 0 ? avoidAreas : undefined,
         steps: true,
+        lang,
       })
 
       const route = result.routes?.[0]
@@ -757,9 +763,9 @@ export function DirectionsPanel({
       const reason = err instanceof Error ? err.message : ""
       setRerouteError(
         reason === "still-on"
-          ? "Couldn't find a way around — it may block the only road."
+          ? t("dir.noAroundBlock")
           : avoidHazards.length > 0
-            ? "Couldn't reroute right now."
+            ? t("dir.noReroute")
             : null // silent off-route retry — no banner, try again next tick
       )
     } finally {
@@ -784,7 +790,7 @@ export function DirectionsPanel({
 
   const handleCalculateRoute = async () => {
     if (!origin.trim() || !destination.trim()) {
-      setError("Please enter both your starting point and destination.")
+      setError(t("dir.enterBoth"))
       return
     }
 
@@ -810,15 +816,11 @@ export function DirectionsPanel({
         ))
 
       if (!originCoords) {
-        throw new Error(
-          `Could not find "${origin}". Try a more specific location, such as "Kwabenya, Accra".`
-        )
+        throw new Error(t("dir.notFoundOrigin", { name: origin }))
       }
 
       if (!destinationCoords) {
-        throw new Error(
-          `Could not find "${destination}". Try a more specific location, such as "Madina, Accra".`
-        )
+        throw new Error(t("dir.notFoundDest", { name: destination }))
       }
 
       setLiveDestination(destinationCoords)
@@ -827,13 +829,12 @@ export function DirectionsPanel({
 
       const result = await calculateRoute(
         [originCoords, destinationCoords],
-        { mode: travelMode, alternatives: true, steps: true }
+        { mode: travelMode, alternatives: true, steps: true, lang }
       )
 
       if (result.code !== "Ok" || result.routes.length === 0) {
         throw new Error(
-          result.message ||
-            "Could not calculate a route between these locations."
+          result.message || t("dir.noRoute")
         )
       }
 
@@ -841,9 +842,7 @@ export function DirectionsPanel({
         (r) => r.geometry.coordinates.length > 0
       )
       if (usable.length === 0) {
-        throw new Error(
-          "The route was found, but no route geometry was returned."
-        )
+        throw new Error(t("dir.noGeometry"))
       }
 
       // OSRM doesn't guarantee the routes come back fastest-first.
@@ -860,7 +859,7 @@ export function DirectionsPanel({
     } catch (err) {
       console.error("Lincoln Navigation route calculation error:", err)
       setError(
-        err instanceof Error ? err.message : "Unable to calculate route."
+        err instanceof Error ? err.message : t("dir.unableCalc")
       )
     } finally {
       setIsLoading(false)
@@ -875,12 +874,12 @@ export function DirectionsPanel({
     setError(null)
 
     if (!liveDestination) {
-      setError("Destination coordinates are missing. Please calculate the route again.")
+      setError(t("dir.destMissing"))
       return
     }
 
     if (liveSteps.length === 0) {
-      setError("Live navigation data is not available. Please calculate the route again.")
+      setError(t("dir.navUnavailable"))
       return
     }
 
@@ -974,8 +973,8 @@ export function DirectionsPanel({
                 type="button"
                 onClick={() => setVoiceWanted((value) => !value)}
                 className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                aria-label={voiceEnabled ? "Disable voice directions" : "Enable voice directions"}
-                title={voiceEnabled ? "Disable voice directions" : "Enable voice directions"}
+                aria-label={voiceEnabled ? t("dir.voiceOff") : t("dir.voiceOn")}
+                title={voiceEnabled ? t("dir.voiceOff") : t("dir.voiceOn")}
               >
                 {voiceEnabled ? (
                   <Volume2 className="w-5 h-5" />
@@ -987,8 +986,8 @@ export function DirectionsPanel({
               <a
                 href="/pricing"
                 className="p-2 hover:bg-secondary rounded-lg transition-colors flex items-center"
-                title="Turn-by-turn voice navigation is a Premium feature"
-                aria-label="Unlock voice navigation with Premium"
+                title={t("dir.voicePremium")}
+                aria-label={t("dir.voiceUnlock")}
               >
                 <span className="relative">
                   <VolumeX className="w-5 h-5 text-muted-foreground" />
@@ -1188,8 +1187,8 @@ export function DirectionsPanel({
                   <Navigation className="w-5 h-5 animate-pulse" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-xs opacity-80 uppercase tracking-wide">Live Navigation</p>
-                  <p className="font-semibold">{navigationMessage || "Following route..."}</p>
+                  <p className="text-xs opacity-80 uppercase tracking-wide">{t("dir.liveNav")}</p>
+                  <p className="font-semibold">{navigationMessage || t("dir.following")}</p>
                 </div>
               </div>
 
@@ -1214,16 +1213,18 @@ export function DirectionsPanel({
                       Navigation was pressed. */}
                   {etaSeconds !== null && (
                     <span className="font-medium">
-                      {formatRouteDuration(etaSeconds)}
+                      {formatRouteDuration(etaSeconds, durationLabels)}
                     </span>
                   )}
 
                   {arrivalTime && (
                     <span className="opacity-75">
-                      · arriving{" "}
-                      {arrivalTime.toLocaleTimeString([], {
-                        hour: "numeric",
-                        minute: "2-digit",
+                      ·{" "}
+                      {t("dir.arriving", {
+                        time: arrivalTime.toLocaleTimeString([lang], {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        }),
                       })}
                     </span>
                   )}
@@ -1232,13 +1233,13 @@ export function DirectionsPanel({
 
               {position && (
                 <div className="mt-2 text-xs opacity-70">
-                  GPS accuracy: {Math.round(position.accuracy)}m
+                  {t("dir.gpsAccuracy", { m: Math.round(position.accuracy) })}
                 </div>
               )}
 
               {liveSteps[currentStepIndex] && (
                 <div className="mt-3 rounded-lg bg-white/10 p-3">
-                  <p className="text-xs opacity-70">NEXT INSTRUCTION</p>
+                  <p className="text-xs opacity-70 uppercase">{t("dir.nextInstruction")}</p>
                   <p className="text-sm font-medium mt-1">
                     {liveSteps[currentStepIndex].instruction}
                   </p>
@@ -1253,15 +1254,15 @@ export function DirectionsPanel({
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-red-600">
                       {hazardAhead.hazard.source === "crowd_report"
-                        ? `Reported ${hazardKindMeta(hazardAhead.hazard.kind).label.toLowerCase()}`
-                        : `${hazardKindMeta(hazardAhead.hazard.kind).label} area`}
+                        ? t("dir.hazardReported", { kind: hazardLabel(hazardAhead.hazard.kind) })
+                        : t("dir.hazardArea", { kind: hazardLabel(hazardAhead.hazard.kind) })}
                     </p>
                     <p className="text-xs text-neutral-600">
                       {rerouteError
                         ? rerouteError
                         : hazardAhead.distanceM <= 60
-                          ? "right ahead"
-                          : `${Math.round(hazardAhead.distanceM / 50) * 50} m ahead`}
+                          ? t("dir.rightAhead")
+                          : t("dir.mAhead", { n: Math.round(hazardAhead.distanceM / 50) * 50 })}
                     </p>
                   </div>
                   {hazardAhead.hazard.kind === "closure" &&
@@ -1276,7 +1277,7 @@ export function DirectionsPanel({
                         {rerouteBusy && (
                           <Loader2 className="w-3 h-3 animate-spin" />
                         )}
-                        Reroute
+                        {t("dir.reroute")}
                       </button>
                     )}
                 </div>
@@ -1317,7 +1318,7 @@ export function DirectionsPanel({
                   </p>
                   <p className="text-2xl font-bold text-foreground">
                     {isNavigating && etaSeconds !== null
-                      ? formatRouteDuration(etaSeconds)
+                      ? formatRouteDuration(etaSeconds, durationLabels)
                       : routeInfo.duration}
                   </p>
                   <p className="text-muted-foreground">
@@ -1326,11 +1327,12 @@ export function DirectionsPanel({
                       : routeInfo.distance}
                   </p>
                   {isNavigating && arrivalTime && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Arriving{" "}
-                      {arrivalTime.toLocaleTimeString([], {
-                        hour: "numeric",
-                        minute: "2-digit",
+                    <p className="text-xs text-muted-foreground mt-1 first-letter:uppercase">
+                      {t("dir.arriving", {
+                        time: arrivalTime.toLocaleTimeString([lang], {
+                          hour: "numeric",
+                          minute: "2-digit",
+                        }),
                       })}
                     </p>
                   )}
@@ -1388,13 +1390,13 @@ export function DirectionsPanel({
 
             <p className="text-xs text-muted-foreground text-center mt-5">
               {hasVoice ? (
-                "Tap a direction to hear it aloud."
+                t("dir.tapToHear")
               ) : (
                 <>
                   <a href="/pricing" className="text-primary font-medium hover:underline">
-                    Upgrade to Premium
+                    {t("dir.upgrade")}
                   </a>{" "}
-                  for turn-by-turn voice navigation.
+                  {t("dir.forVoice")}
                 </>
               )}
             </p>
@@ -1405,7 +1407,7 @@ export function DirectionsPanel({
           <div className="flex items-center justify-end gap-2 border-t border-border bg-card px-4 py-2">
             <button
               type="button"
-              aria-label="Scroll directions up"
+              aria-label={t("dir.scrollUp")}
               onClick={() => scrollRoute(-1)}
               disabled={!canScrollUp}
               className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-secondary text-foreground transition-all duration-150 hover:brightness-110 active:scale-90 disabled:pointer-events-none disabled:opacity-30"
@@ -1414,7 +1416,7 @@ export function DirectionsPanel({
             </button>
             <button
               type="button"
-              aria-label="Scroll directions down"
+              aria-label={t("dir.scrollDown")}
               onClick={() => scrollRoute(1)}
               disabled={!canScrollDown}
               className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all duration-150 hover:brightness-110 active:scale-90 disabled:pointer-events-none disabled:opacity-30"

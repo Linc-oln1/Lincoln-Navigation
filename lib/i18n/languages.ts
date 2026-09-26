@@ -50,3 +50,27 @@ export const LANG_STORAGE_KEY = "ln_lang"
 export function isLangCode(value: unknown): value is LangCode {
   return LANGUAGES.some((l) => l.code === value)
 }
+
+/**
+ * BCP-47 tag handed to the browser's speech engine. If the device has no
+ * voice for it (common for Twi, Hausa, Yoruba and Haitian Creole) the
+ * browser falls back to its default voice.
+ */
+export const SPEECH_LANG: Record<LangCode, string> = {
+  en: "en-US",
+  tw: "ak-GH",
+  fr: "fr-FR",
+  es: "es-ES",
+  ar: "ar-SA",
+  pt: "pt-PT",
+  de: "de-DE",
+  it: "it-IT",
+  zh: "zh-CN",
+  hi: "hi-IN",
+  ru: "ru-RU",
+  sw: "sw-KE",
+  ha: "ha-NG",
+  yo: "yo-NG",
+  ko: "ko-KR",
+  ht: "ht-HT",
+}
