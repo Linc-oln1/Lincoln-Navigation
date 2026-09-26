@@ -105,10 +105,9 @@ export const PREMIUM_FEATURES: PlanFeature[] = [
 /** What Lincoln Pro adds on top of Premium — shown on /pricing. */
 export const PRO_FEATURES: PlanFeature[] = [
   { text: "Professional navigation — run a multi-stop route stop by stop, with progress" },
-  { text: "Fleet tools — your vehicles and where each one is, live" },
+  { text: "Fleet tools — up to 25 vehicles, and where each one is, live" },
   { text: "Advanced routing — truck routing by height, width, length and weight" },
   { text: "Business analytics — distance, time moving and speeds per vehicle, per day" },
-  { text: "Multiple vehicles", soon: true },
   { text: "Route optimization — enter up to 12 stops, get the best order and route" },
 ]
 

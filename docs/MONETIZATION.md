@@ -178,5 +178,4 @@ for both, `requirePro` (lib/premium-guard) only for Pro. Checkout takes
 `/api/billing/verify` only issues a Pro cookie if the Paystack transaction
 was tagged `pro_monthly` **and** the amount paid covers `PRO_PRICE_PESEWAS`.
 A later Premium purchase never replaces a still-valid Pro cookie.
-Still to build for Pro (shown "Coming soon"): professional navigation, fleet
-tools, advanced routing, business analytics, multiple vehicles.
+Every Pro feature on /pricing is now built; nothing is marked "Coming soon". Pro's "multiple vehicles" is covered by Fleet (up to 25 per account, `MAX_VEHICLES` in `lib/fleet-server.ts`).
