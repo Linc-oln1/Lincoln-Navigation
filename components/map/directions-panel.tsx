@@ -1435,6 +1435,7 @@ export function DirectionsPanel({
           distanceToDestination={distanceToDestination}
           driving={travelMode !== "walking"}
           motorcycle={travelMode === "motorcycle"}
+          bicycle={travelMode === "cycling"}
           gpsHeading={position?.heading ?? null}
           speedMps={position?.speed ?? null}
           onClose={() => setLiveViewOpen(false)}
