@@ -76,6 +76,14 @@ function getOrsApiKey(): string | null {
   return key && key.trim() ? key.trim() : null
 }
 
+/*
+ * HeiGIT moved OpenRouteService to api.heigit.org. The old
+ * api.openrouteservice.org host is already capped at 10% of the plan quota
+ * and is switched off on 28 Sep 2026. Same API key, same paths after the
+ * /openrouteservice prefix.
+ */
+const ORS_BASE_URL = "https://api.heigit.org/openrouteservice"
+
 // ORS's numeric maneuver codes -> the {type, modifier} shape the
 // rest of the app already speaks (see lib/routing.ts's RouteStep),
 // so walking/cycling steps slot into the same UI as OSRM's.
@@ -159,7 +167,7 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await fetch(
-      `https://api.openrouteservice.org/v2/directions/${profile}/geojson`,
+      `${ORS_BASE_URL}/v2/directions/${profile}/geojson`,
       {
         method: "POST",
         headers: {
