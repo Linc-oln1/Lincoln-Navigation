@@ -64,7 +64,7 @@ export function TrafficToggle({ isPremium, showTraffic, onToggle }: TrafficToggl
 
       {showTraffic && (
         <div
-          className="absolute top-[21rem] right-4 z-[1000] rounded-xl border border-border bg-card/90 px-3 py-2 shadow-lg backdrop-blur-sm"
+          className="absolute top-[8.75rem] right-[4.25rem] z-[1000] rounded-xl border border-border bg-card/90 px-3 py-2 shadow-lg backdrop-blur-sm"
           aria-label={t("traffic.label")}
         >
           <ul className="space-y-1.5">
