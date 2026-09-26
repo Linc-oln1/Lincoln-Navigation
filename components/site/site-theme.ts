@@ -38,7 +38,7 @@ export const SITE_THEME: Record<
     bar: "bg-transparent",
     border: "border-black/10",
     text: "text-neutral-950",
-    muted: "text-neutral-700",
+    muted: "text-neutral-900",
     hover: "hover:text-black",
     active: "text-black font-semibold",
     pill: "bg-[#1c1c1c] text-white",
