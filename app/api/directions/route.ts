@@ -165,7 +165,9 @@ export async function GET(request: NextRequest) {
         headers: {
           Authorization: apiKey,
           "Content-Type": "application/json",
-          Accept: "application/json",
+          // The /geojson endpoint answers with GeoJSON; asking for plain
+          // application/json gets a 406 "response format is not supported".
+          Accept: "application/geo+json, application/json",
         },
         body: JSON.stringify(body),
         cache: "no-store",
