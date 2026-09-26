@@ -135,6 +135,17 @@ const baseEn = {
   "fleet.kind.motorcycle": "Motorcycle",
   "fleet.kind.bus": "Bus",
   "fleet.kind.bicycle": "Bicycle",
+  "fleet.activity": "Activity",
+  "fleet.lastDays": "Last {n} days",
+  "fleet.distance": "Distance",
+  "fleet.moving": "Moving",
+  "fleet.topSpeed": "Top speed",
+  "fleet.perDay": "Distance per day",
+  "fleet.byVehicle": "By vehicle",
+  "fleet.avg": "avg",
+  "fleet.top": "top",
+  "fleet.noActivity": "No driving recorded yet. Totals build up while drivers share their location.",
+  "fleet.activityNote": "Totals only — no route history is kept. Standing still and gaps when a phone stops reporting aren't counted.",
 
   // Truck routing (Pro). English only for now — other languages fall back.
   "truck.on": "Route for a truck",

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { hashToken } from "@/lib/fleet-server"
+import { hashToken, segmentSample } from "@/lib/fleet-server"
 import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 
 /* Driver phone → its latest position. Public: the secret driver link is the
@@ -47,20 +47,38 @@ export async function POST(request: NextRequest) {
   lastPost.set(hash, now)
   if (lastPost.size > 2000) lastPost.clear()
 
-  const { data, error } = await admin
+  // What the vehicle last reported, so the segment since then can be added
+  // to today's totals (business analytics — see 0004_fleet_daily_stats.sql).
+  const { data: prev } = await admin
     .from("fleet_vehicles")
-    .update({
-      last_lat: lat,
-      last_lng: lng,
-      last_speed: speed,
-      last_heading: heading,
-      last_seen: new Date().toISOString(),
-    })
+    .select("id, last_lat, last_lng, last_seen")
     .eq("driver_token_hash", hash)
-    .select("id")
     .maybeSingle()
+  if (!prev) return NextResponse.json({ error: "This link is no longer valid." }, { status: 404 })
 
+  const nowIso = new Date().toISOString()
+  const { error } = await admin
+    .from("fleet_vehicles")
+    .update({ last_lat: lat, last_lng: lng, last_speed: speed, last_heading: heading, last_seen: nowIso })
+    .eq("id", prev.id)
   if (error) return NextResponse.json({ error: "Could not save the position." }, { status: 502 })
-  if (!data) return NextResponse.json({ error: "This link is no longer valid." }, { status: 404 })
+
+  const sample = segmentSample(
+    prev.last_lat != null && prev.last_lng != null && prev.last_seen
+      ? { lat: prev.last_lat, lng: prev.last_lng, at: new Date(prev.last_seen).getTime() }
+      : null,
+    { lat, lng, at: Date.parse(nowIso), speed }
+  )
+  if (sample) {
+    // Best effort: analytics must never make a position update fail.
+    const { error: statsError } = await admin.rpc("fleet_add_sample", {
+      p_vehicle: prev.id,
+      p_day: nowIso.slice(0, 10),
+      p_dist: sample.distanceM,
+      p_secs: sample.movingSeconds,
+      p_speed: sample.speed,
+    })
+    if (statsError) console.error("[fleet] stats update failed:", statsError.message)
+  }
   return NextResponse.json({ ok: true })
 }

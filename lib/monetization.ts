@@ -107,7 +107,7 @@ export const PRO_FEATURES: PlanFeature[] = [
   { text: "Professional / business navigation", soon: true },
   { text: "Fleet tools — your vehicles and where each one is, live" },
   { text: "Advanced routing — truck routing by height, width, length and weight" },
-  { text: "Business analytics", soon: true },
+  { text: "Business analytics — distance, time moving and speeds per vehicle, per day" },
   { text: "Multiple vehicles", soon: true },
   { text: "Route optimization — enter up to 12 stops, get the best order and route" },
 ]

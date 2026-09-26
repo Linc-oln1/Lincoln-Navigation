@@ -18,6 +18,20 @@ interface FleetVehicle {
   last_seen: string | null
 }
 
+interface FleetStatRow {
+  vehicle_id: string
+  day: string
+  distance_m: number
+  moving_seconds: number
+  max_speed: number
+}
+
+interface FleetStats {
+  since: string
+  vehicles: { id: string; name: string; plate: string | null }[]
+  rows: FleetStatRow[]
+}
+
 interface FleetPanelProps {
   isPro: boolean
   /** Vehicles to pin on the map (null = stop tracking and clear the pins). */
@@ -62,6 +76,10 @@ export function FleetPanel({ isPro, onTrack, onCenter }: FleetPanelProps) {
   const [kind, setKind] = useState<(typeof KINDS)[number]>("car")
   const [adding, setAdding] = useState(false)
   const centeredRef = useRef(false)
+  const [tab, setTab] = useState<"vehicles" | "activity">("vehicles")
+  const [days, setDays] = useState<7 | 30>(7)
+  const [stats, setStats] = useState<FleetStats | null>(null)
+  const [statsError, setStatsError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -129,6 +147,24 @@ export function FleetPanel({ isPro, onTrack, onCenter }: FleetPanelProps) {
       setTracking(true)
     }
   }
+
+  // Activity tab: load the chosen period whenever it's shown.
+  useEffect(() => {
+    if (!canUse || !open || tab !== "activity") return
+    let cancelled = false
+    setStatsError(null)
+    fetch(`/api/fleet/stats?days=${days}`, { cache: "no-store" })
+      .then(async (res) => {
+        const data = await res.json().catch(() => null)
+        if (cancelled) return
+        if (!res.ok) return setStatsError(data?.error || t("fleet.loadFailed"))
+        setStats(data)
+      })
+      .catch(() => !cancelled && setStatsError(t("fleet.loadFailed")))
+    return () => {
+      cancelled = true
+    }
+  }, [canUse, open, tab, days, t])
 
   const linkFor = (token: string) => `${window.location.origin}/drive/${token}`
 
@@ -248,6 +284,28 @@ export function FleetPanel({ isPro, onTrack, onCenter }: FleetPanelProps) {
               </div>
             ) : (
               <>
+                <div role="tablist" className="mt-4 flex gap-1 rounded-xl bg-secondary p-1">
+                  {(["vehicles", "activity"] as const).map((k) => (
+                    <button
+                      key={k}
+                      type="button"
+                      role="tab"
+                      aria-selected={tab === k}
+                      onClick={() => setTab(k)}
+                      className={cn(
+                        "flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                        tab === k ? "bg-card text-foreground shadow" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {t(k === "vehicles" ? "fleet.vehicles" : "fleet.activity")}
+                    </button>
+                  ))}
+                </div>
+
+                {tab === "activity" ? (
+                  <ActivityView stats={stats} error={statsError} days={days} onDays={setDays} />
+                ) : (
+                  <>
                 <button
                   type="button"
                   onClick={toggleTracking}
@@ -390,11 +448,138 @@ export function FleetPanel({ isPro, onTrack, onCenter }: FleetPanelProps) {
                     {t("fleet.addBtn")}
                   </button>
                 </form>
+                  </>
+                )}
               </>
             )}
           </div>
         </div>
       )}
     </>
+  )
+}
+
+function fmtKm(m: number) {
+  const km = m / 1000
+  return `${km >= 100 ? Math.round(km) : km.toFixed(1)} km`
+}
+
+function fmtHours(sec: number) {
+  const m = Math.round(sec / 60)
+  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${String(m % 60).padStart(2, "0")} min`
+}
+
+function ActivityView({
+  stats,
+  error,
+  days,
+  onDays,
+}: {
+  stats: FleetStats | null
+  error: string | null
+  days: 7 | 30
+  onDays: (d: 7 | 30) => void
+}) {
+  const { t } = useI18n()
+
+  // Fleet total per day, over every day in the period (zeros included).
+  const perDay = new Map<string, number>()
+  if (stats) {
+    const start = new Date(stats.since + "T00:00:00Z").getTime()
+    for (let i = 0; i < days; i++) perDay.set(new Date(start + i * 86_400_000).toISOString().slice(0, 10), 0)
+    for (const r of stats.rows) perDay.set(r.day, (perDay.get(r.day) ?? 0) + r.distance_m)
+  }
+  const dayList = [...perDay.entries()]
+  const maxDay = Math.max(1, ...dayList.map(([, m]) => m))
+
+  const perVehicle = (stats?.vehicles ?? []).map((v) => {
+    const rows = stats!.rows.filter((r) => r.vehicle_id === v.id)
+    const distance = rows.reduce((n, r) => n + r.distance_m, 0)
+    const moving = rows.reduce((n, r) => n + r.moving_seconds, 0)
+    const top = rows.reduce((n, r) => Math.max(n, r.max_speed), 0)
+    return { ...v, distance, moving, top, avg: moving > 0 ? distance / moving : 0 }
+  })
+  const totalDistance = perVehicle.reduce((n, v) => n + v.distance, 0)
+  const totalMoving = perVehicle.reduce((n, v) => n + v.moving, 0)
+  const topSpeed = perVehicle.reduce((n, v) => Math.max(n, v.top), 0)
+
+  return (
+    <div className="mt-4">
+      <div className="flex gap-1.5">
+        {([7, 30] as const).map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={() => onDays(d)}
+            aria-pressed={days === d}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-medium",
+              days === d ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {t("fleet.lastDays", { n: d })}
+          </button>
+        ))}
+      </div>
+
+      {error && (
+        <p role="alert" className="mt-3 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+      {!stats && !error && <Loader2 className="mt-4 h-4 w-4 animate-spin text-muted-foreground" />}
+
+      {stats && stats.vehicles.length === 0 && <p className="mt-3 text-sm text-muted-foreground">{t("fleet.none")}</p>}
+
+      {stats && stats.vehicles.length > 0 && (
+        <>
+          <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+            {[
+              [t("fleet.distance"), fmtKm(totalDistance)],
+              [t("fleet.moving"), fmtHours(totalMoving)],
+              [t("fleet.topSpeed"), `${Math.round(topSpeed * 3.6)} km/h`],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-xl bg-secondary px-2 py-2.5">
+                <p className="text-sm font-semibold">{value}</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="mt-5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("fleet.perDay")}</h3>
+          <div className="mt-2 flex h-24 items-end gap-[3px]" role="img" aria-label={t("fleet.perDay")}>
+            {dayList.map(([day, m]) => (
+              <div key={day} className="flex-1" title={`${day}: ${fmtKm(m)}`}>
+                <div
+                  className={cn("w-full rounded-t", m > 0 ? "bg-primary" : "bg-secondary")}
+                  style={{ height: `${Math.max(m > 0 ? 6 : 2, (m / maxDay) * 96)}px` }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+            <span>{dayList[0]?.[0].slice(5)}</span>
+            <span>{dayList[dayList.length - 1]?.[0].slice(5)}</span>
+          </div>
+
+          <h3 className="mt-5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("fleet.byVehicle")}</h3>
+          <ul className="mt-2 space-y-2">
+            {perVehicle.map((v) => (
+              <li key={v.id} className="rounded-xl bg-secondary px-3 py-2.5">
+                <p className="truncate text-sm font-medium">
+                  {v.name}
+                  {v.plate && <span className="ml-2 text-xs font-normal text-muted-foreground">{v.plate}</span>}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {fmtKm(v.distance)} · {fmtHours(v.moving)} · {t("fleet.avg")} {Math.round(v.avg * 3.6)} km/h · {t("fleet.top")} {Math.round(v.top * 3.6)} km/h
+                </p>
+              </li>
+            ))}
+          </ul>
+          {totalDistance === 0 && <p className="mt-3 text-xs text-muted-foreground">{t("fleet.noActivity")}</p>}
+          <p className="mt-3 text-[11px] text-muted-foreground">{t("fleet.activityNote")}</p>
+        </>
+      )}
+    </div>
   )
 }
