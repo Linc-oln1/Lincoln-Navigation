@@ -8,7 +8,6 @@ import {
   Landmark,
   Factory,
   GraduationCap,
-  Code,
   Route,
   type LucideIcon,
 } from "lucide-react"
@@ -32,7 +31,7 @@ export interface BusinessSegment {
  * Ghana place search, hazard-aware routes, Live View and 16 languages —
  * and offers to build the rest with each partner. It deliberately does
  * not promise features that don't exist yet (fleet dashboards, an
- * self-serve API, etc.).
+ * self-serve API, etc.). Developers are not a customer type here.
  */
 export const BUSINESS_SEGMENTS: BusinessSegment[] = [
   {
@@ -99,13 +98,6 @@ export const BUSINESS_SEGMENTS: BusinessSegment[] = [
     highlights: ["Campus & city maps", "Research partners"],
   },
   {
-    id: "developers",
-    title: "Developers",
-    icon: Code,
-    body: "Routing, geocoding and place search for Ghana in one place. Join the early-access list and tell us what you're building.",
-    highlights: ["Early access", "Ghana-first data"],
-  },
-  {
     id: "fleets",
     title: "Fleet operators",
     icon: Route,
@@ -128,7 +120,7 @@ export const BUSINESS_INTERESTS = [
   "Live navigation & ETA",
   "Live View",
   "Hazard & flood data",
-  "Integration or early API access",
+  "Integration into your app",
 ]
 
 export const BUSINESS_SIZES = [

@@ -5,7 +5,7 @@ import { BusinessExperience } from "@/components/business/business-experience"
 export const metadata = {
   title: "For business — Lincoln Navigation",
   description:
-    "Ghana-first navigation for logistics, delivery, taxi, ride-hailing, bus, insurance, government, automotive, university, developer and fleet customers.",
+    "Ghana-first navigation for logistics, delivery, taxi, ride-hailing, bus, insurance, government, automotive, university and fleet customers.",
 }
 
 export default function BusinessPage() {

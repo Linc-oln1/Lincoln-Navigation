@@ -152,17 +152,16 @@ export function BusinessExperience() {
               />
             </div>
 
-            <button
-              type="button"
-              onClick={() => talkAbout(BUSINESS_SEGMENTS.find((s) => s.id === "developers")!.title)}
+            <Link
+              href="/app"
               className={cn(
                 GLASS,
                 "flex flex-1 items-center justify-between gap-6 rounded-full px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/90 active:scale-95 lg:min-w-[150px] lg:flex-none",
               )}
             >
-              Developers
+              Open the map
               <ArrowUpRight className="h-4 w-4 text-orange-400" aria-hidden />
-            </button>
+            </Link>
           </div>
 
           {/* Big translucent headline */}
@@ -232,7 +231,9 @@ export function BusinessExperience() {
             </p>
             <div className="mt-4 flex items-end justify-between">
               <div>
-                <p className="text-4xl font-semibold tracking-tight text-slate-900">11</p>
+                <p className="text-4xl font-semibold tracking-tight text-slate-900">
+                  {BUSINESS_SEGMENTS.length}
+                </p>
                 <p className="text-xs text-slate-600">customer types</p>
               </div>
               <div className="flex items-center gap-3">
@@ -394,10 +395,6 @@ export function BusinessExperience() {
             need — a pilot with a handful of drivers, an integration into your app, or a
             custom deployment — and we&rsquo;ll come back with what&rsquo;s possible now
             and what we can build together.
-          </p>
-          <p className="mt-3 text-sm leading-relaxed text-slate-700">
-            Developers and fleet teams can also just say hello and we&rsquo;ll add you to
-            the early-access list.
           </p>
         </div>
       </section>
