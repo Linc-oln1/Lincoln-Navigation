@@ -6,10 +6,10 @@
 // check for, and (2) let the app shell still open offline instead
 // of showing a browser error.
 //
-// Anything that must always be fresh (every /api/* route, and map
-// tiles from other origins) is deliberately left untouched below —
-// this worker never intercepts those, so they always go straight to
-// the network exactly as if it didn't exist.
+// Anything that must always be fresh (every /api/* route, and other
+// origins' requests) is left untouched below — the one exception is
+// OpenFreeMap (the base map), which is answered from the areas a
+// Premium user saved with "Offline maps" (caches named "ln-offline-*").
 
 const CACHE_NAME = "lincoln-nav-shell-v1"
 
@@ -31,7 +31,8 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME)
+            // Only retire old app-shell caches — never a saved offline map.
+            .filter((key) => key.startsWith("lincoln-nav-shell-") && key !== CACHE_NAME)
             .map((key) => caches.delete(key))
         )
       )
@@ -39,8 +40,37 @@ self.addEventListener("activate", (event) => {
   )
 })
 
+const OFM_HOST = "tiles.openfreemap.org"
+// Tiles, icons and fonts never change for a given URL: saved copy first.
+const OFM_STATIC = /\/(fonts|sprites)\/|\/\d+\/\d+\/\d+(\.\w+)?$/
+
+function offlineMatch(request) {
+  return caches.match(request, { ignoreVary: true })
+}
+
+function handleBaseMap(event) {
+  const { request } = event
+  if (OFM_STATIC.test(new URL(request.url).pathname)) {
+    // Saved copy if there is one, otherwise the network as normal.
+    event.respondWith(offlineMatch(request).then((hit) => hit || fetch(request)))
+  } else {
+    // Style and tile index: the live copy when online (so updates arrive),
+    // the saved copy when there's no connection.
+    event.respondWith(
+      fetch(request).catch(() =>
+        offlineMatch(request).then((hit) => hit || Response.error())
+      )
+    )
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event
+
+  if (request.method === "GET" && new URL(request.url).hostname === OFM_HOST) {
+    handleBaseMap(event)
+    return
+  }
 
   // Only ever handle our own GET requests — never touch /api/* (live
   // data must always hit the network) or cross-origin requests (map

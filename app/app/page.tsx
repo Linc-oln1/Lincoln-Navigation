@@ -20,6 +20,7 @@ import { useHazards } from "@/hooks/use-hazards"
 import { useI18n } from "@/components/i18n/language-provider"
 import { usePremium } from "@/hooks/use-premium"
 import { TrafficToggle } from "@/components/map/traffic-toggle"
+import { OfflineMaps } from "@/components/map/offline-maps"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -461,6 +462,8 @@ function MapNavigator() {
         showTraffic={showTraffic}
         onToggle={toggleTraffic}
       />
+
+      <OfflineMaps isPremium={isPremium} center={mapCenter} />
 
       <MapControls
         currentStyle={mapStyle}

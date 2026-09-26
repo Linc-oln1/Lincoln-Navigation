@@ -138,7 +138,7 @@ its button goes to `/business#talk-to-us` until the Pro tools exist.
 | Business discovery (Explore Nearby) | plain list | distance + nearest-first, open/closed (from OSM `opening_hours`), Call and Website links, filters (Open now / Has phone / Has website), same details on the place card | `components/map/places-panel.tsx`, `components/map/location-details.tsx`, `lib/opening-hours.ts`; data from `app/api/places` (OSM `phone`, `website`, `opening_hours`, `cuisine`). Coverage in Ghana is patchy — places without hours are never shown as open/closed |
 | Route options | locked (upsell to /pricing) | fastest/shortest, avoid highways/tolls/ferries, choose between routes | `components/map/directions-panel.tsx` + `app/api/directions/route.ts` (needs `ORS_API_KEY`; without it the standard route is shown with a notice) |
 | Live View (AR camera) | locked (upsell to /pricing) | on | `components/map/directions-panel.tsx` (the Live View button) |
-| Offline maps | — | — | not built (shown "Coming soon" on /pricing) |
+| Offline maps | — | — | built — saves OpenFreeMap tiles to Cache Storage; SW `public/sw.js` serves them; UI-gated only |
 | Priority routing | — | — | not built |
 
 How to gate something:

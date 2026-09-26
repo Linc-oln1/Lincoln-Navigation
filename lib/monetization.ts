@@ -95,7 +95,7 @@ export const PREMIUM_FEATURES: PlanFeature[] = [
   { text: "Turn-by-turn voice navigation" },
   { text: "Multiple saved locations — unlimited saved places and trip history" },
   { text: "Advanced traffic — live traffic on the map and traffic-aware travel times" },
-  { text: "Offline maps", soon: true },
+  { text: "Offline maps (save areas to your phone)" },
   { text: "Advanced route options — fastest or shortest, avoid highways, tolls and ferries, and route choices" },
   { text: "Real-time road alerts", soon: true },
   { text: "Premium location intelligence", soon: true },
@@ -125,7 +125,7 @@ export const PRO_FEATURES: PlanFeature[] = [
  *   unlimitedSavedPlaces — LIVE, gated (see use-saved-places)
  *   unlimitedTripHistory — LIVE, gated (see use-recent-searches)
  *   liveView             — LIVE, gated (see directions-panel: the Live View button)
- *   offlineMaps          — not built yet
+ *   offlineMaps          — built: client-side, components/map/offline-maps.tsx (no server resource, so UI-gated only)
  *   priorityRouting      — not built yet
  */
 export type PremiumFeature =
