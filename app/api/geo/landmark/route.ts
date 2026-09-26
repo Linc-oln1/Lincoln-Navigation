@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requirePremium } from "@/lib/premium-guard"
 import { resolveRelativeLandmark } from "@/lib/geo-intelligence/ghana-landmarks"
 
 /* =========================================================
@@ -11,6 +12,10 @@ import { resolveRelativeLandmark } from "@/lib/geo-intelligence/ghana-landmarks"
 ========================================================= */
 
 export async function GET(request: NextRequest) {
+  // Premium ("location intelligence"): each call queries Overpass.
+  const gate = requirePremium(request)
+  if (gate) return gate
+
   const { searchParams } = new URL(request.url)
 
   const description = searchParams.get("q")?.trim()

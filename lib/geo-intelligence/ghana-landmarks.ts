@@ -98,8 +98,10 @@ const BASE_UNCERTAINTY_METERS: Record<LandmarkRelation, number> = {
 }
 
 const OVERPASS_ENDPOINTS = [
+  "https://lz4.overpass-api.de/api/interpreter",
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.openstreetmap.ru/api/interpreter",
 ]
 
 function toRad(deg: number): number {
@@ -178,33 +180,51 @@ async function findAnchor(
 ): Promise<AnchorMatch | null> {
   const tagMatch = LANDMARK_KEYWORD_TAGS.find((t) => t.pattern.test(phrase))
 
-  const clauses: string[] = []
   const bbox = `(around:${searchRadiusMeters},${areaHint.lat},${areaHint.lng})`
 
+  // Two passes: the tag lookup ("filling station" → amenity=fuel) is cheap
+  // and covers most phrasing; the literal-name regex scan (brands like
+  // "MTN", "Shell") is much heavier on the shared Overpass servers, so it
+  // only runs when the tag pass finds nothing.
+  const passes: string[] = []
   if (tagMatch) {
     const tag = tagMatch.value ? `"${tagMatch.key}"="${tagMatch.value}"` : `"${tagMatch.key}"`
-    clauses.push(`  node[${tag}]${bbox};\n  way[${tag}]${bbox};\n`)
+    passes.push(`  node[${tag}]${bbox};\n  way[${tag}]${bbox};\n`)
   }
-
-  // Also try matching the anchor phrase as a literal name (e.g. a
-  // brand: "MTN", "Shell", "Vodafone") — covers cases the keyword
-  // table above doesn't anticipate.
   const nameWords = phrase.split(" ").filter((w) => w.length > 2)
   if (nameWords.length > 0) {
     const escaped = nameWords[0].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    clauses.push(`  node["name"~"${escaped}",i]${bbox};\n  way["name"~"${escaped}",i]${bbox};\n`)
+    passes.push(`  node["name"~"${escaped}",i]${bbox};\n  way["name"~"${escaped}",i]${bbox};\n`)
   }
 
-  if (clauses.length === 0) return null
+  for (const clauses of passes) {
+    const found = await queryAnchor(clauses, phrase, areaHint)
+    if (found) return found
+  }
+  return null
+}
 
-  const query = `[out:json][timeout:15];\n(\n${clauses.join("")});\nout center 5;`
+async function queryAnchor(
+  clauses: string,
+  phrase: string,
+  areaHint: LatLng
+): Promise<AnchorMatch | null> {
+  const query = `[out:json][timeout:15];\n(\n${clauses});\nout center 5;`
+
 
   for (const endpoint of OVERPASS_ENDPOINTS) {
     try {
       const response = await fetch(endpoint, {
         method: "POST",
         body: `data=${encodeURIComponent(query)}`,
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          // overpass-api.de answers headerless requests with a 406 (same
+          // fix as app/api/places/route.ts) — without this, every lookup
+          // here silently failed.
+          "User-Agent": "LincolnNavigation/1.0 (https://lincolnnavigation.com)",
+        },
+        signal: AbortSignal.timeout(12000),
         cache: "no-store",
       })
       if (!response.ok) continue

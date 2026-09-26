@@ -140,6 +140,7 @@ its button goes to `/business#talk-to-us` until the Pro tools exist.
 | Live View (AR camera) | locked (upsell to /pricing) | on | `components/map/directions-panel.tsx` (the Live View button) |
 | Offline maps | — | — | built — saves OpenFreeMap tiles to Cache Storage; SW `public/sw.js` serves them; UI-gated only |
 | Real-time road alerts | locked (upsell to /pricing) | bell with hazards within 5 km of the device, refreshed every minute, banner when a new one appears | `components/map/road-alerts.tsx`, `hooks/use-nearby-alerts.ts`; reads the public `/api/hazards` (UI-gated only). Crowd reports need Upstash; without it only forecast flood alerts appear |
+| Location intelligence (landmark search) | hint linking to /pricing when a search looks like a landmark description | search like "opposite the filling station" / "near the market" adds a "Landmark match" card: an estimated position with its accuracy radius | `components/map/search-panel.tsx`, `lib/geo-intelligence/landmark-query.ts` (client check), `app/api/geo/landmark/route.ts` (**server-gated** with `requirePremium`; Overpass anchor lookup within 3 km of the map centre, English phrasing only) |
 | Priority routing | — | — | not built |
 
 How to gate something:

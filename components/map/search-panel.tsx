@@ -3,12 +3,13 @@
 import { useI18n } from "@/components/i18n/language-provider"
 
 import { useState, useEffect, useRef } from "react"
-import { Search, X, MapPin, Clock, Star, Loader2 } from "lucide-react"
+import { Search, X, MapPin, Clock, Star, Loader2, Compass, Lock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { geocode, type GeocodeResult } from "@/lib/geocoding"
 import { useRecentSearches } from "@/hooks/use-recent-searches"
+import { looksLikeLandmarkQuery } from "@/lib/geo-intelligence/landmark-query"
 
 /*
  * PREVIOUSLY: this component called nominatim.openstreetmap.org
@@ -36,6 +37,17 @@ interface SearchPanelProps {
   onSelectLocation: (result: SearchResult) => void
   isOpen: boolean
   onClose: () => void
+  /** Premium: describe a place by a landmark ("opposite the filling station"). */
+  isPremium?: boolean
+  /** [lat, lng] the landmark lookup searches around (the map centre). */
+  areaCenter?: [number, number]
+}
+
+interface LandmarkMatch {
+  anchorName: string
+  lat: number
+  lng: number
+  radiusM: number
 }
 
 // Popular places in Ghana
@@ -63,7 +75,7 @@ function toSearchResult(result: GeocodeResult): SearchResult {
   }
 }
 
-export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelProps) {
+export function SearchPanel({ onSelectLocation, isOpen, onClose, isPremium = false, areaCenter }: SearchPanelProps) {
   const { t } = useI18n()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
@@ -72,6 +84,8 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const [landmark, setLandmark] = useState<LandmarkMatch | null>(null)
+  const isLandmarkQuery = looksLikeLandmarkQuery(query)
   const { recentSearches, addRecentSearch } = useRecentSearches()
 
   useEffect(() => {
@@ -86,6 +100,8 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
     // faster one.
     abortControllerRef.current?.abort()
 
+    setLandmark(null)
+
     if (query.trim().length < 2) {
       setResults([])
       setShowResults(false)
@@ -95,6 +111,29 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
 
     const controller = new AbortController()
     abortControllerRef.current = controller
+
+    // Premium landmark match runs alongside the normal search and only adds
+    // a card when it finds an anchor; failures are silent.
+    if (isPremium && areaCenter && looksLikeLandmarkQuery(query)) {
+      const params = new URLSearchParams({
+        q: query.trim(),
+        areaLat: String(areaCenter[0]),
+        areaLng: String(areaCenter[1]),
+      })
+      fetch(`/api/geo/landmark?${params}`, { signal: controller.signal })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          const r = data?.result
+          if (!r || controller.signal.aborted) return
+          setLandmark({
+            anchorName: r.anchorName,
+            lat: r.estimatedLocation.lat,
+            lng: r.estimatedLocation.lng,
+            radiusM: Math.round(r.uncertaintyRadiusMeters),
+          })
+        })
+        .catch(() => {})
+    }
 
     const timer = setTimeout(async () => {
       setIsSearching(true)
@@ -142,7 +181,8 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
     return () => {
       clearTimeout(timer)
     }
-  }, [query])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, isPremium])
 
   const handleSelect = (result: SearchResult) => {
     onSelectLocation(result)
@@ -192,6 +232,50 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
             the screen and clips results off the right edge on
             narrow viewports. */}
         <div className="p-4" style={{ contain: "inline-size" }}>
+          {/* Landmark match (Premium) */}
+          {landmark && (
+            <div className="mb-6">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                {t("lk.title")}
+              </h3>
+              <button
+                onClick={() =>
+                  handleSelect({
+                    id: `landmark-${landmark.lat.toFixed(5)},${landmark.lng.toFixed(5)}`,
+                    name: t("lk.around", { anchor: landmark.anchorName }),
+                    address: t("lk.radius", { m: landmark.radiusM }),
+                    lat: landmark.lat,
+                    lng: landmark.lng,
+                    type: "Landmark",
+                  })
+                }
+                className="w-full flex items-start gap-3 p-3 rounded-lg border border-primary/40 bg-primary/10 hover:bg-primary/15 transition-colors text-left"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <Compass className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground">{t("lk.around", { anchor: landmark.anchorName })}</p>
+                  <p className="text-sm text-muted-foreground">{t("lk.radius", { m: landmark.radiusM })}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t("lk.note")}</p>
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* Free users: show what the landmark search is */}
+          {!isPremium && isLandmarkQuery && (
+            <a
+              href="/pricing"
+              className="mb-6 flex items-start gap-3 rounded-lg border border-border p-3 text-left hover:bg-secondary transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                <Lock className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground">{t("lk.premiumHint")}</p>
+            </a>
+          )}
+
           {/* Search Results */}
           {showResults && results.length > 0 && (
             <div className="mb-6">
@@ -219,7 +303,7 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose }: SearchPanelPr
           )}
 
           {/* No Results / Error */}
-          {showResults && results.length === 0 && !isSearching && query.length >= 2 && (
+          {showResults && results.length === 0 && !isSearching && !landmark && query.length >= 2 && (
             <div className="text-center py-8">
               <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-muted-foreground">

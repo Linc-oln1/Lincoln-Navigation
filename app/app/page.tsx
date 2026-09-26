@@ -491,6 +491,8 @@ function MapNavigator() {
         isOpen={activePanel === "search"}
         onClose={handleClosePanel}
         onSelectLocation={handleSelectLocation}
+        isPremium={isPremium}
+        areaCenter={weatherCenter ?? userLocation ?? mapCenter}
       />
 
       {/* DIRECTIONS */}
