@@ -134,6 +134,7 @@ its button goes to `/business#talk-to-us` until the Pro tools exist.
 | Saved places | 10 | unlimited | `hooks/use-saved-places.ts` (`FREE_LIMITS.savedPlaces`) — 11th save shows an upgrade prompt |
 | Trip history | 5 | 50 | `hooks/use-recent-searches.ts` (`*_LIMITS.tripHistory`) |
 | Voice navigation | off (on-screen steps only) | on | `components/map/directions-panel.tsx` + `hooks/use-live-navigation.ts` (`speakNavigation`) |
+| Route options | locked (upsell to /pricing) | fastest/shortest, avoid highways/tolls/ferries, choose between routes | `components/map/directions-panel.tsx` + `app/api/directions/route.ts` (needs `ORS_API_KEY`; without it the standard route is shown with a notice) |
 | Live View (AR camera) | locked (upsell to /pricing) | on | `components/map/directions-panel.tsx` (the Live View button) |
 | Offline maps | — | — | not built (shown "Coming soon" on /pricing) |
 | Priority routing | — | — | not built |

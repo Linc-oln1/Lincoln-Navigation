@@ -22,6 +22,7 @@ import {
   Camera,
   TrainFront,
   Ship,
+  SlidersHorizontal,
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -57,6 +58,7 @@ import {
   formatDuration as formatRouteDuration,
   type Coordinate,
   type Route,
+  type RouteAvoidFeature,
 } from "@/lib/routing"
 import {
   geocodeToCoordinates,
@@ -166,6 +168,21 @@ const HUBS = {
 } as const
 type HubMode = keyof typeof HUBS
 
+/* Route options (Premium): saved on the device between visits. */
+interface RoutePrefs {
+  preference: "fastest" | "shortest"
+  highways: boolean
+  tolls: boolean
+  ferries: boolean
+}
+const DEFAULT_ROUTE_PREFS: RoutePrefs = {
+  preference: "fastest",
+  highways: false,
+  tolls: false,
+  ferries: false,
+}
+const ROUTE_PREFS_KEY = "ln_route_prefs"
+
 function straightLineMeters(a: [number, number], b: [number, number]) {
   const rad = (d: number) => (d * Math.PI) / 180
   const h =
@@ -228,6 +245,11 @@ export function DirectionsPanel({
   const [isLoading, setIsLoading] = useState(false)
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [routePrefs, setRoutePrefs] = useState<RoutePrefs>(DEFAULT_ROUTE_PREFS)
+  const [optionsOpen, setOptionsOpen] = useState(false)
+  // All routes from the last search (fastest first) so Premium users can pick.
+  const [routeChoices, setRouteChoices] = useState<Route[]>([])
+  const [optionsNotApplied, setOptionsNotApplied] = useState(false)
 
   // The active route as [lat, lng] points, plus the community
   // hazards fetched for this calculation's area — used to warn
@@ -309,7 +331,26 @@ export function DirectionsPanel({
     [routeCoords, candidateHazards]
   )
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ROUTE_PREFS_KEY)
+      if (raw) setRoutePrefs({ ...DEFAULT_ROUTE_PREFS, ...JSON.parse(raw) })
+    } catch {}
+  }, [])
+
+  const updatePrefs = (patch: Partial<RoutePrefs>) => {
+    setRoutePrefs((prev) => {
+      const next = { ...prev, ...patch }
+      try {
+        localStorage.setItem(ROUTE_PREFS_KEY, JSON.stringify(next))
+      } catch {}
+      return next
+    })
+  }
+
   const clearRouteExtras = () => {
+    setRouteChoices([])
+    setOptionsNotApplied(false)
     setRouteCoords(null)
     setCandidateHazards([])
     setActiveRoute(null)
@@ -836,6 +877,15 @@ export function DirectionsPanel({
      CALCULATE ROUTE
   ======================================================= */
 
+  // Premium: switch to another of the routes found by the last search.
+  const chooseRoute = (route: Route) => {
+    applyRoute(route)
+    if (!saferAlt) {
+      const other = routeChoices.find((r) => r.id !== route.id)
+      onAlternativeRoute?.(other ? toLatLng(other) : [])
+    }
+  }
+
   const handleCalculateRoute = async () => {
     if (!origin.trim() || (!hubMode && !destination.trim())) {
       setError(hubMode ? t("dir.enterStart") : t("dir.enterBoth"))
@@ -922,9 +972,30 @@ export function DirectionsPanel({
       setOriginCoordinates(originCoords)
       setDestinationCoordinates(destinationCoords)
 
+      // Route options are a Premium feature; free visitors always get the
+      // standard fastest route.
+      const activePrefs = hasVoice ? routePrefs : DEFAULT_ROUTE_PREFS
+      const avoidFeatures = (
+        [
+          activePrefs.highways && "highways",
+          activePrefs.tolls && "tolls",
+          activePrefs.ferries && "ferries",
+        ] as (RouteAvoidFeature | false)[]
+      ).filter((f): f is RouteAvoidFeature => Boolean(f))
+      const wantsOptions =
+        activePrefs.preference === "shortest" || avoidFeatures.length > 0
+
       const result = await calculateRoute(
         [originCoords, destinationCoords],
-        { mode: routeMode, alternatives: true, steps: true, lang }
+        {
+          mode: routeMode,
+          alternatives: true,
+          steps: true,
+          lang,
+          preference:
+            activePrefs.preference === "shortest" ? "shortest" : undefined,
+          avoidFeatures,
+        }
       )
 
       if (result.code !== "Ok" || result.routes.length === 0) {
@@ -945,12 +1016,23 @@ export function DirectionsPanel({
         b.duration < a.duration ? b : a
       )
 
-      applyRoute(fastest, { speakFirst: true })
+      // Premium can prefer the shortest route and choose between the options.
+      const choices = [...usable]
+        .sort((a, b) => a.duration - b.duration)
+        .slice(0, 3)
+      const chosen =
+        activePrefs.preference === "shortest"
+          ? choices.reduce((a, b) => (b.distance < a.distance ? b : a))
+          : fastest
+
+      applyRoute(chosen, { speakFirst: true })
+      setRouteChoices(choices)
+      setOptionsNotApplied(wantsOptions && result.optionsApplied === false)
 
       // Score the fastest route + any alternatives against the
       // community hazards for this area — off the critical path, so
       // the route shows immediately and the warning/offer follows.
-      void loadRouteHazards(usable, fastest.id)
+      void loadRouteHazards(usable, chosen.id)
     } catch (err) {
       console.error("Lincoln Navigation route calculation error:", err)
       setError(
@@ -1195,6 +1277,102 @@ export function DirectionsPanel({
             />
           </div>
 
+          {/* ROUTE OPTIONS — Premium */}
+          <div className="rounded-lg bg-secondary/60">
+            {hasVoice ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setOptionsOpen((open) => !open)}
+                  aria-expanded={optionsOpen}
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium"
+                >
+                  <SlidersHorizontal className="h-4 w-4 text-muted-foreground" aria-hidden />
+                  <span className="flex-1 text-left">{t("ropt.title")}</span>
+                  {(routePrefs.preference === "shortest" ||
+                    routePrefs.highways ||
+                    routePrefs.tolls ||
+                    routePrefs.ferries) && (
+                    <span className="h-2 w-2 rounded-full bg-primary" aria-hidden />
+                  )}
+                  <ChevronDown
+                    className={cn("h-4 w-4 text-muted-foreground transition-transform", optionsOpen && "rotate-180")}
+                    aria-hidden
+                  />
+                </button>
+                {optionsOpen && (
+                  <div className="space-y-3 px-3 pb-3">
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("ropt.prefer")}
+                      </p>
+                      <div className="flex gap-1.5">
+                        {(["fastest", "shortest"] as const).map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => updatePrefs({ preference: p })}
+                            aria-pressed={routePrefs.preference === p}
+                            className={cn(
+                              "flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                              routePrefs.preference === p
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-background text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            {t(p === "fastest" ? "ropt.fastest" : "ropt.shortest")}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("ropt.avoid")}
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(
+                          [
+                            ...(travelMode === "walking" || travelMode === "cycling"
+                              ? []
+                              : (["highways", "tolls"] as const)),
+                            "ferries",
+                          ] as const
+                        ).map((key) => (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => updatePrefs({ [key]: !routePrefs[key] })}
+                            aria-pressed={routePrefs[key]}
+                            className={cn(
+                              "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                              routePrefs[key]
+                                ? "border-primary bg-primary/15 text-primary"
+                                : "border-border bg-background text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            {t(`ropt.${key}` as MessageKey)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">{t("ropt.hint")}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <a
+                href="/pricing"
+                title={t("ropt.premiumOnly")}
+                aria-label={t("ropt.premiumOnly")}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium"
+              >
+                <SlidersHorizontal className="h-4 w-4 text-muted-foreground" aria-hidden />
+                <span className="flex-1">{t("ropt.title")}</span>
+                <Lock className="h-3.5 w-3.5 text-primary" aria-hidden />
+              </a>
+            )}
+          </div>
+
           <Button
             type="button"
             onClick={handleCalculateRoute}
@@ -1411,6 +1589,56 @@ export function DirectionsPanel({
           )}
 
           <div className="p-4">
+            {optionsNotApplied && (
+              <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs">
+                {t("ropt.notApplied")}
+              </p>
+            )}
+            {hasVoice && routeChoices.length > 1 && !saferAlt && !isNavigating && (
+              <div className="mb-4">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t("ropt.choices")}
+                </p>
+                <div className="space-y-1.5">
+                  {routeChoices.map((route, index) => {
+                    const fastestId = routeChoices.reduce((a, b) => (b.duration < a.duration ? b : a)).id
+                    const shortestId = routeChoices.reduce((a, b) => (b.distance < a.distance ? b : a)).id
+                    const selected = activeRoute?.id === route.id
+                    return (
+                      <button
+                        key={route.id}
+                        type="button"
+                        onClick={() => chooseRoute(route)}
+                        aria-pressed={selected}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                          selected
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-secondary/40 hover:bg-secondary"
+                        )}
+                      >
+                        <span className="flex-1">
+                          <span className="font-medium">{t("ropt.route", { n: index + 1 })}</span>
+                          <span className="ml-2 text-muted-foreground">
+                            {formatRouteDuration(route.duration, durationLabels)} · {formatRouteDistance(route.distance)}
+                          </span>
+                        </span>
+                        {route.id === fastestId && (
+                          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                            {t("ropt.fastest")}
+                          </span>
+                        )}
+                        {route.id === shortestId && route.id !== fastestId && (
+                          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                            {t("ropt.shortest")}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
             <RouteHazardWarning
               items={routeHazards}
               onFocus={(hazard) => onFocusHazard?.(hazard)}

@@ -39,13 +39,44 @@ type OrsProfile = "foot-walking" | "cycling-regular" | "driving-car"
 
 function getOrsProfile(
   mode: string | null,
-  hasAvoid: boolean
+  needsCarGraph: boolean
 ): OrsProfile | null {
   if (mode === "walking") return "foot-walking"
   if (mode === "cycling") return "cycling-regular"
   // Every road mode (driving / motorcycle / bus) shares the car graph.
-  if (hasAvoid) return "driving-car"
+  if (needsCarGraph) return "driving-car"
   return null
+}
+
+/*
+ * Route options (Premium): "highways" | "tolls" | "ferries" from the app
+ * are translated to ORS avoid_features, and only the ones each profile
+ * actually supports are sent (an unsupported feature is a 400 from ORS).
+ */
+const ORS_FEATURE_NAMES: Record<string, string> = {
+  highways: "highways",
+  tolls: "tollways",
+  ferries: "ferries",
+}
+
+const ORS_SUPPORTED_FEATURES: Record<OrsProfile, string[]> = {
+  "driving-car": ["highways", "tollways", "ferries"],
+  "cycling-regular": ["ferries"],
+  "foot-walking": ["ferries"],
+}
+
+function parseFeatures(raw: string | null, profile: OrsProfile): string[] {
+  if (!raw) return []
+  return raw
+    .split(",")
+    .map((f) => ORS_FEATURE_NAMES[f.trim()])
+    .filter((f): f is string => Boolean(f) && ORS_SUPPORTED_FEATURES[profile].includes(f))
+}
+
+type OrsPreference = "fastest" | "shortest" | "recommended"
+
+function parsePreference(raw: string | null): OrsPreference | null {
+  return raw === "fastest" || raw === "shortest" || raw === "recommended" ? raw : null
 }
 
 function parseAvoid(raw: string | null): AvoidCircle[] {
@@ -117,8 +148,14 @@ export async function GET(request: NextRequest) {
   const coordinatesParam = searchParams.get("coordinates")
   const mode = searchParams.get("mode")
   const avoid = parseAvoid(searchParams.get("avoid"))
+  const featuresParam = searchParams.get("features")
+  const preference = parsePreference(searchParams.get("preference"))
+  const wantAlternatives = searchParams.get("alternatives") === "1"
 
-  const profile = getOrsProfile(mode, avoid.length > 0)
+  // Any of these options needs ORS even for a road mode OSRM would handle.
+  const needsCarGraph =
+    avoid.length > 0 || Boolean(featuresParam) || preference === "shortest"
+  const profile = getOrsProfile(mode, needsCarGraph)
   const apiKey = getOrsApiKey()
 
   if (!coordinatesParam) {
@@ -162,13 +199,23 @@ export async function GET(request: NextRequest) {
 
   try {
     const body: Record<string, unknown> = { coordinates }
+    const orsOptions: Record<string, unknown> = {}
     if (avoid.length > 0) {
-      body.options = { avoid_polygons: avoidPolygons(avoid) }
+      orsOptions.avoid_polygons = avoidPolygons(avoid)
+    }
+    const avoidFeatures = parseFeatures(featuresParam, profile)
+    if (avoidFeatures.length > 0) {
+      orsOptions.avoid_features = avoidFeatures
+    }
+    if (Object.keys(orsOptions).length > 0) {
+      body.options = orsOptions
+    }
+    if (preference) {
+      body.preference = preference
     }
 
-    const response = await fetch(
-      `${ORS_BASE_URL}/v2/directions/${profile}/geojson`,
-      {
+    const callOrs = (withAlternatives: boolean) =>
+      fetch(`${ORS_BASE_URL}/v2/directions/${profile}/geojson`, {
         method: "POST",
         headers: {
           Authorization: apiKey,
@@ -177,10 +224,27 @@ export async function GET(request: NextRequest) {
           // application/json gets a 406 "response format is not supported".
           Accept: "application/geo+json, application/json",
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(
+          withAlternatives
+            ? {
+                ...body,
+                alternative_routes: {
+                  target_count: 3,
+                  share_factor: 0.6,
+                  weight_factor: 1.6,
+                },
+              }
+            : body
+        ),
         cache: "no-store",
-      }
-    )
+      })
+
+    // Alternatives are a bonus: ORS refuses them for very long routes, so
+    // if that request fails, fall back to the single best route.
+    let response = await callOrs(wantAlternatives)
+    if (!response.ok && wantAlternatives) {
+      response = await callOrs(false)
+    }
 
     if (!response.ok) {
       let message = `OpenRouteService request failed (${response.status})`
@@ -198,62 +262,64 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json()
-    const feature = data.features?.[0]
+    const features: any[] = Array.isArray(data.features) ? data.features : []
 
-    if (!feature) {
+    if (features.length === 0) {
       return NextResponse.json(
         { code: "NoRoute", routes: [], waypoints: [], message: "No route found." },
         { status: 200 }
       )
     }
 
-    const fullCoordinates: [number, number][] = feature.geometry?.coordinates ?? []
-    const segment = feature.properties?.segments?.[0]
+    const routes = features.map((feature, index) => {
+      const fullCoordinates: [number, number][] = feature.geometry?.coordinates ?? []
+      const segment = feature.properties?.segments?.[0]
 
-    const steps = (segment?.steps ?? []).map((step: any) => {
-      const maneuver = ORS_MANEUVER_TYPES[step.type] ?? { type: "continue" }
-      const [wpStart, wpEnd] = step.way_points ?? [0, fullCoordinates.length - 1]
+      const steps = (segment?.steps ?? []).map((step: any) => {
+        const maneuver = ORS_MANEUVER_TYPES[step.type] ?? { type: "continue" }
+        const [wpStart, wpEnd] = step.way_points ?? [0, fullCoordinates.length - 1]
+
+        return {
+          distance: step.distance ?? 0,
+          duration: step.duration ?? 0,
+          name: step.name && step.name !== "-" ? step.name : "",
+          instruction:
+            typeof step.instruction === "string"
+              ? step.instruction
+              : "Continue",
+          maneuver: {
+            type: maneuver.type,
+            modifier: maneuver.modifier,
+            location: fullCoordinates[wpStart] ?? [0, 0],
+          },
+          geometry: {
+            type: "LineString",
+            coordinates: fullCoordinates.slice(wpStart, wpEnd + 1),
+          },
+          voiceInstruction:
+            typeof step.instruction === "string"
+              ? step.instruction
+              : "Continue",
+        }
+      })
 
       return {
-        distance: step.distance ?? 0,
-        duration: step.duration ?? 0,
-        name: step.name && step.name !== "-" ? step.name : "",
-        instruction:
-          typeof step.instruction === "string"
-            ? step.instruction
-            : "Continue",
-        maneuver: {
-          type: maneuver.type,
-          modifier: maneuver.modifier,
-          location: fullCoordinates[wpStart] ?? [0, 0],
-        },
+        id: `route-${index}`,
+        distance: segment?.distance ?? feature.properties?.summary?.distance ?? 0,
+        duration: segment?.duration ?? feature.properties?.summary?.duration ?? 0,
         geometry: {
           type: "LineString",
-          coordinates: fullCoordinates.slice(wpStart, wpEnd + 1),
+          coordinates: fullCoordinates,
         },
-        voiceInstruction:
-          typeof step.instruction === "string"
-            ? step.instruction
-            : "Continue",
+        steps,
+        summary: "",
+        traffic: { hasTraffic: false },
       }
     })
 
-    const route = {
-      id: "route-0",
-      distance: segment?.distance ?? feature.properties?.summary?.distance ?? 0,
-      duration: segment?.duration ?? feature.properties?.summary?.duration ?? 0,
-      geometry: {
-        type: "LineString",
-        coordinates: fullCoordinates,
-      },
-      steps,
-      summary: "",
-      traffic: { hasTraffic: false },
-    }
-
     return NextResponse.json({
       code: "Ok",
-      routes: [route],
+      routes,
       waypoints: coordinates.map((location) => ({ name: "", location })),
     })
   } catch (error) {

@@ -43,6 +43,20 @@ export interface RoutingOptions {
   avoidAreas?: Array<{ lat: number; lng: number; radiusM?: number }>
   // Language for the turn-by-turn sentences (defaults to English).
   lang?: LangCode
+  // Route options (Premium). Both need the ORS-backed routing service; if it
+  // isn't available the standard route comes back with optionsApplied=false.
+  preference?: "fastest" | "shortest"
+  avoidFeatures?: RouteAvoidFeature[]
+}
+
+export type RouteAvoidFeature = "highways" | "tolls" | "ferries"
+
+/** True when the request asks for something only ORS can do. */
+function needsRouteOptions(options: RoutingOptions): boolean {
+  return (
+    options.preference === "shortest" ||
+    (options.avoidFeatures?.length ?? 0) > 0
+  )
 }
 
 export interface RouteStep {
@@ -97,6 +111,12 @@ export interface RoutingResult {
   }>
   code: string
   message?: string
+  /**
+   * Whether the requested route options (avoid highways/tolls/ferries,
+   * shortest) were actually applied. false = the standard route was
+   * returned because the options service wasn't available.
+   */
+  optionsApplied?: boolean
 }
 
 /**
@@ -442,7 +462,12 @@ async function tryOpenRouteService(
   // ORS is used for walking/cycling (real foot/bike graph) and for
   // any mode when an avoid area is requested (OSRM can't exclude
   // arbitrary areas). Everything else stays on OSRM.
-  if (mode !== "walking" && mode !== "cycling" && avoidAreas.length === 0) {
+  if (
+    mode !== "walking" &&
+    mode !== "cycling" &&
+    avoidAreas.length === 0 &&
+    !needsRouteOptions(options)
+  ) {
     return null
   }
 
@@ -458,6 +483,15 @@ async function tryOpenRouteService(
 
     if (avoidAreas.length > 0) {
       params.set("avoid", JSON.stringify(avoidAreas))
+    }
+    if (options.preference) {
+      params.set("preference", options.preference)
+    }
+    if (options.avoidFeatures && options.avoidFeatures.length > 0) {
+      params.set("features", options.avoidFeatures.join(","))
+    }
+    if (options.alternatives) {
+      params.set("alternatives", "1")
     }
 
     const response = await fetch(
@@ -491,7 +525,12 @@ export async function calculateRoute(
 ): Promise<RoutingResult> {
   const orsResult = await tryOpenRouteService(coordinates, options)
 
-  if (orsResult) return localizeSteps(orsResult, options.lang ?? "en")
+  if (orsResult) {
+    return {
+      ...localizeSteps(orsResult, options.lang ?? "en"),
+      optionsApplied: true,
+    }
+  }
 
   const url = buildDirectionsUrl(
     coordinates,
@@ -697,6 +736,9 @@ export async function calculateRoute(
       typeof data.message === "string"
         ? data.message
         : undefined,
+
+    // OSRM can't honour avoid/shortest, so those options weren't applied.
+    optionsApplied: !needsRouteOptions(options),
   }
 }
 

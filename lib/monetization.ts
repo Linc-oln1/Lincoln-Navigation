@@ -96,7 +96,7 @@ export const PREMIUM_FEATURES: PlanFeature[] = [
   { text: "Multiple saved locations — unlimited saved places and trip history" },
   { text: "Advanced traffic", soon: true },
   { text: "Offline maps", soon: true },
-  { text: "Advanced route options", soon: true },
+  { text: "Advanced route options — fastest or shortest, avoid highways, tolls and ferries, and route choices" },
   { text: "Real-time road alerts", soon: true },
   { text: "Premium location intelligence", soon: true },
   { text: "Advanced business discovery", soon: true },
