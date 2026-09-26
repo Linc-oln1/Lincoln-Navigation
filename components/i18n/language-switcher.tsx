@@ -59,7 +59,7 @@ export function LanguageSwitcher({
           role="listbox"
           aria-label={t("nav.language")}
           className={cn(
-            "absolute top-full z-50 mt-2 w-44 overflow-hidden rounded-xl border py-1 shadow-xl",
+            "absolute top-full z-50 mt-2 max-h-[60vh] w-48 overflow-y-auto rounded-xl border py-1 shadow-xl",
             align === "right" ? "right-0" : "left-0",
             menuClass ?? "border-border bg-card text-foreground",
           )}
