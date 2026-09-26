@@ -31,7 +31,7 @@ interface RoutePlannerProps {
 }
 
 const BUTTON =
-  "absolute top-[16.25rem] right-4 z-[1000] flex h-10 w-10 items-center justify-center rounded-xl border shadow-lg backdrop-blur-sm transition-colors"
+  "absolute top-[17.75rem] right-4 z-[1000] flex h-10 w-10 items-center justify-center rounded-xl border shadow-lg backdrop-blur-sm transition-colors"
 const MAX_STOPS = 12
 
 /**

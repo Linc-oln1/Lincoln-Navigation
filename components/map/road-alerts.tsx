@@ -17,7 +17,7 @@ interface RoadAlertsProps {
 }
 
 const BUTTON =
-  "absolute top-[13.75rem] right-4 z-[1000] flex h-10 w-10 items-center justify-center rounded-xl border shadow-lg backdrop-blur-sm transition-colors"
+  "absolute top-[14.75rem] right-4 z-[1000] flex h-10 w-10 items-center justify-center rounded-xl border shadow-lg backdrop-blur-sm transition-colors"
 
 /**
  * Real-time road alerts (Premium): a bell under the offline-maps button that
@@ -100,7 +100,7 @@ export function RoadAlerts({ isPremium, position, onSelect }: RoadAlertsProps) {
 
       {open && (
         <div
-          className="absolute right-4 top-[16.75rem] z-[1100] max-h-[50vh] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-border bg-card/95 p-3 text-foreground shadow-2xl backdrop-blur-xl"
+          className="absolute right-4 top-[17.75rem] z-[1100] max-h-[50vh] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-border bg-card/95 p-3 text-foreground shadow-2xl backdrop-blur-xl"
           role="dialog"
           aria-label={t("alerts.label")}
         >
