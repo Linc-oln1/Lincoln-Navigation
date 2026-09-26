@@ -21,6 +21,7 @@ import {
   ChevronDown,
   Camera,
   TrainFront,
+  Ship,
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -120,11 +121,12 @@ export type TravelMode =
   | "cycling"
 
 /*
- * "train" isn't a routing profile: it means "take me to the nearest
+ * "train" and "boat" aren't routing profiles: they mean "take me to the
+ * nearest station / ferry terminal or port". Same idea for both: the
  * station". The route to the station is a normal walking (close) or
  * driving (farther) route — see TRAIN_WALK_MAX_METERS.
  */
-type PanelMode = TravelMode | "train"
+type PanelMode = TravelMode | "train" | "boat"
 
 const TRAVEL_MODES: {
   mode: PanelMode
@@ -137,11 +139,32 @@ const TRAVEL_MODES: {
   { mode: "walking", icon: Footprints, label: "Walk" },
   { mode: "cycling", icon: Bike, label: "Bike" },
   { mode: "train", icon: TrainFront, label: "Train" },
+  { mode: "boat", icon: Ship, label: "Boat" },
 ]
 
 // Stations closer than this (straight line) are reached on foot.
 const TRAIN_WALK_MAX_METERS = 2500
-const TRAIN_SEARCH_RADIUS_METERS = 25000
+
+// What each hub mode searches for, and which messages it uses.
+const HUBS = {
+  train: {
+    category: "train_station",
+    radiusMeters: 25000,
+    nearest: "train.nearest",
+    finding: "train.finding",
+    none: "train.none",
+    error: "train.error",
+  },
+  boat: {
+    category: "ferry_terminal",
+    radiusMeters: 50000,
+    nearest: "boat.nearest",
+    finding: "boat.finding",
+    none: "boat.none",
+    error: "boat.error",
+  },
+} as const
+type HubMode = keyof typeof HUBS
 
 function straightLineMeters(a: [number, number], b: [number, number]) {
   const rad = (d: number) => (d * Math.PI) / 180
@@ -199,9 +222,9 @@ export function DirectionsPanel({
   ------------------------------------------------------- */
 
   const [travelMode, setTravelMode] = useState<TravelMode>("driving")
-  // Train mode: the destination is the nearest station, found on Get Directions.
-  const [trainMode, setTrainMode] = useState(false)
-  const [trainStationName, setTrainStationName] = useState<string | null>(null)
+  // Train / Boat mode: the destination is the nearest station or ferry terminal, found on Get Directions.
+  const [hubMode, setHubMode] = useState<HubMode | null>(null)
+  const [hubName, setHubName] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -814,8 +837,8 @@ export function DirectionsPanel({
   ======================================================= */
 
   const handleCalculateRoute = async () => {
-    if (!origin.trim() || (!trainMode && !destination.trim())) {
-      setError(trainMode ? t("dir.enterStart") : t("dir.enterBoth"))
+    if (!origin.trim() || (!hubMode && !destination.trim())) {
+      setError(hubMode ? t("dir.enterStart") : t("dir.enterBoth"))
       return
     }
 
@@ -842,8 +865,9 @@ export function DirectionsPanel({
       // Close by → walk there; farther → drive.
       let routeMode: TravelMode = travelMode
       let stationCoords: Coordinate | null = null
-      if (trainMode) {
-        setDestination(t("train.finding"))
+      if (hubMode) {
+        const hub = HUBS[hubMode]
+        setDestination(t(hub.finding))
         const from: [number, number] = [originCoords[1], originCoords[0]]
         // The free OpenStreetMap service behind this search is shared and
         // times out now and then, so try a few times before giving up.
@@ -852,9 +876,9 @@ export function DirectionsPanel({
         for (let attempt = 0; attempt < 3 && lookupFailed; attempt++) {
           try {
             stations = await searchNearbyPlaces(
-              "train_station",
+              hub.category,
               from,
-              TRAIN_SEARCH_RADIUS_METERS
+              hub.radiusMeters
             )
             lookupFailed = false
           } catch {
@@ -863,7 +887,7 @@ export function DirectionsPanel({
         }
         if (lookupFailed) {
           setDestination("")
-          throw new Error(t("train.error"))
+          throw new Error(t(hub.error))
         }
         const nearest = stations
           .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
@@ -874,13 +898,13 @@ export function DirectionsPanel({
           .sort((a, b) => a.meters - b.meters)[0]
         if (!nearest) {
           setDestination("")
-          throw new Error(t("train.none"))
+          throw new Error(t(hub.none))
         }
         stationCoords = [nearest.place.lng, nearest.place.lat]
         routeMode = nearest.meters <= TRAIN_WALK_MAX_METERS ? "walking" : "driving"
         setTravelMode(routeMode)
         setDestination(nearest.place.name)
-        setTrainStationName(nearest.place.name)
+        setHubName(nearest.place.name)
       }
 
       const destinationCoords =
@@ -1085,15 +1109,15 @@ export function DirectionsPanel({
               type="button"
               key={mode}
               onClick={() => {
-                if (mode === "train") {
-                  setTrainMode(true)
-                  setTrainStationName(null)
+                if (mode === "train" || mode === "boat") {
+                  setHubMode(mode)
+                  setHubName(null)
                   setDestination("")
                   setDestinationCoordinates(null)
                   setTravelMode("walking")
                 } else {
-                  setTrainMode(false)
-                  setTrainStationName(null)
+                  setHubMode(null)
+                  setHubName(null)
                   setTravelMode(mode)
                 }
                 setRouteInfo(null)
@@ -1106,7 +1130,7 @@ export function DirectionsPanel({
               }}
               className={cn(
                 "flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-colors",
-                (trainMode ? mode === "train" : travelMode === mode)
+                (hubMode ? mode === hubMode : travelMode === mode)
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               )}
@@ -1159,9 +1183,9 @@ export function DirectionsPanel({
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
             <Input
-              placeholder={trainMode ? t("train.nearest") : t("dir.dest")}
+              placeholder={hubMode ? t(HUBS[hubMode].nearest) : t("dir.dest")}
               value={destination}
-              readOnly={trainMode}
+              readOnly={hubMode !== null}
               onChange={(event) => {
                 setDestination(event.target.value)
                 setDestinationCoordinates(null)
@@ -1424,7 +1448,7 @@ export function DirectionsPanel({
                   {(() => {
                     const ModeIcon =
                       TRAVEL_MODES.find(
-                        (m) => m.mode === (trainMode ? "train" : travelMode)
+                        (m) => m.mode === (hubMode ?? travelMode)
                       )?.icon ?? Car
                     return <ModeIcon className="w-6 h-6 text-primary" />
                   })()}
@@ -1520,7 +1544,7 @@ export function DirectionsPanel({
           motorcycle={travelMode === "motorcycle"}
           bicycle={travelMode === "cycling"}
           bus={travelMode === "bus"}
-          stationName={trainMode ? trainStationName : null}
+          stationName={hubMode ? hubName : null}
           gpsHeading={position?.heading ?? null}
           speedMps={position?.speed ?? null}
           onClose={() => setLiveViewOpen(false)}
