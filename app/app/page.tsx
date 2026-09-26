@@ -411,6 +411,7 @@ function MapNavigator() {
         onDirectionsClick={() => handleOpenPanel("directions")}
         onPlacesClick={() => handleOpenPanel("places")}
         activePanel={activePanel}
+        isNavigating={navigationState.isNavigating}
       />
 
       {/* MAP STYLE CONTROL */}

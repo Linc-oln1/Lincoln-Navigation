@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Search, Navigation, Layers, User } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -11,17 +12,34 @@ interface HeaderProps {
   onDirectionsClick: () => void
   onPlacesClick: () => void
   activePanel: "search" | "directions" | "places" | "saved" | null
+  /** Live navigation is running — Exit asks for confirmation first. */
+  isNavigating?: boolean
 }
 
-export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, activePanel }: HeaderProps) {
+export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, activePanel, isNavigating = false }: HeaderProps) {
   const { user, authEnabled } = useSession()
   const router = useRouter()
+  const [confirmOpen, setConfirmOpen] = useState(false)
+
+  useEffect(() => {
+    if (!confirmOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setConfirmOpen(false)
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [confirmOpen])
+
+  // If navigation ends while the prompt is up, there's nothing to confirm.
+  useEffect(() => {
+    if (!isNavigating) setConfirmOpen(false)
+  }, [isNavigating])
 
   // Back to the previous page of this site; if the map was opened
   // directly or from another website, go to the home page instead.
   // The Navigation API only counts same-site entries; browsers without
   // it fall back to a same-site referrer check.
-  const handleExit = () => {
+  const leave = () => {
     const nav = (window as unknown as { navigation?: { canGoBack: boolean } })
       .navigation
     let cameFromSite = false
@@ -36,7 +54,13 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
     else router.push("/")
   }
 
+  const handleExit = () => {
+    if (isNavigating) setConfirmOpen(true)
+    else leave()
+  }
+
   return (
+    <>
     <header className="absolute top-0 left-0 right-0 z-[1000] p-4">
       <div className="max-w-2xl mx-auto">
         {/* Logo & Search Bar */}
@@ -128,5 +152,47 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
         </div>
       </div>
     </header>
+
+    {confirmOpen && (
+      <div
+        className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 p-4"
+        onClick={() => setConfirmOpen(false)}
+      >
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="exit-nav-title"
+          aria-describedby="exit-nav-desc"
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        >
+          <h2 id="exit-nav-title" className="text-lg font-semibold text-foreground">
+            Stop navigation?
+          </h2>
+          <p id="exit-nav-desc" className="mt-2 text-sm text-muted-foreground">
+            You&apos;re in the middle of a trip. Leaving the map will end live
+            navigation and turn off voice guidance.
+          </p>
+          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={leave}
+              className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary active:scale-95"
+            >
+              Stop &amp; exit
+            </button>
+            <button
+              type="button"
+              autoFocus
+              onClick={() => setConfirmOpen(false)}
+              className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110 active:scale-95"
+            >
+              Keep navigating
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
