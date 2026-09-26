@@ -24,6 +24,7 @@ import { OfflineMaps } from "@/components/map/offline-maps"
 import { RoadAlerts } from "@/components/map/road-alerts"
 import { RoutePlanner } from "@/components/map/route-planner"
 import { FleetPanel } from "@/components/map/fleet-panel"
+import { RunCard, type Run } from "@/components/map/run-card"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -132,6 +133,21 @@ function MapNavigator() {
   const [mapStyle, setMapStyle] = useState<MapStyle>("device")
   // Live traffic overlay: Premium only; the choice is remembered on the device.
   const { isPremium, isPro } = usePremium()
+  // Professional navigation (Pro): the current multi-stop run, kept on the device.
+  const [run, setRun] = useState<Run | null>(null)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("ln_run")
+      if (raw) setRun(JSON.parse(raw))
+    } catch {}
+  }, [])
+  const updateRun = useCallback((next: Run | null) => {
+    setRun(next)
+    try {
+      if (next) localStorage.setItem("ln_run", JSON.stringify(next))
+      else localStorage.removeItem("ln_run")
+    } catch {}
+  }, [])
   const [trafficOn, setTrafficOn] = useState(false)
   useEffect(() => {
     try {
@@ -469,6 +485,12 @@ function MapNavigator() {
       <OfflineMaps isPremium={isPremium} center={mapCenter} />
       <RoutePlanner
         isPro={isPro}
+        onStartRun={(stops) =>
+          updateRun({
+            startedAt: new Date().toISOString(),
+            stops: stops.map((s) => ({ ...s, status: "todo" as const })),
+          })
+        }
         userLocation={userLocation}
         onShowRoute={(points, planned) => {
           setSelectedLocation(null)
@@ -481,6 +503,22 @@ function MapNavigator() {
           )
         }}
       />
+      {isPro && run && activePanel !== "directions" && (
+        <RunCard
+          run={run}
+          onChange={updateRun}
+          onEnd={() => updateRun(null)}
+          onNavigate={(stop, index) => {
+            setSelectedLocation({
+              name: stop.name,
+              address: `${index + 1} / ${run.stops.length}`,
+              lat: stop.lat,
+              lng: stop.lng,
+            })
+            setActivePanel("directions")
+          }}
+        />
+      )}
       <FleetPanel
         isPro={isPro}
         onTrack={(vehicles) => setMarkers(vehicles ?? [])}

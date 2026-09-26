@@ -148,6 +148,21 @@ const baseEn = {
   "fleet.activityNote": "Totals only — no route history is kept. Standing still and gaps when a phone stops reporting aren't counted.",
 
   // Truck routing (Pro). English only for now — other languages fall back.
+  // Professional navigation / runs (Pro). English only for now.
+  "run.title": "Current run",
+  "run.start": "Start this run",
+  "run.progress": "Stop {n} of {total}",
+  "run.complete": "Run complete",
+  "run.summary": "{done} done, {skipped} skipped.",
+  "run.left": "About {time} of driving left",
+  "run.navigate": "Navigate",
+  "run.done": "Done",
+  "run.skip": "Skip this stop",
+  "run.undo": "Undo",
+  "run.stops": "Show all stops",
+  "run.end": "End run",
+  "run.close": "Close",
+
   "truck.on": "Route for a truck",
   "truck.proOnly": "Truck routing is a Pro feature",
   "truck.height": "Height (m)",

@@ -28,6 +28,8 @@ interface RoutePlannerProps {
   userLocation: [number, number] | null
   /** Draw the finished route and numbered stops on the map. */
   onShowRoute: (points: [number, number][], stops: { name: string; position: [number, number] }[]) => void
+  /** Begin a run: navigate the ordered stops one after another (Pro). */
+  onStartRun?: (stops: { id: string; name: string; lat: number; lng: number; legSeconds: number }[]) => void
 }
 
 const BUTTON =
@@ -39,7 +41,7 @@ const MAX_STOPS = 12
  * visit them and the route through them. Non-Pro visitors get a padlocked
  * link to the pricing page.
  */
-export function RoutePlanner({ isPro, userLocation, onShowRoute }: RoutePlannerProps) {
+export function RoutePlanner({ isPro, userLocation, onShowRoute, onStartRun }: RoutePlannerProps) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [stops, setStops] = useState<PlannerStop[]>([])
@@ -135,6 +137,22 @@ export function RoutePlanner({ isPro, userLocation, onShowRoute }: RoutePlannerP
   }
 
   const ordered = result ? result.data.order.map((i) => result.stops[i]) : []
+
+  const startRun = () => {
+    if (!result || !onStartRun) return
+    // ordered[0] is the start; the rest are the stops to visit, each with the
+    // driving time of the leg that leads to it.
+    onStartRun(
+      ordered.slice(1).map((s, i) => ({
+        id: s.id,
+        name: s.name,
+        lat: s.lat,
+        lng: s.lng,
+        legSeconds: result.data.legs[i]?.duration ?? 0,
+      }))
+    )
+    show()
+  }
 
   const show = () => {
     if (!result) return
@@ -325,11 +343,20 @@ export function RoutePlanner({ isPro, userLocation, onShowRoute }: RoutePlannerP
                     </li>
                   ))}
                 </ol>
-                <div className="mt-4 flex gap-2">
+                {onStartRun && (
+                  <button
+                    type="button"
+                    onClick={startRun}
+                    className="mt-4 w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+                  >
+                    {t("run.start")}
+                  </button>
+                )}
+                <div className="mt-2 flex gap-2">
                   <button
                     type="button"
                     onClick={show}
-                    className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
+                    className="flex-1 rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-secondary/70"
                   >
                     {t("plan.show")}
                   </button>
