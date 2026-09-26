@@ -19,6 +19,7 @@ import {
   Square,
   ChevronUp,
   ChevronDown,
+  Camera,
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -30,6 +31,7 @@ import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
 import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
 import { SpeedReader, isSpeedMode } from "@/components/map/speed-reader"
+import { LiveView } from "@/components/map/live-view"
 import { StopNavigationDialog } from "@/components/map/stop-navigation-dialog"
 import {
   fetchHazards,
@@ -201,6 +203,7 @@ export function DirectionsPanel({
   const hazardFetchIdRef = useRef(0)
 
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false)
+  const [liveViewOpen, setLiveViewOpen] = useState(false)
   const routeScrollRef = useRef<HTMLDivElement>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
@@ -334,6 +337,7 @@ export function DirectionsPanel({
       setRerouteError(null)
       setRerouteBusy(false)
       setConfirmCloseOpen(false)
+      setLiveViewOpen(false)
     }
   }, [isNavigating])
 
@@ -1118,6 +1122,18 @@ export function DirectionsPanel({
             </Button>
           )}
 
+          {isNavigating && travelMode === "walking" && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLiveViewOpen(true)}
+              className="w-full"
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              Live View
+            </Button>
+          )}
+
           {isNavigating && (
             <Button
               type="button"
@@ -1393,6 +1409,16 @@ export function DirectionsPanel({
         )}
         </div>
       )}
+      {liveViewOpen && isNavigating && (
+        <LiveView
+          position={position}
+          step={liveSteps[currentStepIndex]}
+          nextStep={liveSteps[currentStepIndex + 1]}
+          distanceToDestination={distanceToDestination}
+          onClose={() => setLiveViewOpen(false)}
+        />
+      )}
+
       <StopNavigationDialog
         open={confirmCloseOpen}
         description="You're in the middle of a trip. Closing directions will end live navigation and turn off voice guidance."
