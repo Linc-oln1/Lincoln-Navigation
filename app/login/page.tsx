@@ -1,8 +1,9 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useSession } from "@/hooks/use-session"
 import { ArrowLeft, ChevronRight, Loader2, Mail, UserRound } from "lucide-react"
 import { AUTH_ENABLED } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/client"
@@ -20,8 +21,17 @@ export default function LoginPage() {
 
 function LoginContent() {
   const params = useSearchParams()
-  const next = params.get("next") || "/app"
+  // Only ever continue to a page on this site.
+  const rawNext = params.get("next") || "/app"
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/app"
   const hadError = params.get("error")
+  const router = useRouter()
+  const { user } = useSession()
+
+  // Already signed in? Nothing to do here — carry on to where they were going.
+  useEffect(() => {
+    if (user) router.replace(next)
+  }, [user, next, router])
 
   const [email, setEmail] = useState("")
   const [busy, setBusy] = useState<Busy>(null)

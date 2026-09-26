@@ -23,6 +23,7 @@ import { ProductShowcase } from "@/components/landing/product-showcase"
 import { AdSlot } from "@/components/ads/ad-slot"
 import { useI18n } from "@/components/i18n/language-provider"
 import { SiteFooter } from "@/components/site/site-footer"
+import { AccountLink } from "@/components/site/account-link"
 
 /* =========================================================
    LANDING PAGE
@@ -223,6 +224,9 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <span className="text-white">
+              <AccountLink className="inline-flex rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 sm:px-5 sm:py-2.5" />
+            </span>
             <button
               onClick={handleLaunchMap}
               className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-[#0b1118] text-sm font-semibold hover:bg-white/90 transition-colors"

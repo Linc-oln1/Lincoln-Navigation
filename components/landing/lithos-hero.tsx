@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react"
 import { InstallAppButton } from "@/components/pwa/install-app-button"
 import { useI18n } from "@/components/i18n/language-provider"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
+import { AccountLink } from "@/components/site/account-link"
 import type { MessageKey } from "@/lib/i18n/messages"
 
 interface LithosHeroProps {
@@ -175,6 +176,9 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
               showLabel
             />
             <InstallAppButton className="hidden md:flex bg-white/10 hover:bg-white/20 border border-white/20 text-white" />
+            <span className="hidden text-white md:inline-flex">
+              <AccountLink className="rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/20" />
+            </span>
             <button
               type="button"
               onClick={goToApp}
@@ -233,6 +237,12 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
             >
               {t("home.launch")}
             </button>
+            <span className="mt-3 flex text-white">
+              <AccountLink
+                onNavigate={() => setMenuOpen(false)}
+                className="rounded-full border border-white/20 px-8 py-3 text-base font-semibold text-white/90 hover:text-white"
+              />
+            </span>
             <InstallAppButton className="mt-3 border border-white/20 text-white/90 hover:text-white text-base px-6 py-3" />
           </div>
         )}

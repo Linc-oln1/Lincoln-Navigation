@@ -4,6 +4,7 @@ import { AUTH_ENABLED } from "@/lib/supabase/config"
 import { getSessionUser } from "@/lib/supabase/server"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
+import { AccountPlanRow } from "@/components/site/account-plan"
 
 export const metadata = { title: "Account — Lincoln Navigation" }
 
@@ -26,11 +27,7 @@ export default async function AccountPage() {
     <Shell>
       <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
         <Row label="Signed in as" value={user.email ?? "—"} />
-        <Row
-          label="Plan"
-          value="Free"
-          hint="Premium billing arrives in the next update."
-        />
+        <AccountPlanRow />
       </dl>
 
       <form action="/auth/signout" method="post" className="mt-6">
@@ -44,7 +41,7 @@ export default async function AccountPage() {
 
       <p className="mt-8 text-sm text-muted-foreground">
         <Link href="/pricing" className="font-semibold text-primary hover:underline">
-          See Premium →
+          See plans →
         </Link>
       </p>
     </Shell>

@@ -9,6 +9,7 @@ import { HEADER_LINKS } from "@/lib/site-nav"
 import { useI18n } from "@/components/i18n/language-provider"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { SITE_THEME, type SiteVariant } from "@/components/site/site-theme"
+import { AccountLink } from "@/components/site/account-link"
 
 /** Shared top bar for the public pages. */
 export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
@@ -47,15 +48,14 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
             buttonClass={cn("border", t.border, t.muted, t.hover)}
             menuClass={t.menu}
           />
-          <Link
-            href="/login"
-            className={cn(
-              "rounded-full px-4 py-1.5 text-sm font-semibold transition hover:brightness-110",
-              t.pill,
-            )}
-          >
-            {tr("nav.signIn")}
-          </Link>
+          <span className={t.text}>
+            <AccountLink
+              className={cn(
+                "rounded-full px-4 py-1.5 text-sm font-semibold transition hover:brightness-110",
+                t.pill,
+              )}
+            />
+          </span>
         </nav>
 
         <div className="flex items-center gap-1 lg:hidden">
@@ -93,16 +93,16 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
               {tr(l.labelKey)}
             </Link>
           ))}
-          <Link
-            href="/login"
-            onClick={() => setOpen(false)}
-            className={cn(
-              "mt-2 rounded-full px-4 py-2.5 text-center text-base font-semibold",
-              t.pill,
-            )}
-          >
-            {tr("nav.signIn")}
-          </Link>
+          <div className={cn("mt-2 flex", t.text)}>
+            <AccountLink
+              fullWidth
+              onNavigate={() => setOpen(false)}
+              className={cn(
+                "w-full rounded-full px-4 py-2.5 text-center text-base font-semibold",
+                t.pill,
+              )}
+            />
+          </div>
         </nav>
       )}
     </header>
