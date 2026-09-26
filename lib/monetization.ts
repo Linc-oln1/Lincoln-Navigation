@@ -94,7 +94,7 @@ export const PREMIUM_FEATURES: PlanFeature[] = [
   { text: "No ads, anywhere" },
   { text: "Turn-by-turn voice navigation" },
   { text: "Multiple saved locations — unlimited saved places and trip history" },
-  { text: "Advanced traffic", soon: true },
+  { text: "Advanced traffic — live traffic on the map and traffic-aware travel times" },
   { text: "Offline maps", soon: true },
   { text: "Advanced route options — fastest or shortest, avoid highways, tolls and ferries, and route choices" },
   { text: "Real-time road alerts", soon: true },

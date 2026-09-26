@@ -47,6 +47,9 @@ export interface RoutingOptions {
   // isn't available the standard route comes back with optionsApplied=false.
   preference?: "fastest" | "shortest"
   avoidFeatures?: RouteAvoidFeature[]
+  // Advanced traffic (Premium): ask for a time that reflects current
+  // traffic. Road modes only; falls back to the standard route.
+  traffic?: boolean
 }
 
 export type RouteAvoidFeature = "highways" | "tolls" | "ferries"
@@ -81,6 +84,9 @@ export interface RouteStep {
 
 export interface Route {
   id: string
+
+  /** Usual (no-traffic-jam) travel time in seconds, when the source knows it. */
+  typicalDuration?: number
 
   distance: number
   duration: number
@@ -117,6 +123,8 @@ export interface RoutingResult {
    * returned because the options service wasn't available.
    */
   optionsApplied?: boolean
+  /** true when the times include live traffic (Premium traffic routing). */
+  trafficApplied?: boolean
 }
 
 /**
@@ -519,6 +527,40 @@ async function tryOpenRouteService(
  * Accra: [-0.1870, 5.6037]
  * Kumasi: [-1.6244, 6.6885]
  */
+const TRAFFIC_ROUTE_MODES: TravelMode[] = [
+  "driving",
+  "driving-traffic",
+  "motorcycle",
+  "bus",
+]
+
+/** Traffic-aware routes via our Premium proxy; null = use the normal route. */
+async function tryTrafficRoute(
+  coordinates: Coordinate[],
+  options: RoutingOptions
+): Promise<any | null> {
+  if (!options.traffic) return null
+  if (!TRAFFIC_ROUTE_MODES.includes(options.mode ?? "driving")) return null
+
+  try {
+    const params = new URLSearchParams({
+      coordinates: coordinates.map(([lng, lat]) => `${lng},${lat}`).join(";"),
+    })
+    if (options.alternatives) params.set("alternatives", "1")
+
+    const response = await fetch(`/api/traffic-directions?${params}`, {
+      cache: "no-store",
+    })
+    if (!response.ok) return null
+
+    const data = await response.json()
+    if (data.code !== "Ok" || !data.routes?.length) return null
+    return data
+  } catch {
+    return null
+  }
+}
+
 export async function calculateRoute(
   coordinates: Coordinate[],
   options: RoutingOptions = {}
@@ -532,47 +574,54 @@ export async function calculateRoute(
     }
   }
 
-  const url = buildDirectionsUrl(
-    coordinates,
-    options
-  )
+  const trafficData = await tryTrafficRoute(coordinates, options)
 
-  const response = await fetch(url, {
-    method: "GET",
+  let data: any
+  if (trafficData) {
+    data = trafficData
+  } else {
+    const url = buildDirectionsUrl(
+      coordinates,
+      options
+    )
 
-    headers: {
-      Accept: "application/json",
-    },
+    const response = await fetch(url, {
+      method: "GET",
 
-    cache: "no-store",
-  })
+      headers: {
+        Accept: "application/json",
+      },
 
-  if (!response.ok) {
-    let message = `Routing request failed (${response.status})`
+      cache: "no-store",
+    })
 
-    try {
-      const errorData = await response.json()
+    if (!response.ok) {
+      let message = `Routing request failed (${response.status})`
 
-      if (
-        errorData &&
-        typeof errorData.message === "string"
-      ) {
-        message = errorData.message
+      try {
+        const errorData = await response.json()
+
+        if (
+          errorData &&
+          typeof errorData.message === "string"
+        ) {
+          message = errorData.message
+        }
+      } catch {
+        // Ignore JSON parsing errors.
       }
-    } catch {
-      // Ignore JSON parsing errors.
+
+      throw new Error(message)
     }
 
-    throw new Error(message)
-  }
+    data = await response.json()
 
-  const data = await response.json()
-
-  if (data.code !== "Ok") {
-    throw new Error(
-      data.message ||
-        `Routing failed with code: ${data.code}`
-    )
+    if (data.code !== "Ok") {
+      throw new Error(
+        data.message ||
+          `Routing failed with code: ${data.code}`
+      )
+    }
   }
 
   const durationMultiplier = durationMultiplierFor(
@@ -685,6 +734,9 @@ export async function calculateRoute(
             route.duration
           ) ?? 0) * durationMultiplier,
 
+        typicalDuration:
+          numberOrUndefined(route.duration_typical),
+
         geometry: {
           type: "LineString",
           coordinates:
@@ -739,6 +791,8 @@ export async function calculateRoute(
 
     // OSRM can't honour avoid/shortest, so those options weren't applied.
     optionsApplied: !needsRouteOptions(options),
+
+    trafficApplied: Boolean(trafficData),
   }
 }
 

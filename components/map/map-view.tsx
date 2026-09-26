@@ -142,6 +142,9 @@ interface MapViewProps {
   mapStyle?: MapStyle
 
   liveNavigation?: LiveNavigationState
+
+  // Live traffic overlay (Premium; the page decides who may switch it on).
+  showTraffic?: boolean
 }
 
 /* =========================================================
@@ -1336,6 +1339,64 @@ function enhanceVectorStyle(map: maplibregl.Map, theme: ThemeMode) {
 const ROUTE_SOURCE_ID = "lincoln-route"
 const ALT_ROUTE_SOURCE_ID = "lincoln-route-alt"
 
+const TRAFFIC_SOURCE_ID = "lincoln-traffic"
+const TRAFFIC_LAYER_ID = "lincoln-traffic-lines"
+
+/**
+ * Live traffic (Premium): coloured road lines from our tile proxy. Added or
+ * removed to match `visible`, and re-applied after every style change (a new
+ * basemap style wipes custom sources), always underneath the route line.
+ */
+function syncTrafficLayer(map: maplibregl.Map, visible: boolean) {
+  if (!visible) {
+    if (map.getLayer(TRAFFIC_LAYER_ID)) map.removeLayer(TRAFFIC_LAYER_ID)
+    if (map.getSource(TRAFFIC_SOURCE_ID)) map.removeSource(TRAFFIC_SOURCE_ID)
+    return
+  }
+
+  if (!map.getSource(TRAFFIC_SOURCE_ID)) {
+    map.addSource(TRAFFIC_SOURCE_ID, {
+      type: "vector",
+      // Tiles come through our own route so the token stays server-side and
+      // the Premium check is enforced (see app/api/traffic-tiles).
+      tiles: [`${window.location.origin}/api/traffic-tiles/{z}/{x}/{y}`],
+      minzoom: 6,
+      maxzoom: 16,
+    })
+  }
+
+  if (!map.getLayer(TRAFFIC_LAYER_ID)) {
+    map.addLayer(
+      {
+        id: TRAFFIC_LAYER_ID,
+        type: "line",
+        source: TRAFFIC_SOURCE_ID,
+        "source-layer": "traffic",
+        minzoom: 8,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": [
+            "match",
+            ["get", "congestion"],
+            "moderate", "#f1c40f",
+            "heavy", "#e67e22",
+            "severe", "#c0392b",
+            "#2ecc71",
+          ],
+          "line-width": [
+            "interpolate", ["linear"], ["zoom"],
+            8, 1,
+            12, 2.5,
+            16, 6,
+          ],
+          "line-opacity": 0.9,
+        },
+      },
+      map.getLayer("lincoln-route-alt-line") ? "lincoln-route-alt-line" : undefined
+    )
+  }
+}
+
 function ensureRouteLayers(map: maplibregl.Map) {
   if (map.getSource(ROUTE_SOURCE_ID)) return
 
@@ -1473,8 +1534,11 @@ export function MapView({
   onUserLocationChange,
   mapStyle = "device",
   liveNavigation,
+  showTraffic = false,
 }: MapViewProps) {
   const { t } = useI18n()
+  const showTrafficRef = useRef(showTraffic)
+  showTrafficRef.current = showTraffic
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<maplibregl.Map | null>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
@@ -1495,6 +1559,13 @@ export function MapView({
   // ends, to catch up to wherever the trip finished).
   const isNavigatingRef = useRef(false)
   const emitBoundsRef = useRef<() => void>(() => {})
+
+  // Switching traffic on/off while the map is already showing.
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    if (!map || !map.isStyleLoaded()) return
+    syncTrafficLayer(map, showTraffic)
+  }, [showTraffic])
 
   const [mapInstance, setMapInstance] =
     useState<maplibregl.Map | null>(null)
@@ -1612,6 +1683,7 @@ export function MapView({
 
       map.on("style.load", () => {
         ensureRouteLayers(map)
+        syncTrafficLayer(map, showTrafficRef.current)
 
         if (
           currentStyleKindRef.current === "light" ||

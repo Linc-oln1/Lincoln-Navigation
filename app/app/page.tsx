@@ -18,6 +18,8 @@ import { geocode } from "@/lib/geocoding"
 import { useSavedPlaces, type SavedPlaceInput } from "@/hooks/use-saved-places"
 import { useHazards } from "@/hooks/use-hazards"
 import { useI18n } from "@/components/i18n/language-provider"
+import { usePremium } from "@/hooks/use-premium"
+import { TrafficToggle } from "@/components/map/traffic-toggle"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -119,6 +121,24 @@ function MapNavigator() {
 
   // Device theme is the default
   const [mapStyle, setMapStyle] = useState<MapStyle>("device")
+  // Live traffic overlay: Premium only; the choice is remembered on the device.
+  const { isPremium } = usePremium()
+  const [trafficOn, setTrafficOn] = useState(false)
+  useEffect(() => {
+    try {
+      setTrafficOn(localStorage.getItem("ln_traffic") === "1")
+    } catch {}
+  }, [])
+  const showTraffic = isPremium && trafficOn
+  const toggleTraffic = () => {
+    setTrafficOn((on) => {
+      const next = !on
+      try {
+        localStorage.setItem("ln_traffic", next ? "1" : "0")
+      } catch {}
+      return next
+    })
+  }
 
   const [selectedLocation, setSelectedLocation] =
     useState<Location | null>(null)
@@ -410,6 +430,7 @@ function MapNavigator() {
         selectedHazardId={selectedHazard?.id ?? null}
         onHazardSelect={handleHazardSelect}
         liveNavigation={navigationState}
+        showTraffic={showTraffic}
       />
 
       {/* HEADER */}
@@ -422,6 +443,12 @@ function MapNavigator() {
       />
 
       {/* MAP STYLE CONTROL */}
+      <TrafficToggle
+        isPremium={isPremium}
+        showTraffic={showTraffic}
+        onToggle={toggleTraffic}
+      />
+
       <MapControls
         currentStyle={mapStyle}
         onStyleChange={setMapStyle}

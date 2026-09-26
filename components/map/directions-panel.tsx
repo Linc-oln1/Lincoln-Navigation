@@ -23,6 +23,7 @@ import {
   TrainFront,
   Ship,
   SlidersHorizontal,
+  TrafficCone,
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -250,6 +251,8 @@ export function DirectionsPanel({
   // All routes from the last search (fastest first) so Premium users can pick.
   const [routeChoices, setRouteChoices] = useState<Route[]>([])
   const [optionsNotApplied, setOptionsNotApplied] = useState(false)
+  // The shown time includes live traffic (Premium traffic routing).
+  const [trafficApplied, setTrafficApplied] = useState(false)
 
   // The active route as [lat, lng] points, plus the community
   // hazards fetched for this calculation's area — used to warn
@@ -351,6 +354,7 @@ export function DirectionsPanel({
   const clearRouteExtras = () => {
     setRouteChoices([])
     setOptionsNotApplied(false)
+    setTrafficApplied(false)
     setRouteCoords(null)
     setCandidateHazards([])
     setActiveRoute(null)
@@ -995,6 +999,8 @@ export function DirectionsPanel({
           preference:
             activePrefs.preference === "shortest" ? "shortest" : undefined,
           avoidFeatures,
+          // Premium: traffic-aware travel time for road modes.
+          traffic: hasVoice,
         }
       )
 
@@ -1028,6 +1034,7 @@ export function DirectionsPanel({
       applyRoute(chosen, { speakFirst: true })
       setRouteChoices(choices)
       setOptionsNotApplied(wantsOptions && result.optionsApplied === false)
+      setTrafficApplied(result.trafficApplied === true)
 
       // Score the fastest route + any alternatives against the
       // community hazards for this area — off the critical path, so
@@ -1675,6 +1682,21 @@ export function DirectionsPanel({
                       ? formatRouteDistance(distanceToDestination)
                       : routeInfo.distance}
                   </p>
+                  {trafficApplied && !isNavigating && (
+                    <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+                      <TrafficCone className="h-3 w-3" aria-hidden />
+                      {t("traffic.live")}
+                      {activeRoute?.typicalDuration != null &&
+                        Math.round((activeRoute.duration - activeRoute.typicalDuration) / 60) >= 2 && (
+                          <span className="font-semibold text-amber-500">
+                            ·{" "}
+                            {t("traffic.delay", {
+                              n: Math.round((activeRoute.duration - activeRoute.typicalDuration) / 60),
+                            })}
+                          </span>
+                        )}
+                    </p>
+                  )}
                   {isNavigating && arrivalTime && (
                     <p className="text-xs text-muted-foreground mt-1 first-letter:uppercase">
                       {t("dir.arriving", {
