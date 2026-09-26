@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { avoidPolygons, type AvoidCircle } from "@/lib/geo/avoid-polygon"
+import { requirePro } from "@/lib/premium-guard"
 
 /* =========================================================
    WALKING / CYCLING ROUTING PROXY  (+ "route around a hazard")
@@ -35,12 +36,15 @@ import { avoidPolygons, type AvoidCircle } from "@/lib/geo/avoid-polygon"
    set.
 ========================================================= */
 
-type OrsProfile = "foot-walking" | "cycling-regular" | "driving-car"
+type OrsProfile = "foot-walking" | "cycling-regular" | "driving-car" | "driving-hgv"
 
 function getOrsProfile(
   mode: string | null,
-  needsCarGraph: boolean
+  needsCarGraph: boolean,
+  truck: TruckRestrictions | null
 ): OrsProfile | null {
+  // Truck routing (Pro) replaces the car graph for road modes.
+  if (truck && (mode === "driving" || mode === "driving-traffic")) return "driving-hgv"
   if (mode === "walking") return "foot-walking"
   if (mode === "cycling") return "cycling-regular"
   // Every road mode (driving / motorcycle / bus) shares the car graph.
@@ -61,6 +65,7 @@ const ORS_FEATURE_NAMES: Record<string, string> = {
 
 const ORS_SUPPORTED_FEATURES: Record<OrsProfile, string[]> = {
   "driving-car": ["highways", "tollways", "ferries"],
+  "driving-hgv": ["highways", "tollways", "ferries"],
   "cycling-regular": ["ferries"],
   "foot-walking": ["ferries"],
 }
@@ -71,6 +76,37 @@ function parseFeatures(raw: string | null, profile: OrsProfile): string[] {
     .split(",")
     .map((f) => ORS_FEATURE_NAMES[f.trim()])
     .filter((f): f is string => Boolean(f) && ORS_SUPPORTED_FEATURES[profile].includes(f))
+}
+
+/*
+ * Truck routing (Pro): vehicle size and weight the route must fit under and
+ * over. Values are clamped to sane ranges before they reach ORS.
+ */
+interface TruckRestrictions {
+  height: number
+  width: number
+  length: number
+  weight: number
+}
+
+function clamp(value: unknown, min: number, max: number): number | null {
+  const n = Number(value)
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : null
+}
+
+function parseTruck(raw: string | null): TruckRestrictions | null {
+  if (!raw) return null
+  try {
+    const t = JSON.parse(raw)
+    const height = clamp(t?.heightM, 1, 6)
+    const width = clamp(t?.widthM, 1, 4)
+    const length = clamp(t?.lengthM, 2, 30)
+    const weight = clamp(t?.weightT, 0.5, 100)
+    if (height === null || width === null || length === null || weight === null) return null
+    return { height, width, length, weight }
+  } catch {
+    return null
+  }
 }
 
 type OrsPreference = "fastest" | "shortest" | "recommended"
@@ -151,11 +187,18 @@ export async function GET(request: NextRequest) {
   const featuresParam = searchParams.get("features")
   const preference = parsePreference(searchParams.get("preference"))
   const wantAlternatives = searchParams.get("alternatives") === "1"
+  const truck = parseTruck(searchParams.get("truck"))
+
+  // Truck routing is a Pro feature: verify the signed plan on the server.
+  if (searchParams.get("truck")) {
+    const gate = requirePro(request)
+    if (gate) return gate
+  }
 
   // Any of these options needs ORS even for a road mode OSRM would handle.
   const needsCarGraph =
     avoid.length > 0 || Boolean(featuresParam) || preference === "shortest"
-  const profile = getOrsProfile(mode, needsCarGraph)
+  const profile = getOrsProfile(mode, needsCarGraph, truck)
   const apiKey = getOrsApiKey()
 
   if (!coordinatesParam) {
@@ -202,6 +245,9 @@ export async function GET(request: NextRequest) {
     const orsOptions: Record<string, unknown> = {}
     if (avoid.length > 0) {
       orsOptions.avoid_polygons = avoidPolygons(avoid)
+    }
+    if (profile === "driving-hgv" && truck) {
+      orsOptions.profile_params = { restrictions: truck }
     }
     const avoidFeatures = parseFeatures(featuresParam, profile)
     if (avoidFeatures.length > 0) {

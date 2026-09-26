@@ -50,6 +50,17 @@ export interface RoutingOptions {
   // Advanced traffic (Premium): ask for a time that reflects current
   // traffic. Road modes only; falls back to the standard route.
   traffic?: boolean
+  // Advanced routing (Pro): route for a heavy vehicle. Metres and tonnes.
+  // Needs ORS; without it the standard route comes back with
+  // optionsApplied=false and the caller must warn that it ignores the size.
+  vehicle?: TruckSpec
+}
+
+export interface TruckSpec {
+  heightM: number
+  widthM: number
+  lengthM: number
+  weightT: number
 }
 
 export type RouteAvoidFeature = "highways" | "tolls" | "ferries"
@@ -58,7 +69,8 @@ export type RouteAvoidFeature = "highways" | "tolls" | "ferries"
 function needsRouteOptions(options: RoutingOptions): boolean {
   return (
     options.preference === "shortest" ||
-    (options.avoidFeatures?.length ?? 0) > 0
+    (options.avoidFeatures?.length ?? 0) > 0 ||
+    Boolean(options.vehicle)
   )
 }
 
@@ -500,6 +512,9 @@ async function tryOpenRouteService(
     }
     if (options.alternatives) {
       params.set("alternatives", "1")
+    }
+    if (options.vehicle) {
+      params.set("truck", JSON.stringify(options.vehicle))
     }
 
     const response = await fetch(

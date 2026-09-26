@@ -24,6 +24,7 @@ import {
   Ship,
   SlidersHorizontal,
   TrafficCone,
+  Truck,
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -63,6 +64,7 @@ import {
   type Route,
   type RouteAvoidFeature,
   type TrafficSummary,
+  type TruckSpec,
 } from "@/lib/routing"
 import {
   geocodeToCoordinates,
@@ -187,6 +189,25 @@ const DEFAULT_ROUTE_PREFS: RoutePrefs = {
 }
 const ROUTE_PREFS_KEY = "ln_route_prefs"
 
+/* Truck routing (Pro): the vehicle's size, saved on the device. */
+interface TruckPrefs extends TruckSpec {
+  enabled: boolean
+}
+const DEFAULT_TRUCK_PREFS: TruckPrefs = {
+  enabled: false,
+  heightM: 4,
+  widthM: 2.5,
+  lengthM: 10,
+  weightT: 12,
+}
+const TRUCK_PREFS_KEY = "ln_truck_prefs"
+const TRUCK_FIELDS = [
+  { key: "heightM", label: "truck.height", min: 1, max: 6, step: 0.1 },
+  { key: "widthM", label: "truck.width", min: 1, max: 4, step: 0.1 },
+  { key: "lengthM", label: "truck.length", min: 2, max: 30, step: 0.5 },
+  { key: "weightT", label: "truck.weight", min: 0.5, max: 100, step: 0.5 },
+] as const
+
 function straightLineMeters(a: [number, number], b: [number, number]) {
   const rad = (d: number) => (d * Math.PI) / 180
   const h =
@@ -254,6 +275,8 @@ export function DirectionsPanel({
   // All routes from the last search (fastest first) so Premium users can pick.
   const [routeChoices, setRouteChoices] = useState<Route[]>([])
   const [optionsNotApplied, setOptionsNotApplied] = useState(false)
+  const [truckPrefs, setTruckPrefs] = useState<TruckPrefs>(DEFAULT_TRUCK_PREFS)
+  const [truckNotApplied, setTruckNotApplied] = useState(false)
   // The shown time includes live traffic (Premium traffic routing).
   const [trafficApplied, setTrafficApplied] = useState(false)
   // Free plan: how busy this route is right now (no map layer, no live ETA).
@@ -346,6 +369,23 @@ export function DirectionsPanel({
     } catch {}
   }, [])
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(TRUCK_PREFS_KEY)
+      if (raw) setTruckPrefs({ ...DEFAULT_TRUCK_PREFS, ...JSON.parse(raw) })
+    } catch {}
+  }, [])
+
+  const updateTruck = (patch: Partial<TruckPrefs>) => {
+    setTruckPrefs((prev) => {
+      const next = { ...prev, ...patch }
+      try {
+        localStorage.setItem(TRUCK_PREFS_KEY, JSON.stringify(next))
+      } catch {}
+      return next
+    })
+  }
+
   const updatePrefs = (patch: Partial<RoutePrefs>) => {
     setRoutePrefs((prev) => {
       const next = { ...prev, ...patch }
@@ -361,6 +401,7 @@ export function DirectionsPanel({
     setOptionsNotApplied(false)
     setTrafficApplied(false)
     setTrafficSummary(null)
+    setTruckNotApplied(false)
     setRouteCoords(null)
     setCandidateHazards([])
     setActiveRoute(null)
@@ -380,7 +421,7 @@ export function DirectionsPanel({
      spoken layer is gated on the entitlement.
   ------------------------------------------------------- */
 
-  const { isPremium: hasVoice } = usePremium()
+  const { isPremium: hasVoice, isPro } = usePremium()
   const [voiceWanted, setVoiceWanted] = useState(true)
   const voiceEnabled = voiceWanted && hasVoice
 
@@ -994,6 +1035,7 @@ export function DirectionsPanel({
       ).filter((f): f is RouteAvoidFeature => Boolean(f))
       const wantsOptions =
         activePrefs.preference === "shortest" || avoidFeatures.length > 0
+      const truckActive = isPro && truckPrefs.enabled && routeMode === "driving"
 
       const result = await calculateRoute(
         [originCoords, destinationCoords],
@@ -1007,6 +1049,15 @@ export function DirectionsPanel({
           avoidFeatures,
           // Premium: traffic-aware travel time for road modes.
           traffic: hasVoice,
+          // Pro: route for a truck's size and weight (driving only).
+          vehicle: truckActive
+            ? {
+                heightM: truckPrefs.heightM,
+                widthM: truckPrefs.widthM,
+                lengthM: truckPrefs.lengthM,
+                weightT: truckPrefs.weightT,
+              }
+            : undefined,
         }
       )
 
@@ -1040,6 +1091,7 @@ export function DirectionsPanel({
       applyRoute(chosen, { speakFirst: true })
       setRouteChoices(choices)
       setOptionsNotApplied(wantsOptions && result.optionsApplied === false)
+      setTruckNotApplied(truckActive && result.optionsApplied === false)
       setTrafficApplied(result.trafficApplied === true)
 
       // Free visitors get a one-line "how busy is it now" instead.
@@ -1392,6 +1444,62 @@ export function DirectionsPanel({
             )}
           </div>
 
+          {/* TRUCK ROUTING — Pro (driving only) */}
+          {travelMode === "driving" && (
+            <div className="rounded-lg bg-secondary/60">
+              {isPro ? (
+                <div className="px-3 py-2.5">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Truck className="h-4 w-4 text-muted-foreground" aria-hidden />
+                    <span className="flex-1">{t("truck.on")}</span>
+                    <input
+                      type="checkbox"
+                      checked={truckPrefs.enabled}
+                      onChange={(e) => updateTruck({ enabled: e.target.checked })}
+                      className="h-4 w-4 accent-[var(--primary)]"
+                    />
+                  </label>
+                  {truckPrefs.enabled && (
+                    <>
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {TRUCK_FIELDS.map((f) => (
+                          <label key={f.key} className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            {t(f.label)}
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              min={f.min}
+                              max={f.max}
+                              step={f.step}
+                              value={truckPrefs[f.key]}
+                              onChange={(e) => {
+                                const n = Number(e.target.value)
+                                if (Number.isFinite(n)) updateTruck({ [f.key]: n })
+                              }}
+                              className="mt-1 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground outline-none focus:border-primary"
+                            />
+                          </label>
+                        ))}
+                      </div>
+                      <p className="mt-2 text-[11px] text-muted-foreground">{t("truck.hint")}</p>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <a
+                  href="/pricing"
+                  title={t("truck.proOnly")}
+                  aria-label={t("truck.proOnly")}
+                  className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-medium"
+                >
+                  <Truck className="h-4 w-4 text-muted-foreground" aria-hidden />
+                  <span className="flex-1">{t("truck.on")}</span>
+                  <Lock className="h-3.5 w-3.5 text-primary" aria-hidden />
+                </a>
+              )}
+            </div>
+          )}
+
           <Button
             type="button"
             onClick={handleCalculateRoute}
@@ -1608,7 +1716,12 @@ export function DirectionsPanel({
           )}
 
           <div className="p-4">
-            {optionsNotApplied && (
+            {truckNotApplied && (
+              <p role="alert" className="mb-3 rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2 text-xs font-medium">
+                {t("truck.notApplied")}
+              </p>
+            )}
+            {optionsNotApplied && !truckNotApplied && (
               <p className="mb-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs">
                 {t("ropt.notApplied")}
               </p>

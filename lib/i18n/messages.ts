@@ -135,6 +135,16 @@ const baseEn = {
   "fleet.kind.motorcycle": "Motorcycle",
   "fleet.kind.bus": "Bus",
   "fleet.kind.bicycle": "Bicycle",
+
+  // Truck routing (Pro). English only for now — other languages fall back.
+  "truck.on": "Route for a truck",
+  "truck.proOnly": "Truck routing is a Pro feature",
+  "truck.height": "Height (m)",
+  "truck.width": "Width (m)",
+  "truck.length": "Length (m)",
+  "truck.weight": "Weight (t)",
+  "truck.hint": "Avoids roads and bridges your truck can't fit or carry, where the map has that information.",
+  "truck.notApplied": "Truck routing wasn't applied, so this route ignores your vehicle's size and weight. Don't rely on it — check low bridges and weight limits yourself.",
 } as const
 
 const en = { ...baseEn, ...MAP_EN } as const
