@@ -21,6 +21,8 @@ interface LiveViewProps {
   distanceToDestination: number | null
   /** Driving mounts the phone facing the road, so travel direction beats the compass. */
   driving?: boolean
+  /** Motorcycle riders get "ride" wording in the safety notice. */
+  motorcycle?: boolean
   gpsHeading?: number | null
   speedMps?: number | null
   onClose: () => void
@@ -67,6 +69,7 @@ export function LiveView({
   nextStep,
   distanceToDestination,
   driving = false,
+  motorcycle = false,
   gpsHeading = null,
   speedMps = null,
   onClose,
@@ -347,7 +350,9 @@ export function LiveView({
         </div>
         <p className="text-center text-[11px] text-white/60">
           {driving
-            ? "Mount your phone before you drive. Never hold or touch it while driving."
+            ? motorcycle
+              ? "Mount your phone securely before you ride. Never hold or touch it while riding."
+              : "Mount your phone before you drive. Never hold or touch it while driving."
             : "Keep looking where you're walking — glance at the screen, don't stare."}
         </p>
       </div>
@@ -355,7 +360,12 @@ export function LiveView({
   )
 }
 
-/** Live View is offered for walking and for driving. */
+/** Live View is offered for walking, driving and motorcycle. */
 export function isLiveViewMode(mode: TravelMode) {
-  return mode === "walking" || mode === "driving" || mode === "driving-traffic"
+  return (
+    mode === "walking" ||
+    mode === "driving" ||
+    mode === "driving-traffic" ||
+    mode === "motorcycle"
+  )
 }
