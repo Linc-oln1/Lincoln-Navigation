@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Search, Navigation, Layers, User } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, Search, Navigation, Layers, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSession } from "@/hooks/use-session"
 
@@ -14,14 +15,47 @@ interface HeaderProps {
 
 export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, activePanel }: HeaderProps) {
   const { user, authEnabled } = useSession()
+  const router = useRouter()
+
+  // Back to the previous page of this site; if the map was opened
+  // directly or from another website, go to the home page instead.
+  // The Navigation API only counts same-site entries; browsers without
+  // it fall back to a same-site referrer check.
+  const handleExit = () => {
+    const nav = (window as unknown as { navigation?: { canGoBack: boolean } })
+      .navigation
+    let cameFromSite = false
+    if (nav) {
+      cameFromSite = nav.canGoBack
+    } else if (document.referrer) {
+      try {
+        cameFromSite = new URL(document.referrer).origin === window.location.origin
+      } catch {}
+    }
+    if (cameFromSite) router.back()
+    else router.push("/")
+  }
+
   return (
     <header className="absolute top-0 left-0 right-0 z-[1000] p-4">
       <div className="max-w-2xl mx-auto">
         {/* Logo & Search Bar */}
         <div className="bg-card/90 backdrop-blur-xl rounded-2xl border border-border shadow-2xl overflow-hidden">
           <div className="flex items-center gap-3 p-3">
+            {/* Exit — back to the previous page */}
+            <button
+              type="button"
+              onClick={handleExit}
+              aria-label="Exit map"
+              title="Exit map"
+              className="flex items-center gap-1.5 rounded-xl px-2.5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary active:scale-95"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="hidden sm:inline">Exit</span>
+            </button>
+
             {/* Logo */}
-            <div className="flex items-center px-2">
+            <div className="hidden items-center px-2 sm:flex">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/logo/lincoln-navigation-logo.webp"
