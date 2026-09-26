@@ -1799,7 +1799,21 @@ export function MapView({
       if (map) {
         markerObjectsRef.current.forEach((marker) => marker.remove())
         markerObjectsRef.current = []
-        map.remove()
+        // A terrain style (Satellite / Terrain) leaves a depth pass queued;
+        // if the map is torn down mid-frame — e.g. a dev hot-reload remount —
+        // that pass can run against freed shaders ("shaderPreludeCode"
+        // TypeError). Switch terrain off and stop animations first.
+        try {
+          map.stop()
+          map.setTerrain(null)
+        } catch {
+          // Already torn down — nothing to undo.
+        }
+        try {
+          map.remove()
+        } catch (error) {
+          console.warn("[lincoln-map] map.remove() failed:", error)
+        }
         mapInstanceRef.current = null
         setMapInstance(null)
       }
