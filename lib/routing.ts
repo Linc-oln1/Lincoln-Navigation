@@ -534,6 +534,32 @@ const TRAFFIC_ROUTE_MODES: TravelMode[] = [
   "bus",
 ]
 
+export function supportsTraffic(mode: TravelMode | undefined): boolean {
+  return TRAFFIC_ROUTE_MODES.includes(mode ?? "driving")
+}
+
+export interface TrafficSummary {
+  level: "low" | "moderate" | "heavy" | "severe"
+  delayMinutes: number
+}
+
+/** Free-plan "how busy is it now" for one route; null when unavailable. */
+export async function fetchTrafficSummary(
+  origin: Coordinate,
+  destination: Coordinate
+): Promise<TrafficSummary | null> {
+  try {
+    const params = new URLSearchParams({
+      coordinates: [origin, destination].map(([lng, lat]) => `${lng},${lat}`).join(";"),
+    })
+    const response = await fetch(`/api/traffic-summary?${params}`)
+    if (!response.ok) return null
+    return (await response.json()) as TrafficSummary
+  } catch {
+    return null
+  }
+}
+
 /** Traffic-aware routes via our Premium proxy; null = use the normal route. */
 async function tryTrafficRoute(
   coordinates: Coordinate[],

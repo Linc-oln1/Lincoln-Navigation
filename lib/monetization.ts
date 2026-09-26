@@ -152,7 +152,7 @@ export type TierLimits = { savedPlaces: number; tripHistory: number }
 /** Feature list for the free tier — shown on /pricing. */
 export const FREE_FEATURES: PlanFeature[] = [
   { text: "Turn-by-turn navigation" },
-  { text: "Live traffic", soon: true },
+  { text: "Live traffic — how busy your driving route is right now" },
   { text: "Full Ghana map and search" },
   { text: "GPS positioning" },
   { text: "Walking, driving, motorcycle, bus, bike, train and boat directions" },

@@ -55,11 +55,14 @@ import { countTurns, pickSaferRoute } from "@/lib/route-scoring"
 import type { AvoidCircle } from "@/lib/geo/avoid-polygon"
 import {
   calculateRoute,
+  fetchTrafficSummary,
+  supportsTraffic,
   formatDistance as formatRouteDistance,
   formatDuration as formatRouteDuration,
   type Coordinate,
   type Route,
   type RouteAvoidFeature,
+  type TrafficSummary,
 } from "@/lib/routing"
 import {
   geocodeToCoordinates,
@@ -253,6 +256,8 @@ export function DirectionsPanel({
   const [optionsNotApplied, setOptionsNotApplied] = useState(false)
   // The shown time includes live traffic (Premium traffic routing).
   const [trafficApplied, setTrafficApplied] = useState(false)
+  // Free plan: how busy this route is right now (no map layer, no live ETA).
+  const [trafficSummary, setTrafficSummary] = useState<TrafficSummary | null>(null)
 
   // The active route as [lat, lng] points, plus the community
   // hazards fetched for this calculation's area — used to warn
@@ -355,6 +360,7 @@ export function DirectionsPanel({
     setRouteChoices([])
     setOptionsNotApplied(false)
     setTrafficApplied(false)
+    setTrafficSummary(null)
     setRouteCoords(null)
     setCandidateHazards([])
     setActiveRoute(null)
@@ -1036,6 +1042,12 @@ export function DirectionsPanel({
       setOptionsNotApplied(wantsOptions && result.optionsApplied === false)
       setTrafficApplied(result.trafficApplied === true)
 
+      // Free visitors get a one-line "how busy is it now" instead.
+      setTrafficSummary(null)
+      if (!hasVoice && supportsTraffic(routeMode)) {
+        void fetchTrafficSummary(originCoords, destinationCoords).then(setTrafficSummary)
+      }
+
       // Score the fastest route + any alternatives against the
       // community hazards for this area — off the critical path, so
       // the route shows immediately and the warning/offer follows.
@@ -1695,6 +1707,29 @@ export function DirectionsPanel({
                             })}
                           </span>
                         )}
+                    </p>
+                  )}
+                  {!hasVoice && trafficSummary && !isNavigating && (
+                    <p className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs text-muted-foreground">
+                      <TrafficCone className="h-3 w-3" aria-hidden />
+                      <span>
+                        {t("traffic.now", { level: t(`traffic.${trafficSummary.level}` as MessageKey) })}
+                      </span>
+                      {trafficSummary.delayMinutes >= 2 && (
+                        <span
+                          className={cn(
+                            "font-semibold",
+                            trafficSummary.level === "severe" || trafficSummary.level === "heavy"
+                              ? "text-red-500"
+                              : "text-amber-500"
+                          )}
+                        >
+                          · {t("traffic.delay", { n: trafficSummary.delayMinutes })}
+                        </span>
+                      )}
+                      <a href="/pricing" className="text-primary underline-offset-2 hover:underline">
+                        {t("traffic.freeUpsell")}
+                      </a>
                     </p>
                   )}
                   {isNavigating && arrivalTime && (
