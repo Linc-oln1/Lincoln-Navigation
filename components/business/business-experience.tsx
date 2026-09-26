@@ -115,7 +115,7 @@ export function BusinessExperience() {
               onClick={() => scrollTo("talk-to-us")}
               className={cn(
                 GLASS,
-                "flex flex-1 items-center justify-between gap-6 rounded-full px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/90 active:scale-95 lg:min-w-[150px] lg:flex-none",
+                "flex flex-1 items-center justify-between gap-3 whitespace-nowrap rounded-full px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/90 active:scale-95 sm:gap-6 sm:px-5 lg:min-w-[150px] lg:flex-none",
               )}
             >
               <ArrowUpLeft className="h-4 w-4 text-orange-400" aria-hidden />
@@ -156,7 +156,7 @@ export function BusinessExperience() {
               href="/app"
               className={cn(
                 GLASS,
-                "flex flex-1 items-center justify-between gap-6 rounded-full px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/90 active:scale-95 lg:min-w-[150px] lg:flex-none",
+                "flex flex-1 items-center justify-between gap-3 whitespace-nowrap rounded-full px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white/90 active:scale-95 sm:gap-6 sm:px-5 lg:min-w-[150px] lg:flex-none",
               )}
             >
               Open the map
