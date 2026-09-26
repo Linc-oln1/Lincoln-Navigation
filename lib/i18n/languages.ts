@@ -14,6 +14,7 @@ export type LangCode =
   | "ha"
   | "yo"
   | "ko"
+  | "ht"
 
 export interface Language {
   code: LangCode
@@ -38,6 +39,7 @@ export const LANGUAGES: Language[] = [
   { code: "it", name: "Italiano", english: "Italian", dir: "ltr" },
   { code: "ru", name: "Русский", english: "Russian", dir: "ltr" },
   { code: "zh", name: "中文", english: "Chinese (Simplified)", dir: "ltr" },
+  { code: "ht", name: "Kreyòl ayisyen", english: "Haitian Creole", dir: "ltr" },
   { code: "ko", name: "한국어", english: "Korean", dir: "ltr" },
   { code: "hi", name: "हिन्दी", english: "Hindi", dir: "ltr" },
 ]
