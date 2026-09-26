@@ -19,7 +19,7 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
 
   const linkClass = (href: string) =>
     cn(
-      "text-sm transition-colors",
+      "whitespace-nowrap text-sm transition-colors",
       pathname === href ? t.active : cn(t.muted, t.hover),
     )
 
@@ -37,7 +37,7 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
           <span className="text-sm font-bold tracking-tight">LincolnNavigation</span>
         </Link>
 
-        <nav aria-label="Main" className="hidden items-center gap-6 md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-6 lg:flex">
           {HEADER_LINKS.map((l) => (
             <Link key={l.href} href={l.href} className={linkClass(l.href)}>
               {tr(l.labelKey)}
@@ -58,7 +58,7 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-1 md:hidden">
+        <div className="flex items-center gap-1 lg:hidden">
         <LanguageSwitcher
           buttonClass={cn("border", t.border, t.text)}
           menuClass={t.menu}
@@ -79,7 +79,7 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
         <nav
           aria-label="Mobile"
           className={cn(
-            "absolute inset-x-0 top-full flex flex-col gap-1 border-b px-5 pb-4 pt-2 md:hidden",
+            "absolute inset-x-0 top-full flex flex-col gap-1 border-b px-5 pb-4 pt-2 lg:hidden",
             t.menu,
           )}
         >

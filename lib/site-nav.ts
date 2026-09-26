@@ -10,6 +10,7 @@ export const HEADER_LINKS: NavLink[] = [
   { labelKey: "nav.map", href: "/app" },
   { labelKey: "nav.pricing", href: "/pricing" },
   { labelKey: "nav.about", href: "/about" },
+  { labelKey: "nav.business", href: "/business" },
   { labelKey: "nav.advertise", href: "/advertise" },
   { labelKey: "nav.contact", href: "/contact" },
 ]
@@ -27,6 +28,7 @@ export const FOOTER_GROUPS: { titleKey: MessageKey; links: NavLink[] }[] = [
     titleKey: "footer.company",
     links: [
       { labelKey: "nav.about", href: "/about" },
+      { labelKey: "nav.business", href: "/business" },
       { labelKey: "nav.advertise", href: "/advertise" },
       { labelKey: "nav.contact", href: "/contact" },
     ],
