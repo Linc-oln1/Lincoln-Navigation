@@ -845,11 +845,26 @@ export function DirectionsPanel({
       if (trainMode) {
         setDestination(t("train.finding"))
         const from: [number, number] = [originCoords[1], originCoords[0]]
-        const stations = await searchNearbyPlaces(
-          "train_station",
-          from,
-          TRAIN_SEARCH_RADIUS_METERS
-        )
+        // The free OpenStreetMap service behind this search is shared and
+        // times out now and then, so try a few times before giving up.
+        let stations: Awaited<ReturnType<typeof searchNearbyPlaces>> = []
+        let lookupFailed = true
+        for (let attempt = 0; attempt < 3 && lookupFailed; attempt++) {
+          try {
+            stations = await searchNearbyPlaces(
+              "train_station",
+              from,
+              TRAIN_SEARCH_RADIUS_METERS
+            )
+            lookupFailed = false
+          } catch {
+            await new Promise((resolve) => setTimeout(resolve, 900))
+          }
+        }
+        if (lookupFailed) {
+          setDestination("")
+          throw new Error(t("train.error"))
+        }
         const nearest = stations
           .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
           .map((p) => ({
