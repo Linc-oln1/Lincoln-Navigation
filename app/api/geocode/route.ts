@@ -124,6 +124,53 @@ async function mapboxReverseGeocode(
   return features.length > 0 ? normalizeMapboxFeature(features[0]) : null
 }
 
+/* =========================================================
+   RELEVANCE CHECK
+
+   Mapbox matches fuzzily and will happily return a result that shares
+   only one generic word with the query: "Kumasi Central Market" came back
+   as "Central" (a region in the far south-west, 200 km from Kumasi), which
+   then failed to route. A result is now kept only if it actually contains
+   the query's words — every one for short queries, all but one for long
+   ones. Anything that fails is dropped in favour of the OpenStreetMap
+   search, which had "Kumasi Central Market" right all along.
+========================================================= */
+
+const QUERY_STOPWORDS = new Set(["the", "of", "in", "at", "near", "and", "a", "an", "to", "ghana"])
+
+function splitWords(text: string): string[] {
+  return text.toLowerCase().split(/[^a-z0-9\u00c0-\u024f]+/).filter(Boolean)
+}
+
+function queryWords(query: string): string[] {
+  return splitWords(query).filter((w) => w.length >= 2 && !QUERY_STOPWORDS.has(w))
+}
+
+// Whole-word match (plus a plural "s"): "mall" must not match "Mallam".
+function hasWord(haystackWords: Set<string>, word: string): boolean {
+  return haystackWords.has(word) || haystackWords.has(word + "s") || (word.endsWith("s") && haystackWords.has(word.slice(0, -1)))
+}
+
+/**
+ * Results containing enough of the query's words, best match first.
+ * `strict` demands every word (an exact hit); otherwise all but one word of
+ * a long query is enough (a reasonable near-miss).
+ */
+function relevantResults(results: NormalizedResult[], query: string, strict = false): NormalizedResult[] {
+  const words = queryWords(query)
+  if (words.length === 0) return results
+  const need = strict || words.length <= 2 ? words.length : words.length - 1
+
+  return results
+    .map((result, index) => {
+      const haystack = new Set(splitWords(`${result.name} ${result.address}`))
+      return { result, index, matched: words.filter((w) => hasWord(haystack, w)).length }
+    })
+    .filter((r) => r.matched >= need)
+    .sort((a, b) => b.matched - a.matched || a.index - b.index)
+    .map((r) => r.result)
+}
+
 interface CacheEntry {
   expires: number
   data: unknown
@@ -311,13 +358,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(cached)
     }
 
+    // Kept as a last resort: weak Mapbox matches beat "nothing found" only
+    // when the OpenStreetMap search has nothing better either.
+    let weakMapboxResults: NormalizedResult[] = []
+
     if (mapboxToken) {
       try {
         const mapboxResults = await mapboxForwardGeocode(query, limit, mapboxToken)
-        if (mapboxResults.length > 0) {
-          const results = { results: mapboxResults }
+        // An exact hit is returned straight away. A near-miss ("Cape Coast"
+        // for "Cape Coast Castle") is held back while OpenStreetMap, which
+        // knows many more named places, gets a chance to find the real one.
+        const exact = relevantResults(mapboxResults, query, true)
+        if (exact.length > 0) {
+          const results = { results: exact }
           setCached(cacheKey, results)
           return NextResponse.json(results)
+        }
+        weakMapboxResults = relevantResults(mapboxResults, query)
+        if (mapboxResults.length > 0) {
+          console.warn(`[geocode] Mapbox had no exact match for "${query}", trying Nominatim`)
         }
         // Mapbox found nothing in Ghana — its coverage of informal
         // place names ("Kejetia", trotro stations, market names) is
@@ -350,10 +409,20 @@ export async function GET(request: NextRequest) {
 
     const data = (await response.json()) as NominatimResult[]
 
+    const osmResults = Array.isArray(data) ? data.map(normalizeResult) : []
+    // Best to worst: OSM exact hits, Mapbox near-misses, OSM near-misses,
+    // OSM's own ranking. (Off-topic Mapbox results are never returned.)
+    const osmExact = relevantResults(osmResults, query, true)
+    const osmNear = relevantResults(osmResults, query)
     const results = {
-      results: Array.isArray(data)
-        ? data.map(normalizeResult)
-        : [],
+      results:
+        osmExact.length > 0
+          ? osmExact
+          : weakMapboxResults.length > 0
+            ? weakMapboxResults
+            : osmNear.length > 0
+              ? osmNear
+              : osmResults,
     }
 
     setCached(cacheKey, results)
