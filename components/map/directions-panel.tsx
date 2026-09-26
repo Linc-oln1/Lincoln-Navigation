@@ -1433,9 +1433,10 @@ export function DirectionsPanel({
           step={liveSteps[currentStepIndex]}
           nextStep={liveSteps[currentStepIndex + 1]}
           distanceToDestination={distanceToDestination}
-          driving={travelMode !== "walking"}
+          driving={travelMode !== "walking" && travelMode !== "bus"}
           motorcycle={travelMode === "motorcycle"}
           bicycle={travelMode === "cycling"}
+          bus={travelMode === "bus"}
           gpsHeading={position?.heading ?? null}
           speedMps={position?.speed ?? null}
           onClose={() => setLiveViewOpen(false)}

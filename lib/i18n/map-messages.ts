@@ -272,6 +272,7 @@ export const MAP_EN = {
   "hz.reportedNear": "Heads up — reported {label} ahead.",
   "hz.reportedIn": "Heads up — reported {label} in {n} metres.",
   "lv.bikeNote": "Mount your phone on the handlebars before you ride. Never hold or touch it while cycling.",
+  "lv.busNote": "Hold your phone up to the window. Keep it secure on a crowded bus and watch for your stop.",
 } as const
 
 type Table = Partial<Record<string, string>>
@@ -548,6 +549,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Kɔkɔbɔ — wɔaka {label} ho asɛm wɔ w'anim.",
     "hz.reportedIn": "Kɔkɔbɔ — wɔaka {label} ho asɛm wɔ mita {n} akyi.",
     "lv.bikeNote": "Fa wo fon no si bisikɛl no dua so ansa na woafi ase. Nkura anaa nka no wɔ bisikɛl so.",
+    "lv.busNote": "Kura wo fon no wɔ mfɛnsere ho. Kora no yiye wɔ bɔs a nnipa ahyɛ mu so na hwɛ wo gyinabea.",
   },
   fr: {
     "common.close": "Fermer",
@@ -820,6 +822,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Attention — {label} signalé devant.",
     "hz.reportedIn": "Attention — {label} signalé dans {n} mètres.",
     "lv.bikeNote": "Fixez votre téléphone au guidon avant de partir. Ne le tenez ni ne le touchez jamais en roulant.",
+    "lv.busNote": "Tenez votre téléphone près de la fenêtre. Gardez-le en sécurité dans un bus bondé et surveillez votre arrêt.",
   },
   es: {
     "common.close": "Cerrar",
@@ -1092,6 +1095,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Atención: {label} reportado más adelante.",
     "hz.reportedIn": "Atención: {label} reportado a {n} metros.",
     "lv.bikeNote": "Fija el teléfono al manillar antes de salir. Nunca lo sostengas ni lo toques mientras pedaleas.",
+    "lv.busNote": "Sostén el teléfono junto a la ventana. Mantenlo seguro en un autobús lleno y estate atento a tu parada.",
   },
   ar: {
     "common.close": "إغلاق",
@@ -1364,6 +1368,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "انتبه — تم الإبلاغ عن {label} أمامك.",
     "hz.reportedIn": "انتبه — تم الإبلاغ عن {label} بعد {n} مترًا.",
     "lv.bikeNote": "ثبّت هاتفك على المقود قبل الانطلاق. لا تمسكه ولا تلمسه أثناء ركوب الدراجة أبدًا.",
+    "lv.busNote": "أمسك هاتفك قرب النافذة. حافظ عليه في الحافلة المزدحمة وانتبه لمحطتك.",
   },
   pt: {
     "common.close": "Fechar",
@@ -1636,6 +1641,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Atenção — {label} reportado à frente.",
     "hz.reportedIn": "Atenção — {label} reportado a {n} metros.",
     "lv.bikeNote": "Fixe o telemóvel ao guiador antes de partir. Nunca o segure nem toque nele enquanto pedala.",
+    "lv.busNote": "Segure o telemóvel junto à janela. Mantenha-o seguro num autocarro cheio e fique atento à sua paragem.",
   },
   de: {
     "common.close": "Schließen",
@@ -1908,6 +1914,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Achtung – voraus wurde {label} gemeldet.",
     "hz.reportedIn": "Achtung – {label} in {n} Metern gemeldet.",
     "lv.bikeNote": "Befestigen Sie Ihr Telefon vor der Fahrt am Lenker. Halten oder berühren Sie es niemals während der Fahrt.",
+    "lv.busNote": "Halten Sie das Telefon ans Fenster. Sichern Sie es in einem vollen Bus und achten Sie auf Ihre Haltestelle.",
   },
   it: {
     "common.close": "Chiudi",
@@ -2180,6 +2187,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Attenzione: {label} segnalato più avanti.",
     "hz.reportedIn": "Attenzione: {label} segnalato tra {n} metri.",
     "lv.bikeNote": "Fissa il telefono al manubrio prima di partire. Non tenerlo in mano né toccarlo mentre pedali.",
+    "lv.busNote": "Tieni il telefono vicino al finestrino. Tienilo al sicuro su un autobus affollato e fai attenzione alla tua fermata.",
   },
   zh: {
     "common.close": "关闭",
@@ -2452,6 +2460,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "注意——前方有人上报了{label}。",
     "hz.reportedIn": "注意——{n} 米外有人上报了{label}。",
     "lv.bikeNote": "骑行前请将手机固定在车把上。骑行时切勿手持或触摸手机。",
+    "lv.busNote": "请将手机举到车窗旁。在拥挤的公交车上请保管好手机，并留意您的下车站。",
   },
   hi: {
     "common.close": "बंद करें",
@@ -2724,6 +2733,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "सावधान — आगे {label} की रिपोर्ट है।",
     "hz.reportedIn": "सावधान — {n} मीटर आगे {label} की रिपोर्ट है।",
     "lv.bikeNote": "चलने से पहले फ़ोन को हैंडलबार पर लगाएँ। साइकिल चलाते समय उसे कभी हाथ में न पकड़ें और न छुएँ।",
+    "lv.busNote": "फ़ोन को खिड़की के पास पकड़ें। भीड़ वाली बस में उसे सुरक्षित रखें और अपने स्टॉप पर नज़र रखें।",
   },
   ru: {
     "common.close": "Закрыть",
@@ -2996,6 +3006,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Внимание — впереди сообщают: {label}.",
     "hz.reportedIn": "Внимание — через {n} м сообщают: {label}.",
     "lv.bikeNote": "Закрепите телефон на руле перед поездкой. Никогда не держите и не трогайте его во время езды.",
+    "lv.busNote": "Держите телефон у окна. В переполненном автобусе берегите его и следите за своей остановкой.",
   },
   sw: {
     "common.close": "Funga",
@@ -3268,6 +3279,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Tahadhari — {label} imeripotiwa mbele.",
     "hz.reportedIn": "Tahadhari — {label} imeripotiwa baada ya mita {n}.",
     "lv.bikeNote": "Weka simu yako kwenye usukani wa baiskeli kabla ya kuanza. Usiishike wala kuigusa ukiwa unaendesha baiskeli.",
+    "lv.busNote": "Shikilia simu karibu na dirisha. Ilinde kwenye basi lenye msongamano na uangalie kituo chako.",
   },
   ha: {
     "common.close": "Rufe",
@@ -3540,6 +3552,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Lura — an kai rahoton {label} a gaba.",
     "hz.reportedIn": "Lura — an kai rahoton {label} bayan mita {n}.",
     "lv.bikeNote": "Ɗaura wayarka a kan sitiyarin keke kafin ka fara. Kada ka riƙe ko taɓa ta yayin hawan keke.",
+    "lv.busNote": "Riƙe wayarka kusa da taga. Kiyaye ta a cikin bas mai cunkoso kuma ka lura da tashar da za ka sauka.",
   },
   yo: {
     "common.close": "Ti",
@@ -3812,6 +3825,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Ẹ ṣọ́ra — a ròyìn {label} níwájú.",
     "hz.reportedIn": "Ẹ ṣọ́ra — a ròyìn {label} ní mítà {n} síwájú.",
     "lv.bikeNote": "Dè fóònù rẹ mọ́ ọ̀pá ìdarí kẹ̀kẹ́ kí o tó gùn. Má ṣe dì í mú tàbí fọwọ́ kàn án nígbà tí ò ń gun kẹ̀kẹ́.",
+    "lv.busNote": "Di fóònù rẹ mú sí ẹ̀gbẹ́ fèrèsé. Pa á mọ́ dáadáa nínú bọ́ọ̀sì tó kún, kí o sì máa wo ibùdókọ̀ rẹ.",
   },
   ko: {
     "common.close": "닫기",
@@ -4084,6 +4098,7 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "주의 — 앞쪽에 {label} 신고가 있습니다.",
     "hz.reportedIn": "주의 — {n}m 앞에 {label} 신고가 있습니다.",
     "lv.bikeNote": "출발하기 전에 휴대폰을 핸들바에 고정하세요. 자전거를 타는 동안에는 절대 손에 들거나 만지지 마세요.",
+    "lv.busNote": "휴대폰을 창가에 대고 보세요. 붐비는 버스에서는 소지품을 잘 챙기고 내릴 정류장을 확인하세요.",
   },
   ht: {
     "common.close": "Fèmen",
@@ -4356,5 +4371,6 @@ export const MAP_TR: Record<string, Table> = {
     "hz.reportedNear": "Atansyon — yo rapòte {label} devan.",
     "hz.reportedIn": "Atansyon — yo rapòte {label} nan {n} mèt.",
     "lv.bikeNote": "Fikse telefòn ou sou gidon an anvan w pati. Pa janm kenbe l oswa touche l pandan w ap monte bisiklèt.",
+    "lv.busNote": "Kenbe telefòn ou bò fenèt la. Kenbe l an sekirite nan yon bis ki chaje epi swiv estasyon ou a.",
   },
 }

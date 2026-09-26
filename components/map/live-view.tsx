@@ -26,6 +26,8 @@ interface LiveViewProps {
   motorcycle?: boolean
   /** Cyclists get "handlebars" wording in the safety notice. */
   bicycle?: boolean
+  /** Bus riders are passengers: compass heading and a "hold to the window" note. */
+  bus?: boolean
   gpsHeading?: number | null
   speedMps?: number | null
   onClose: () => void
@@ -74,6 +76,7 @@ export function LiveView({
   driving = false,
   motorcycle = false,
   bicycle = false,
+  bus = false,
   gpsHeading = null,
   speedMps = null,
   onClose,
@@ -363,20 +366,23 @@ export function LiveView({
               : motorcycle
                 ? t("lv.rideNote")
                 : t("lv.driveNote")
-            : t("lv.walkNote")}
+            : bus
+              ? t("lv.busNote")
+              : t("lv.walkNote")}
         </p>
       </div>
     </div>
   )
 }
 
-/** Live View is offered for walking, driving, motorcycle and bicycle. */
+/** Live View is offered for walking, driving, motorcycle, bicycle and bus. */
 export function isLiveViewMode(mode: TravelMode) {
   return (
     mode === "walking" ||
     mode === "driving" ||
     mode === "driving-traffic" ||
     mode === "motorcycle" ||
-    mode === "cycling"
+    mode === "cycling" ||
+    mode === "bus"
   )
 }
