@@ -2,6 +2,7 @@
 
 import { Search, Navigation, Layers, MapPin, Star } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/components/i18n/language-provider"
 
 interface MobileNavProps {
   activePanel: "search" | "directions" | "places" | "saved" | null
@@ -12,14 +13,15 @@ interface MobileNavProps {
 }
 
 export function MobileNav({ activePanel, onSearchClick, onDirectionsClick, onPlacesClick, onSavedClick }: MobileNavProps) {
+  const { t } = useI18n()
   const items = [
-    { id: "search" as const, label: "Search", icon: Search, onClick: onSearchClick },
-    { id: "directions" as const, label: "Directions", icon: Navigation, onClick: onDirectionsClick },
-    { id: "places" as const, label: "Explore", icon: Layers, onClick: onPlacesClick },
+    { id: "search" as const, label: t("nav.search"), icon: Search, onClick: onSearchClick },
+    { id: "directions" as const, label: t("dir.title"), icon: Navigation, onClick: onDirectionsClick },
+    { id: "places" as const, label: t("nav.explore"), icon: Layers, onClick: onPlacesClick },
     // PREVIOUSLY: this button did nothing (onClick: () => {}) —
     // SavedPlacesPanel existed as a component but was never
     // rendered anywhere in the app.
-    { id: "saved" as const, label: "Saved", icon: Star, onClick: onSavedClick },
+    { id: "saved" as const, label: t("nav.saved"), icon: Star, onClick: onSavedClick },
   ]
 
   return (

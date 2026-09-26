@@ -17,6 +17,7 @@ import { ReportHazardSheet } from "@/components/map/report-hazard-sheet"
 import { geocode } from "@/lib/geocoding"
 import { useSavedPlaces, type SavedPlaceInput } from "@/hooks/use-saved-places"
 import { useHazards } from "@/hooks/use-hazards"
+import { useI18n } from "@/components/i18n/language-provider"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -86,6 +87,7 @@ const VALID_TRAVEL_MODES: TravelMode[] = [
 
 function MapNavigator() {
   const searchParams = useSearchParams()
+  const { t } = useI18n()
 
   const [activePanel, setActivePanel] = useState<PanelType>(null)
 
@@ -430,7 +432,7 @@ function MapNavigator() {
           className="absolute left-4 bottom-32 md:bottom-16 z-[1000] flex items-center gap-2 px-3 py-2 rounded-xl border border-border bg-card/90 backdrop-blur-sm text-foreground shadow-lg hover:bg-card transition-colors"
         >
           <TriangleAlert className="w-4 h-4 text-amber-500" />
-          <span className="text-sm font-medium">Report</span>
+          <span className="text-sm font-medium">{t("map.report")}</span>
         </button>
       )}
 

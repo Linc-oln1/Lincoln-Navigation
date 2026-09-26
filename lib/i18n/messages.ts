@@ -5,6 +5,10 @@ import type { LangCode } from "@/lib/i18n/languages"
  * and it falls back to English, so a half-translated screen never breaks.
  */
 const en = {
+  "map.report": "Report",
+  "map.exitShort": "Exit",
+  "nav.search": "Search",
+  "nav.saved": "Saved",
   "nav.map": "Map",
   "nav.pricing": "Pricing",
   "nav.about": "About",
@@ -84,6 +88,10 @@ export type MessageKey = keyof typeof en
 type Dict = Partial<Record<MessageKey, string>>
 
 const tw: Dict = {
+  "map.report": "Bɔ amanneɛ",
+  "map.exitShort": "Fi mu",
+  "nav.search": "Hwehwɛ",
+  "nav.saved": "Nea wɔasie",
   "nav.explore": "Hwehwɛ",
   "nav.features": "Nneɛma a ɛwɔ hɔ",
   "home.tagLeft": "Kwan a emu da hɔ wɔ mmɔnten, kurow mu ne akwan nyinaa so — yɛayɛ no sɛnea Ghana nnipa nantew.",
@@ -143,6 +151,10 @@ const tw: Dict = {
 }
 
 const fr: Dict = {
+  "map.report": "Signaler",
+  "map.exitShort": "Quitter",
+  "nav.search": "Rechercher",
+  "nav.saved": "Enregistrés",
   "nav.explore": "Explorer",
   "nav.features": "Fonctionnalités",
   "home.tagLeft": "Un chemin clair à travers chaque rue, rond-point et détour — conçu pour la façon dont le Ghana se déplace vraiment.",
@@ -211,6 +223,10 @@ const fr: Dict = {
 }
 
 const es: Dict = {
+  "map.report": "Reportar",
+  "map.exitShort": "Salir",
+  "nav.search": "Buscar",
+  "nav.saved": "Guardados",
   "nav.explore": "Explorar",
   "nav.features": "Funciones",
   "home.tagLeft": "Un camino claro por cada calle, rotonda y desvío — creado para cómo se mueve realmente Ghana.",
@@ -279,6 +295,10 @@ const es: Dict = {
 }
 
 const ar: Dict = {
+  "map.report": "إبلاغ",
+  "map.exitShort": "خروج",
+  "nav.search": "بحث",
+  "nav.saved": "المحفوظة",
   "nav.explore": "استكشف",
   "nav.features": "الميزات",
   "home.tagLeft": "طريق واضح عبر كل شارع ودوّار وطريق التفافي — مصمم لكيفية تنقّل الناس في غانا فعلًا.",
@@ -343,6 +363,10 @@ const ar: Dict = {
 }
 
 const pt: Dict = {
+  "map.report": "Reportar",
+  "map.exitShort": "Sair",
+  "nav.search": "Pesquisar",
+  "nav.saved": "Guardados",
   "nav.explore": "Explorar",
   "nav.features": "Funcionalidades",
   "home.tagLeft": "Um caminho claro por cada rua, rotunda e desvio — feito para a forma como o Gana realmente se move.",
@@ -411,6 +435,10 @@ const pt: Dict = {
 }
 
 const de: Dict = {
+  "map.report": "Melden",
+  "map.exitShort": "Beenden",
+  "nav.search": "Suchen",
+  "nav.saved": "Gespeichert",
   "nav.map": "Karte",
   "nav.pricing": "Preise",
   "nav.about": "Über uns",
@@ -475,6 +503,10 @@ const de: Dict = {
 }
 
 const it: Dict = {
+  "map.report": "Segnala",
+  "map.exitShort": "Esci",
+  "nav.search": "Cerca",
+  "nav.saved": "Salvati",
   "nav.map": "Mappa",
   "nav.pricing": "Prezzi",
   "nav.about": "Chi siamo",
@@ -539,6 +571,10 @@ const it: Dict = {
 }
 
 const zh: Dict = {
+  "map.report": "上报",
+  "map.exitShort": "退出",
+  "nav.search": "搜索",
+  "nav.saved": "已保存",
   "nav.map": "地图",
   "nav.pricing": "价格",
   "nav.about": "关于我们",
@@ -603,6 +639,10 @@ const zh: Dict = {
 }
 
 const hi: Dict = {
+  "map.report": "रिपोर्ट करें",
+  "map.exitShort": "बाहर निकलें",
+  "nav.search": "खोजें",
+  "nav.saved": "सहेजे गए",
   "nav.map": "नक्शा",
   "nav.pricing": "मूल्य",
   "nav.about": "हमारे बारे में",
@@ -667,6 +707,10 @@ const hi: Dict = {
 }
 
 const ru: Dict = {
+  "map.report": "Сообщить",
+  "map.exitShort": "Выход",
+  "nav.search": "Поиск",
+  "nav.saved": "Сохранённое",
   "nav.map": "Карта",
   "nav.pricing": "Цены",
   "nav.about": "О нас",
@@ -731,6 +775,10 @@ const ru: Dict = {
 }
 
 const sw: Dict = {
+  "map.report": "Ripoti",
+  "map.exitShort": "Ondoka",
+  "nav.search": "Tafuta",
+  "nav.saved": "Zilizohifadhiwa",
   "nav.map": "Ramani",
   "nav.pricing": "Bei",
   "nav.about": "Kuhusu",
@@ -795,6 +843,10 @@ const sw: Dict = {
 }
 
 const ha: Dict = {
+  "map.report": "Yi rahoto",
+  "map.exitShort": "Fita",
+  "nav.search": "Nema",
+  "nav.saved": "Adanannu",
   "nav.map": "Taswira",
   "nav.pricing": "Farashi",
   "nav.about": "Game da mu",
@@ -859,6 +911,10 @@ const ha: Dict = {
 }
 
 const yo: Dict = {
+  "map.report": "Ròyìn",
+  "map.exitShort": "Jáde",
+  "nav.search": "Wá",
+  "nav.saved": "Àwọn tí a fipamọ́",
   "nav.map": "Maapu",
   "nav.pricing": "Iye owó",
   "nav.about": "Nípa wa",
@@ -923,6 +979,10 @@ const yo: Dict = {
 }
 
 const ko: Dict = {
+  "map.report": "신고",
+  "map.exitShort": "나가기",
+  "nav.search": "검색",
+  "nav.saved": "저장됨",
   "nav.map": "지도",
   "nav.pricing": "요금",
   "nav.about": "소개",
@@ -987,6 +1047,10 @@ const ko: Dict = {
 }
 
 const ht: Dict = {
+  "map.report": "Rapòte",
+  "map.exitShort": "Soti",
+  "nav.search": "Chèche",
+  "nav.saved": "Sove",
   "nav.map": "Kat",
   "nav.pricing": "Pri",
   "nav.about": "Sou nou",

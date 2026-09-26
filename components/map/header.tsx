@@ -70,8 +70,8 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
               title={t("map.exit")}
               className="flex items-center gap-1.5 rounded-xl px-2.5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary active:scale-95"
             >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="hidden sm:inline">Exit</span>
+              <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
+              <span className="hidden sm:inline">{t("map.exitShort")}</span>
             </button>
 
             {/* Logo */}
@@ -108,7 +108,7 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-secondary text-foreground"
                 )}
-                title="Get directions"
+                title={t("dir.get")}
               >
                 <Navigation className="w-5 h-5" />
               </button>
@@ -120,7 +120,7 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-secondary text-foreground"
                 )}
-                title="Explore places"
+                title={t("nav.explore")}
               >
                 <Layers className="w-5 h-5" />
               </button>
