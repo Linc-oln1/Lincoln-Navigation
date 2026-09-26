@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { ArrowUp, CameraOff, Compass, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import type { TravelMode } from "@/lib/routing"
 
 /**
  * Live View — the phone camera with a walking arrow, the next street /
@@ -18,6 +19,10 @@ interface LiveViewProps {
   step: { instruction: string; coordinates: [number, number][] } | undefined
   nextStep?: { instruction: string } | undefined
   distanceToDestination: number | null
+  /** Driving mounts the phone facing the road, so travel direction beats the compass. */
+  driving?: boolean
+  gpsHeading?: number | null
+  speedMps?: number | null
   onClose: () => void
 }
 
@@ -61,11 +66,14 @@ export function LiveView({
   step,
   nextStep,
   distanceToDestination,
+  driving = false,
+  gpsHeading = null,
+  speedMps = null,
   onClose,
 }: LiveViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
-  const [heading, setHeading] = useState<number | null>(null)
+  const [compassHeading, setHeading] = useState<number | null>(null)
   const [needsCompassTap, setNeedsCompassTap] = useState(false)
   const [compassBlocked, setCompassBlocked] = useState(false)
   const headingRef = useRef<number | null>(null)
@@ -189,6 +197,12 @@ export function LiveView({
     toTurn = distanceM(position.latitude, position.longitude, target[1], target[0])
   }
 
+  // In a car the compass is thrown off by the metal around it, and the
+  // phone points where the car travels — so once moving, use GPS heading.
+  const useGps =
+    driving && gpsHeading !== null && speedMps !== null && speedMps > 2.5
+  const heading = useGps ? gpsHeading : compassHeading
+
   const rel = bearing !== null && heading !== null ? angleDiff(heading, bearing) : null
   const offScreen = rel !== null && Math.abs(rel) > 60
   const arrived = toTurn !== null && toTurn < 15
@@ -280,7 +294,7 @@ export function LiveView({
             <p className="text-sm">{cameraError}</p>
           </div>
         )}
-        {needsCompassTap && (
+        {needsCompassTap && !useGps && (
           <button
             type="button"
             onClick={enableCompass}
@@ -332,9 +346,16 @@ export function LiveView({
           )}
         </div>
         <p className="text-center text-[11px] text-white/60">
-          Keep looking where you&apos;re walking — glance at the screen, don&apos;t stare.
+          {driving
+            ? "Mount your phone before you drive. Never hold or touch it while driving."
+            : "Keep looking where you're walking — glance at the screen, don't stare."}
         </p>
       </div>
     </div>
   )
+}
+
+/** Live View is offered for walking and for driving. */
+export function isLiveViewMode(mode: TravelMode) {
+  return mode === "walking" || mode === "driving" || mode === "driving-traffic"
 }

@@ -31,7 +31,7 @@ import { useLiveNavigation } from "@/hooks/use-live-navigation"
 import { usePremium } from "@/hooks/use-premium"
 import { RouteHazardWarning } from "@/components/map/route-hazard-warning"
 import { SpeedReader, isSpeedMode } from "@/components/map/speed-reader"
-import { LiveView } from "@/components/map/live-view"
+import { LiveView, isLiveViewMode } from "@/components/map/live-view"
 import { StopNavigationDialog } from "@/components/map/stop-navigation-dialog"
 import {
   fetchHazards,
@@ -1127,7 +1127,7 @@ export function DirectionsPanel({
             </Button>
           )}
 
-          {routeInfo && travelMode === "walking" && (
+          {routeInfo && isLiveViewMode(travelMode) && (
             <Button
               type="button"
               variant="outline"
@@ -1428,6 +1428,9 @@ export function DirectionsPanel({
           step={liveSteps[currentStepIndex]}
           nextStep={liveSteps[currentStepIndex + 1]}
           distanceToDestination={distanceToDestination}
+          driving={travelMode !== "walking"}
+          gpsHeading={position?.heading ?? null}
+          speedMps={position?.speed ?? null}
           onClose={() => setLiveViewOpen(false)}
         />
       )}
