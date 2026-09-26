@@ -20,6 +20,7 @@ import {
   ChevronUp,
   ChevronDown,
   Camera,
+  TrainFront,
 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -59,6 +60,7 @@ import {
 import {
   geocodeToCoordinates,
   reverseGeocode,
+  searchNearbyPlaces,
 } from "@/lib/geocoding"
 
 /*
@@ -117,8 +119,15 @@ export type TravelMode =
   | "walking"
   | "cycling"
 
+/*
+ * "train" isn't a routing profile: it means "take me to the nearest
+ * station". The route to the station is a normal walking (close) or
+ * driving (farther) route — see TRAIN_WALK_MAX_METERS.
+ */
+type PanelMode = TravelMode | "train"
+
 const TRAVEL_MODES: {
-  mode: TravelMode
+  mode: PanelMode
   icon: typeof Car
   label: string
 }[] = [
@@ -127,7 +136,20 @@ const TRAVEL_MODES: {
   { mode: "bus", icon: Bus, label: "Bus" },
   { mode: "walking", icon: Footprints, label: "Walk" },
   { mode: "cycling", icon: Bike, label: "Bike" },
+  { mode: "train", icon: TrainFront, label: "Train" },
 ]
+
+// Stations closer than this (straight line) are reached on foot.
+const TRAIN_WALK_MAX_METERS = 2500
+const TRAIN_SEARCH_RADIUS_METERS = 25000
+
+function straightLineMeters(a: [number, number], b: [number, number]) {
+  const rad = (d: number) => (d * Math.PI) / 180
+  const h =
+    Math.sin(rad(b[0] - a[0]) / 2) ** 2 +
+    Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(rad(b[1] - a[1]) / 2) ** 2
+  return 2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(h)))
+}
 
 interface RouteStepView {
   instruction: string
@@ -177,6 +199,9 @@ export function DirectionsPanel({
   ------------------------------------------------------- */
 
   const [travelMode, setTravelMode] = useState<TravelMode>("driving")
+  // Train mode: the destination is the nearest station, found on Get Directions.
+  const [trainMode, setTrainMode] = useState(false)
+  const [trainStationName, setTrainStationName] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -789,8 +814,8 @@ export function DirectionsPanel({
   ======================================================= */
 
   const handleCalculateRoute = async () => {
-    if (!origin.trim() || !destination.trim()) {
-      setError(t("dir.enterBoth"))
+    if (!origin.trim() || (!trainMode && !destination.trim())) {
+      setError(trainMode ? t("dir.enterStart") : t("dir.enterBoth"))
       return
     }
 
@@ -809,15 +834,46 @@ export function DirectionsPanel({
           (result) => result && ([result[1], result[0]] as Coordinate)
         ))
 
-      const destinationCoords =
-        destinationCoordinates ||
-        (await geocodeToCoordinates(destination).then(
-          (result) => result && ([result[1], result[0]] as Coordinate)
-        ))
-
       if (!originCoords) {
         throw new Error(t("dir.notFoundOrigin", { name: origin }))
       }
+
+      // Train mode: the destination is the closest station to the start.
+      // Close by → walk there; farther → drive.
+      let routeMode: TravelMode = travelMode
+      let stationCoords: Coordinate | null = null
+      if (trainMode) {
+        setDestination(t("train.finding"))
+        const from: [number, number] = [originCoords[1], originCoords[0]]
+        const stations = await searchNearbyPlaces(
+          "train_station",
+          from,
+          TRAIN_SEARCH_RADIUS_METERS
+        )
+        const nearest = stations
+          .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng))
+          .map((p) => ({
+            place: p,
+            meters: straightLineMeters(from, [p.lat, p.lng]),
+          }))
+          .sort((a, b) => a.meters - b.meters)[0]
+        if (!nearest) {
+          setDestination("")
+          throw new Error(t("train.none"))
+        }
+        stationCoords = [nearest.place.lng, nearest.place.lat]
+        routeMode = nearest.meters <= TRAIN_WALK_MAX_METERS ? "walking" : "driving"
+        setTravelMode(routeMode)
+        setDestination(nearest.place.name)
+        setTrainStationName(nearest.place.name)
+      }
+
+      const destinationCoords =
+        stationCoords ??
+        destinationCoordinates ??
+        (await geocodeToCoordinates(destination).then(
+          (result) => result && ([result[1], result[0]] as Coordinate)
+        ))
 
       if (!destinationCoords) {
         throw new Error(t("dir.notFoundDest", { name: destination }))
@@ -829,7 +885,7 @@ export function DirectionsPanel({
 
       const result = await calculateRoute(
         [originCoords, destinationCoords],
-        { mode: travelMode, alternatives: true, steps: true, lang }
+        { mode: routeMode, alternatives: true, steps: true, lang }
       )
 
       if (result.code !== "Ok" || result.routes.length === 0) {
@@ -1014,7 +1070,17 @@ export function DirectionsPanel({
               type="button"
               key={mode}
               onClick={() => {
-                setTravelMode(mode)
+                if (mode === "train") {
+                  setTrainMode(true)
+                  setTrainStationName(null)
+                  setDestination("")
+                  setDestinationCoordinates(null)
+                  setTravelMode("walking")
+                } else {
+                  setTrainMode(false)
+                  setTrainStationName(null)
+                  setTravelMode(mode)
+                }
                 setRouteInfo(null)
                 clearRouteExtras()
                 setLiveSteps([])
@@ -1025,7 +1091,7 @@ export function DirectionsPanel({
               }}
               className={cn(
                 "flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 rounded-lg transition-colors",
-                travelMode === mode
+                (trainMode ? mode === "train" : travelMode === mode)
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary text-muted-foreground hover:text-foreground"
               )}
@@ -1078,8 +1144,9 @@ export function DirectionsPanel({
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
             <Input
-              placeholder={t("dir.dest")}
+              placeholder={trainMode ? t("train.nearest") : t("dir.dest")}
               value={destination}
+              readOnly={trainMode}
               onChange={(event) => {
                 setDestination(event.target.value)
                 setDestinationCoordinates(null)
@@ -1341,8 +1408,9 @@ export function DirectionsPanel({
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
                   {(() => {
                     const ModeIcon =
-                      TRAVEL_MODES.find((m) => m.mode === travelMode)
-                        ?.icon ?? Car
+                      TRAVEL_MODES.find(
+                        (m) => m.mode === (trainMode ? "train" : travelMode)
+                      )?.icon ?? Car
                     return <ModeIcon className="w-6 h-6 text-primary" />
                   })()}
                 </div>
@@ -1437,6 +1505,7 @@ export function DirectionsPanel({
           motorcycle={travelMode === "motorcycle"}
           bicycle={travelMode === "cycling"}
           bus={travelMode === "bus"}
+          stationName={trainMode ? trainStationName : null}
           gpsHeading={position?.heading ?? null}
           speedMps={position?.speed ?? null}
           onClose={() => setLiveViewOpen(false)}

@@ -74,6 +74,10 @@ const CATEGORY_FILTERS: Record<string, CategoryFilter[]> = {
   cinema: [{ key: "amenity", value: "cinema" }],
   gym: [{ key: "leisure", value: "fitness_centre" }],
   airport: [{ key: "aeroway", value: "aerodrome" }],
+  train_station: [
+    { key: "railway", value: "station" },
+    { key: "railway", value: "halt" },
+  ],
 }
 
 // Google Places API (New) "included type" values for each of our
@@ -110,6 +114,7 @@ const GOOGLE_TYPES_FOR_CATEGORY: Record<string, string[]> = {
   cinema: ["movie_theater"],
   gym: ["gym"],
   airport: ["airport"],
+  train_station: ["train_station"],
 }
 
 // The main overpass-api.de instance in particular is a free, shared

@@ -28,6 +28,8 @@ interface LiveViewProps {
   bicycle?: boolean
   /** Bus riders are passengers: compass heading and a "hold to the window" note. */
   bus?: boolean
+  /** Train mode: the station the route leads to, shown in the heading. */
+  stationName?: string | null
   gpsHeading?: number | null
   speedMps?: number | null
   onClose: () => void
@@ -77,6 +79,7 @@ export function LiveView({
   motorcycle = false,
   bicycle = false,
   bus = false,
+  stationName = null,
   gpsHeading = null,
   speedMps = null,
   onClose,
@@ -233,7 +236,7 @@ export function LiveView({
       <div className="absolute inset-x-0 top-0 flex items-start gap-3 p-4">
         <div className="min-w-0 flex-1">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-white/70">
-            {t("lv.title")}
+            {stationName ? t("train.stationFor", { station: stationName }) : t("lv.title")}
           </p>
           <p className="mt-0.5 text-lg font-semibold leading-snug drop-shadow">
             {step?.instruction ?? t("lv.following")}

@@ -26,6 +26,7 @@ import {
   Clapperboard,
   Dumbbell,
   Plane,
+  TrainFront,
   Star,
   Megaphone,
 } from "lucide-react"
@@ -79,6 +80,7 @@ const CATEGORIES = [
   { id: "cinema", label: "Cinemas", icon: Clapperboard },
   { id: "gym", label: "Gyms", icon: Dumbbell },
   { id: "airport", label: "Airports", icon: Plane },
+  { id: "train_station", label: "Train stations", icon: TrainFront },
 ] as const
 
 export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: PlacesPanelProps) {
