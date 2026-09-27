@@ -51,13 +51,16 @@ export function mintPremiumCookie(input: {
   reference: string
   days?: number
   plan?: PaidPlan
+  /** Unix seconds the plan should end. Overrides `days` (used to honour the payment date). */
+  expiresAt?: number
 }): { value: string; maxAge: number } {
   const now = Math.floor(Date.now() / 1000)
-  const maxAge = (input.days ?? 31) * 24 * 60 * 60
+  const exp = input.expiresAt ?? now + (input.days ?? 31) * 24 * 60 * 60
+  const maxAge = Math.max(0, exp - now)
   const payload: PremiumPayload = {
     sub: input.email,
     iat: now,
-    exp: now + maxAge,
+    exp,
     ref: input.reference,
     plan: input.plan ?? "premium",
   }

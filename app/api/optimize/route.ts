@@ -22,9 +22,11 @@ function parseStops(value: unknown): Stop[] | null {
   if (!Array.isArray(value) || value.length < 2 || value.length > MAX_STOPS) return null
   const out: Stop[] = []
   for (const s of value) {
-    const lat = Number(s?.lat)
-    const lng = Number(s?.lng)
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    // Real numbers only: Number(null) and Number("") are 0, which would send
+    // a stop to 0,0 (the Gulf of Guinea).
+    const lat = s?.lat
+    const lng = s?.lng
+    if (typeof lat !== "number" || typeof lng !== "number" || !Number.isFinite(lat) || !Number.isFinite(lng)) return null
     if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null
     out.push({ lat, lng })
   }

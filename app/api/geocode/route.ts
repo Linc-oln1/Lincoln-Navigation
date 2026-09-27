@@ -398,16 +398,31 @@ export async function GET(request: NextRequest) {
       countrycodes: "gh",
     })
 
-    const response = await fetch(
-      `${base}/search?${params.toString()}`,
-      { headers, cache: "no-store" }
-    )
+    let data: NominatimResult[]
+    try {
+      const response = await fetch(`${base}/search?${params.toString()}`, {
+        headers,
+        cache: "no-store",
+        // The public Nominatim server is slow or rate-limited at times; don't
+        // let it hold a search open.
+        signal: AbortSignal.timeout(8000),
+      })
 
-    if (!response.ok) {
-      throw new Error(`Geocoding failed (${response.status})`)
+      if (!response.ok) {
+        throw new Error(`Geocoding failed (${response.status})`)
+      }
+
+      data = (await response.json()) as NominatimResult[]
+    } catch (error) {
+      // OpenStreetMap is down or slow. If Mapbox had a near-miss ("Cape Coast"
+      // for "Cape Coast Castle"), that beats an error; it isn't cached so the
+      // next search tries OSM again.
+      if (weakMapboxResults.length > 0) {
+        console.warn("[geocode] Nominatim unavailable, returning Mapbox near-misses:", error)
+        return NextResponse.json({ results: weakMapboxResults })
+      }
+      throw error
     }
-
-    const data = (await response.json()) as NominatimResult[]
 
     const osmResults = Array.isArray(data) ? data.map(normalizeResult) : []
     // Best to worst: OSM exact hits, Mapbox near-misses, OSM near-misses,

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { clientIp } from "@/lib/hazard-identity"
+import { overLimit } from "@/lib/rate-limit"
 
 /* =========================================================
    LIVE TRAFFIC SUMMARY  (Free — "Live traffic")
@@ -25,36 +27,22 @@ interface Summary {
 }
 
 const cache = new Map<string, { expires: number; summary: Summary }>()
-const hits = new Map<string, number[]>()
 
 function parseCoordinates(raw: string): [number, number][] | null {
   const pairs = raw.split(";")
   if (pairs.length !== 2) return null
   const out: [number, number][] = []
   for (const pair of pairs) {
-    const [lng, lat] = pair.split(",").map(Number)
+    const parts = pair.split(",")
+    // Both parts must be present: Number("") is 0, so ",;," would otherwise
+    // pass as two points at 0,0 and cost a paid Mapbox request.
+    if (parts.length !== 2 || parts.some((p) => p.trim() === "")) return null
+    const [lng, lat] = parts.map(Number)
     if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null
     if (Math.abs(lng) > 180 || Math.abs(lat) > 90) return null
     out.push([lng, lat])
   }
   return out
-}
-
-function overLimit(ip: string): boolean {
-  const now = Date.now()
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS)
-  if (recent.length >= RATE_LIMIT) {
-    hits.set(ip, recent)
-    return true
-  }
-  recent.push(now)
-  hits.set(ip, recent)
-  if (hits.size > 5000) {
-    for (const [key, times] of hits) {
-      if (!times.some((t) => now - t < RATE_WINDOW_MS)) hits.delete(key)
-    }
-  }
-  return false
 }
 
 /** Ratio of travel time now to usual → a plain-language level. */
@@ -82,8 +70,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(hit.summary, { headers: { "Cache-Control": "private, max-age=60" } })
   }
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-  if (overLimit(ip)) {
+  // Shared across server instances (Upstash), so the limit that protects the
+  // Mapbox token holds no matter which instance a request lands on.
+  if (await overLimit(`traffic:${clientIp(request)}`, RATE_LIMIT, RATE_WINDOW_MS / 1000)) {
     return NextResponse.json({ error: "Too many requests." }, { status: 429 })
   }
 

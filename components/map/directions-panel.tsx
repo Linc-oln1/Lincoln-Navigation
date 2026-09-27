@@ -1036,6 +1036,15 @@ export function DirectionsPanel({
       const wantsOptions =
         activePrefs.preference === "shortest" || avoidFeatures.length > 0
       const truckActive = isPro && truckPrefs.enabled && routeMode === "driving"
+      if (
+        truckActive &&
+        TRUCK_FIELDS.some((f) => !(truckPrefs[f.key] >= f.min && truckPrefs[f.key] <= f.max))
+      ) {
+        // Never route around a size we'd have to change: ask for a real one.
+        setError(t("truck.range"))
+        setIsLoading(false)
+        return
+      }
 
       const result = await calculateRoute(
         [originCoords, destinationCoords],

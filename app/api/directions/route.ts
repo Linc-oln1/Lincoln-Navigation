@@ -80,7 +80,9 @@ function parseFeatures(raw: string | null, profile: OrsProfile): string[] {
 
 /*
  * Truck routing (Pro): vehicle size and weight the route must fit under and
- * over. Values are clamped to sane ranges before they reach ORS.
+ * over. Out-of-range values are REFUSED, never clamped: quietly treating a
+ * 5 m wide or 120 t vehicle as a 4 m / 100 t one would return a route it
+ * can't legally or physically use, presented as a truck route.
  */
 interface TruckRestrictions {
   height: number
@@ -89,23 +91,31 @@ interface TruckRestrictions {
   weight: number
 }
 
-function clamp(value: unknown, min: number, max: number): number | null {
-  const n = Number(value)
-  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : null
-}
+const TRUCK_LIMITS = {
+  heightM: [1, 6],
+  widthM: [1, 4],
+  lengthM: [2, 30],
+  weightT: [0.5, 100],
+} as const
 
-function parseTruck(raw: string | null): TruckRestrictions | null {
+/** null when no truck was asked for; "invalid" when it was but can't be honoured. */
+function parseTruck(raw: string | null): TruckRestrictions | null | "invalid" {
   if (!raw) return null
   try {
     const t = JSON.parse(raw)
-    const height = clamp(t?.heightM, 1, 6)
-    const width = clamp(t?.widthM, 1, 4)
-    const length = clamp(t?.lengthM, 2, 30)
-    const weight = clamp(t?.weightT, 0.5, 100)
-    if (height === null || width === null || length === null || weight === null) return null
+    const read = (key: keyof typeof TRUCK_LIMITS): number | null => {
+      const v = t?.[key]
+      const [min, max] = TRUCK_LIMITS[key]
+      return typeof v === "number" && Number.isFinite(v) && v >= min && v <= max ? v : null
+    }
+    const height = read("heightM")
+    const width = read("widthM")
+    const length = read("lengthM")
+    const weight = read("weightT")
+    if (height === null || width === null || length === null || weight === null) return "invalid"
     return { height, width, length, weight }
   } catch {
-    return null
+    return "invalid"
   }
 }
 
@@ -187,13 +197,20 @@ export async function GET(request: NextRequest) {
   const featuresParam = searchParams.get("features")
   const preference = parsePreference(searchParams.get("preference"))
   const wantAlternatives = searchParams.get("alternatives") === "1"
-  const truck = parseTruck(searchParams.get("truck"))
+  const truckParam = parseTruck(searchParams.get("truck"))
 
   // Truck routing is a Pro feature: verify the signed plan on the server.
   if (searchParams.get("truck")) {
     const gate = requirePro(request)
     if (gate) return gate
   }
+  if (truckParam === "invalid") {
+    return NextResponse.json(
+      { error: "Vehicle size or weight is missing or outside the supported range." },
+      { status: 400 }
+    )
+  }
+  const truck = truckParam
 
   // Any of these options needs ORS even for a road mode OSRM would handle.
   const needsCarGraph =

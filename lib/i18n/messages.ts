@@ -169,6 +169,7 @@ const baseEn = {
   "truck.width": "Width (m)",
   "truck.length": "Length (m)",
   "truck.weight": "Weight (t)",
+  "truck.range": "Check your truck's size and weight: height 1–6 m, width 1–4 m, length 2–30 m, weight 0.5–100 t.",
   "truck.hint": "Avoids roads and bridges your truck can't fit or carry, where the map has that information.",
   "truck.notApplied": "Truck routing wasn't applied, so this route ignores your vehicle's size and weight. Don't rely on it — check low bridges and weight limits yourself.",
 } as const
