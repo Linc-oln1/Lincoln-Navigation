@@ -215,3 +215,31 @@ open — the sheet says so. Limits: 10 shares/hour per address, updates throttle
 to 1 per 3 s, and wrong-token guessing is cut off after 30 misses per 10 min
 (`lib/rate-limit.ts`, shared via Upstash). `/track/` is disallowed in robots.txt
 and carries `noindex`.
+
+
+## Travel section and booking links
+
+Explore Nearby has a **Travel** tab (`components/map/places-panel.tsx`): hotels
+(now including guest houses, hostels, motels, apartments), restaurants,
+attractions, tours & travel agents, car rentals, event venues, airports, train
+stations and ferry terminals — all from OpenStreetMap through `/api/places`. A
+place card for a hotel/attraction/tour/car rental/venue shows "Book on <partner>"
+buttons (`components/map/book-links.tsx`, `lib/travel-partners.ts`).
+
+**We don't take bookings or payments.** Each button opens a partner's own search
+page; the partner handles the booking and payment. Buttons work immediately as
+plain links. To earn commission, add your affiliate IDs in Vercel → Settings →
+Environment Variables (all environments), then redeploy:
+
+| Variable | Partner | Where the id goes |
+|---|---|---|
+| `NEXT_PUBLIC_AFFILIATE_BOOKING_AID` | Booking.com (stays, cars) | `aid=` |
+| `NEXT_PUBLIC_AFFILIATE_VIATOR_PID` | Viator (tours) | `pid=` (+ `mcid`, `medium`) |
+| `NEXT_PUBLIC_AFFILIATE_GETYOURGUIDE_ID` | GetYourGuide (tours) | `partner_id=` |
+
+A link with an id becomes `rel="sponsored"` and the card shows a commission
+disclosure; links without one stay plain. Eventbrite has no affiliate id (events
+here are venues plus an Eventbrite search — there is no free events data source
+for Ghana). If a programme wants different parameters, change the builders in
+`lib/travel-partners.ts`. Real direct booking/payment (Paystack) would need
+agreements with each business and is not built.

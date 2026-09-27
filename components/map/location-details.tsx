@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { usePremium } from "@/hooks/use-premium"
 import { openStatus } from "@/lib/opening-hours"
+import { BookLinks } from "@/components/map/book-links"
+import { travelKindFor } from "@/lib/travel-partners"
 
 interface LocationDetailsProps {
   location: {
@@ -201,6 +203,18 @@ export function LocationDetails({
           </a>
         )}
       </div>
+
+      {/* Travel: hotels, attractions, tours, car rentals, event venues */}
+      {(() => {
+        const kind = travelKindFor(location.type)
+        if (!kind) return null
+        // Partners search by name; "Ghana" keeps them from matching a same-named place abroad.
+        return (
+          <div className="px-4 pb-4">
+            <BookLinks kind={kind} query={`${location.name}, Ghana`} heading={t("travel.book")} />
+          </div>
+        )
+      })()}
 
       {/* Quick info */}
       <div className="px-4 pb-4">

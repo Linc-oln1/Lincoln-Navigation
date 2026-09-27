@@ -33,7 +33,11 @@ import {
   Lock,
   Star,
   Megaphone,
+  Compass,
+  CarFront,
+  Ticket,
 } from "lucide-react"
+import { BookLinks } from "@/components/map/book-links"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { searchNearbyPlaces, type Place } from "@/lib/geocoding"
@@ -88,7 +92,13 @@ const CATEGORIES = [
   { id: "airport", label: "Airports", icon: Plane },
   { id: "train_station", label: "Train stations", icon: TrainFront },
   { id: "ferry_terminal", label: "Ferry terminals & ports", icon: Ship },
+  { id: "tour", label: "Tours & travel agents", icon: Compass },
+  { id: "car_rental", label: "Car rentals", icon: CarFront },
+  { id: "event_venue", label: "Event venues", icon: Ticket },
 ] as const
+
+/** The "Travel" tab: places to stay, eat, visit and get around, with booking links. */
+const TRAVEL_IDS = ["hotel", "restaurant", "tourism", "tour", "car_rental", "event_venue", "airport", "train_station", "ferry_terminal"] as const
 
 /** Straight-line distance in metres between two [lat, lng] points. */
 function metersBetween(a: [number, number], b: [number, number]) {
@@ -114,6 +124,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
   const { isPremium } = usePremium()
   const [filters, setFilters] = useState({ open: false, phone: false, website: false })
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [tab, setTab] = useState<"everyday" | "travel">("everyday")
   const [places, setPlaces] = useState<Place[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -162,10 +173,12 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
       // something that's already handled gracefully, so this stays
       // a warn (still visible for debugging, just not disruptive).
       console.warn("Places search error:", err)
+      // "This operation was aborted" is the map-data server timing out —
+      // say so in plain words (and in the person's language).
       setError(
-        err instanceof Error
+        err instanceof Error && !/abort|timeout|timed out/i.test(err.message)
           ? err.message
-          : t("places.loadError")
+          : t("places.busy")
       )
     } finally {
       if (!controller.signal.aborted) {
@@ -224,9 +237,32 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
             the screen and clips results off the right edge on
             narrow viewports. */}
         <div className="p-4" style={{ contain: "inline-size" }}>
+          {/* Everyday places vs. the travel section (stay, eat, visit, get around) */}
+          <div role="tablist" className="mb-4 flex gap-1 rounded-xl bg-secondary p-1">
+            {(["everyday", "travel"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                role="tab"
+                aria-selected={tab === k}
+                onClick={() => setTab(k)}
+                className={cn(
+                  "flex-1 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                  tab === k ? "bg-card text-foreground shadow" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {t(k === "everyday" ? "places.tabEveryday" : "places.tabTravel")}
+              </button>
+            ))}
+          </div>
+
           {/* Categories Grid */}
           <div className="grid grid-cols-4 gap-2 mb-6">
-            {CATEGORIES.map(({ id, icon: Icon }) => (
+            {CATEGORIES.filter((c) =>
+              tab === "travel"
+                ? (TRAVEL_IDS as readonly string[]).includes(c.id)
+                : !(["hotel", "tourism", "tour", "car_rental", "event_venue", "airport", "train_station", "ferry_terminal"] as string[]).includes(c.id)
+            ).map(({ id, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => searchCategory(id)}
@@ -242,6 +278,17 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
               </button>
             ))}
           </div>
+
+          {/* Travel tab: book online (partner sites handle booking and payment) */}
+          {tab === "travel" && !selectedCategory && (
+            <div className="mb-6 space-y-3">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("travel.bookOnline")}</p>
+              <BookLinks kind="stay" query="Ghana" heading={t("travel.stays")} />
+              <BookLinks kind="tour" query="Ghana" heading={t("travel.tours")} />
+              <BookLinks kind="car" query="Ghana" heading={t("travel.cars")} />
+              <BookLinks kind="event" query="events" heading={t("travel.events")} />
+            </div>
+          )}
 
           {/* Results */}
           {isLoading && (

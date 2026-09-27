@@ -59,8 +59,29 @@ const CATEGORY_FILTERS: Record<string, CategoryFilter[]> = {
   bank: [{ key: "amenity", value: "bank" }],
   atm: [{ key: "amenity", value: "atm" }],
   fuel: [{ key: "amenity", value: "fuel" }],
-  hotel: [{ key: "tourism", value: "hotel" }],
+  // Lodging in Ghana is often tagged guest_house / hostel / motel rather than hotel.
+  hotel: [
+    { key: "tourism", value: "hotel" },
+    { key: "tourism", value: "guest_house" },
+    { key: "tourism", value: "hostel" },
+    { key: "tourism", value: "motel" },
+    { key: "tourism", value: "apartment" },
+  ],
   tourism: [{ key: "tourism" }],
+  // Travel section: places that sell tours, hire cars, or host events.
+  tour: [
+    { key: "office", value: "travel_agent" },
+    { key: "shop", value: "travel_agency" },
+    { key: "office", value: "tour_operator" },
+  ],
+  car_rental: [{ key: "amenity", value: "car_rental" }],
+  event_venue: [
+    { key: "amenity", value: "theatre" },
+    { key: "amenity", value: "arts_centre" },
+    { key: "amenity", value: "events_venue" },
+    { key: "amenity", value: "conference_centre" },
+    { key: "leisure", value: "stadium" },
+  ],
   park: [{ key: "leisure", value: "park" }],
   university: [
     { key: "amenity", value: "university" },
