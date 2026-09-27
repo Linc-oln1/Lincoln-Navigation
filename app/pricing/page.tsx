@@ -123,7 +123,7 @@ function PricingContent() {
 
         <header className="mt-8 mb-10">
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Simple pricing
+            Subscription
           </h1>
           <p className="mt-3 text-muted-foreground max-w-xl">
             The map, search and directions are free forever. Premium adds Live
