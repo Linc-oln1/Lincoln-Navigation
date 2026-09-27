@@ -264,3 +264,22 @@ Free; the token is public by design (client token). Imagery is CC BY-SA 4.0 by
 Mapillary contributors and the viewer shows that credit. Coverage in Ghana is
 good in Accra and other big towns, patchy elsewhere. Built and tested against
 mocked API responses only — please try it with your real token.
+
+
+## Landmark recognition — "What is this?" (Premium)
+
+A button under the Fleet button (right-hand stack) opens the camera; one tap
+sends a single small JPEG (max 1024 px) plus the approximate location to
+`/api/identify`, which asks an Anthropic vision model to name the landmark or
+building and returns a small, checked shape: name, kind, short description, the
+clues it used, and a confidence (very likely / probably / possibly). It says "not
+sure" for generic scenes, never names people, and the UI says AI can be wrong.
+The person must agree first (remembered in `ln_identify_consent`); nothing is
+stored. `/api/identify` is **server-gated** (`requirePremium`) and limited to 20
+per hour and 60 per day per person plus `IDENTIFY_DAILY_CAP` (default 500) for the
+whole site, counted in Upstash. **The button is hidden until the server has a key:**
+set `ANTHROPIC_API_KEY` (server env, all environments) and redeploy. Optional:
+`ANTHROPIC_MODEL` (default `claude-sonnet-5`), `IDENTIFY_DAILY_CAP`. Each call
+costs a small amount of API credit; watch usage in the Anthropic console. The
+privacy page describes this feature and the Anthropic transfer. Tested against a
+mock Anthropic server only — try it with a real key before announcing it.

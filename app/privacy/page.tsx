@@ -9,7 +9,7 @@ export const metadata = {
 }
 
 const CONTACT_EMAIL = "info@lincolnnavigation.com"
-const LAST_UPDATED = "25 September 2026"
+const LAST_UPDATED = "27 September 2026"
 
 export default function PrivacyPage() {
   return (
@@ -81,6 +81,45 @@ export default function PrivacyPage() {
               weather at that spot, reverse-geocoding it to an address, or
               finding nearby hazards — and isn&rsquo;t stored against you
               unless you explicitly save it as a place.
+            </p>
+          </section>
+
+          <section>
+            <h2>Live location sharing</h2>
+            <p>
+              If you choose &ldquo;Share trip&rdquo;, we create a private
+              link and store your latest position, a name and destination
+              if you add them, and when the share ends. Anyone who has the
+              link can see your position until you stop or the time you
+              chose (1, 4 or 12 hours) runs out. We keep only your most
+              recent position, no history, and delete it when the share
+              ends. Sharing only reports while the app is open. No account
+              is needed on either side.
+            </p>
+          </section>
+
+          <section>
+            <h2>Fleet tools (Pro)</h2>
+            <p>
+              A business using Fleet tools stores its vehicles (name, plate,
+              type) on its account. A driver who opens the link they were
+              sent and taps &ldquo;Start sharing&rdquo; shares that
+              vehicle&rsquo;s latest position with the business until they
+              stop. We keep the latest position and running daily totals
+              (distance, time moving, top speed), not a history of where
+              the vehicle has been.
+            </p>
+          </section>
+
+          <section>
+            <h2>Identifying a landmark (Premium)</h2>
+            <p>
+              If you use &ldquo;What is this?&rdquo;, you are asked first.
+              The one photo you take, and your approximate location if it
+              is on, is sent to Anthropic&rsquo;s AI service to work out what
+              you are looking at. We don&rsquo;t store the photo or the
+              answer. Please don&rsquo;t photograph people. The result is
+              a guess and can be wrong.
             </p>
           </section>
 
@@ -187,7 +226,23 @@ export default function PrivacyPage() {
                 <strong>Paystack</strong> — Premium subscription payments.
               </li>
               <li>
-                <strong>Upstash</strong> — hazard report storage.
+                <strong>Upstash</strong> — hazard report storage and
+                rate limiting.
+              </li>
+              <li>
+                <strong>Anthropic</strong> — identifying a landmark from a
+                photo you choose to take (Premium).
+              </li>
+              <li>
+                <strong>Mapillary</strong> — street-level photos, when you
+                open Street view.
+              </li>
+              <li>
+                <strong>Booking.com, Viator, GetYourGuide and
+                Eventbrite</strong> — when you tap a &ldquo;Book&rdquo;
+                button you leave our site and their own terms and privacy
+                policies apply. We may earn a commission on some
+                bookings.
               </li>
               <li>
                 <strong>Vercel</strong> — hosting and the analytics

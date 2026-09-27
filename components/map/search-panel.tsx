@@ -41,6 +41,8 @@ interface SearchPanelProps {
   isPremium?: boolean
   /** [lat, lng] the landmark lookup searches around (the map centre). */
   areaCenter?: [number, number]
+  /** Fill the search box with this text (e.g. a landmark just identified). Change `nonce` to re-apply the same text. */
+  presetQuery?: { text: string; nonce: number } | null
 }
 
 interface LandmarkMatch {
@@ -75,7 +77,7 @@ function toSearchResult(result: GeocodeResult): SearchResult {
   }
 }
 
-export function SearchPanel({ onSelectLocation, isOpen, onClose, isPremium = false, areaCenter }: SearchPanelProps) {
+export function SearchPanel({ onSelectLocation, isOpen, onClose, isPremium = false, areaCenter, presetQuery }: SearchPanelProps) {
   const { t } = useI18n()
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
@@ -87,6 +89,10 @@ export function SearchPanel({ onSelectLocation, isOpen, onClose, isPremium = fal
   const [landmark, setLandmark] = useState<LandmarkMatch | null>(null)
   const isLandmarkQuery = looksLikeLandmarkQuery(query)
   const { recentSearches, addRecentSearch } = useRecentSearches()
+
+  useEffect(() => {
+    if (presetQuery?.text) setQuery(presetQuery.text)
+  }, [presetQuery?.nonce]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isOpen && inputRef.current) {

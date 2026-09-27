@@ -27,6 +27,7 @@ import { FleetPanel } from "@/components/map/fleet-panel"
 import { RunCard, type Run } from "@/components/map/run-card"
 import { PlanExpiryNotice } from "@/components/map/plan-expiry-notice"
 import { TripShare } from "@/components/map/trip-share"
+import { IdentifyLandmark } from "@/components/map/identify-landmark"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -150,6 +151,8 @@ function MapNavigator() {
       else localStorage.removeItem("ln_run")
     } catch {}
   }, [])
+  // A landmark just identified from the camera, waiting to be searched.
+  const [searchPreset, setSearchPreset] = useState<{ text: string; nonce: number } | null>(null)
   const [trafficOn, setTrafficOn] = useState(false)
   useEffect(() => {
     try {
@@ -522,6 +525,14 @@ function MapNavigator() {
           }}
         />
       )}
+      <IdentifyLandmark
+        isPremium={isPremium}
+        position={userLocation}
+        onSearch={(text) => {
+          setSearchPreset({ text, nonce: Date.now() })
+          setActivePanel("search")
+        }}
+      />
       <FleetPanel
         isPro={isPro}
         onTrack={(vehicles) => setMarkers(vehicles ?? [])}
@@ -558,6 +569,7 @@ function MapNavigator() {
         onSelectLocation={handleSelectLocation}
         isPremium={isPremium}
         areaCenter={weatherCenter ?? userLocation ?? mapCenter}
+        presetQuery={searchPreset}
       />
 
       {/* DIRECTIONS */}
