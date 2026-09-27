@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Clock, X } from "lucide-react"
 import { usePremium } from "@/hooks/use-premium"
+import { useI18n } from "@/components/i18n/language-provider"
 
 const WARN_DAYS = 5
 const DISMISS_KEY = "ln_expiry_dismissed"
@@ -15,6 +16,7 @@ const DISMISS_KEY = "ln_expiry_dismissed"
  */
 export function PlanExpiryNotice() {
   const { isPremium, isPro, expiresAt } = usePremium()
+  const { t } = useI18n()
   const [hidden, setHidden] = useState(true)
 
   const msLeft = expiresAt ? new Date(expiresAt).getTime() - Date.now() : null
@@ -34,7 +36,11 @@ export function PlanExpiryNotice() {
 
   const plan = isPro ? "Pro" : "Premium"
   const text =
-    daysLeft! <= 0 ? `Your ${plan} plan ends today.` : `Your ${plan} plan ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`
+    daysLeft! <= 0
+      ? t("expiry.today", { plan })
+      : daysLeft === 1
+        ? t("expiry.tomorrow", { plan })
+        : t("expiry.days", { plan, n: daysLeft! })
 
   return (
     <div
@@ -45,12 +51,12 @@ export function PlanExpiryNotice() {
       <span className="flex-1">
         {text}{" "}
         <Link href="/pricing" className="font-semibold text-primary hover:underline">
-          Renew
+          {t("expiry.renew")}
         </Link>
       </span>
       <button
         type="button"
-        aria-label="Dismiss"
+        aria-label={t("common.close")}
         onClick={() => {
           setHidden(true)
           try {
