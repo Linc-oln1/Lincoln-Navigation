@@ -255,7 +255,7 @@ export default function PrivacyPage() {
         <p>
           If you are unhappy with how we handle your data, please tell us
           first. You also have the right to complain to the{" "}
-          <a href="https://www.dataprotection.org.gh" target="_blank" rel="noopener noreferrer">
+          <a href="https://dpc.gov.gh" target="_blank" rel="noopener noreferrer">
             Data Protection Commission of Ghana
           </a>
           , or to the data protection authority where you live.
