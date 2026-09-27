@@ -241,7 +241,7 @@ function PricingContent() {
                 <p className="text-center text-[11px] text-muted-foreground">
                   Secure payment via Paystack · paid 31 days at a time, no auto-renewal
                 </p>
-                <AgreeLine className="text-center" />
+                <AgreeLine className="text-center" purchase />
               </form>
             ) : (
               <p className="mt-6 rounded-xl border border-dashed border-border px-4 py-2.5 text-center text-xs text-muted-foreground">
@@ -296,7 +296,7 @@ function PricingContent() {
                 <p className="text-center text-[11px] text-muted-foreground">
                   Secure payment via Paystack · paid 31 days at a time, no auto-renewal
                 </p>
-                <AgreeLine className="text-center" />
+                <AgreeLine className="text-center" purchase />
               </form>
             ) : null}
 

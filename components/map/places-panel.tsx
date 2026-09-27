@@ -499,6 +499,27 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
                     )}
                 </div>
               ))}
+
+              {/* Data-source credit. Google's Places terms require a
+                  "Google Maps" attribution beside its data; OSM's ODbL
+                  requires crediting OpenStreetMap contributors. Only
+                  Google results carry a rating, so that tells them apart. */}
+              {shown.length > 0 && (
+                <p className="px-3 pt-2 text-[11px] text-muted-foreground">
+                  {shown.some(({ place }) => typeof place.rating === "number") ? (
+                    <span translate="no">Google Maps</span>
+                  ) : (
+                    <a
+                      href="https://www.openstreetmap.org/copyright"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline"
+                    >
+                      © OpenStreetMap contributors
+                    </a>
+                  )}
+                </p>
+              )}
             </div>
           )}
 

@@ -36,8 +36,13 @@ export const FOOTER_GROUPS: { titleKey: MessageKey; links: NavLink[] }[] = [
   {
     titleKey: "footer.legal",
     links: [
-      { labelKey: "footer.privacy", href: "/privacy" },
       { labelKey: "footer.terms", href: "/terms" },
+      { labelKey: "footer.privacy", href: "/privacy" },
+      { labelKey: "footer.cookies", href: "/cookies" },
+      { labelKey: "footer.refunds", href: "/refunds" },
+      { labelKey: "footer.adsPolicy", href: "/advertising-policy" },
+      { labelKey: "footer.attributions", href: "/attributions" },
+      { labelKey: "footer.security", href: "/security" },
     ],
   },
   {

@@ -1,320 +1,316 @@
 import Link from "next/link"
-import { SiteHeader } from "@/components/site/site-header"
-import { SiteFooter } from "@/components/site/site-footer"
+import { LegalPage, LegalTable } from "@/components/legal/legal-page"
+import {
+  DPC_REGISTRATION,
+  LEGAL_ADDRESS,
+  LEGAL_NAME,
+  LEGAL_UPDATED,
+  PRIVACY_EMAIL,
+  SITE_NAME,
+} from "@/lib/legal"
 
 export const metadata = {
   title: "Privacy Policy — Lincoln Navigation",
   description:
-    "What LincolnNavigation.com collects, why, and how it's used — in plain language.",
+    "What LincolnNavigation.com collects, why, who it is shared with, how long it is kept, and your rights under Ghana's Data Protection Act and other laws.",
 }
 
-const CONTACT_EMAIL = "info@lincolnnavigation.com"
-const LAST_UPDATED = "27 September 2026"
+const mail = <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>
 
 export default function PrivacyPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-background text-foreground">
-      <SiteHeader />
-      <div className="w-full flex-1 mx-auto max-w-3xl px-6 py-14">
+    <LegalPage
+      title="Privacy Policy"
+      path="/privacy"
+      updated={LEGAL_UPDATED.privacy}
+      intro={
+        <p>
+          This policy explains what {SITE_NAME} (the &ldquo;app&rdquo;,
+          &ldquo;we&rdquo;, &ldquo;us&rdquo;) collects, why, who it is shared
+          with, how long it is kept, and the rights you have over it. It covers
+          the website, the installable web app, and every feature in them.
+        </p>
+      }
+    >
+      <section>
+        <h2>1. The short version</h2>
+        <ul>
+          <li>You can use the map, search and directions without an account.</li>
+          <li>Your location is used on your device; it reaches our servers only to answer a specific request, and is not stored against you unless you save it.</li>
+          <li>Hazard reports are anonymous. We never link a report to who sent it.</li>
+          <li>We never see your card details. Paystack handles payments.</li>
+          <li>We do not sell your personal data.</li>
+          <li>You can ask to see, correct or delete your data at any time by emailing {mail}.</li>
+        </ul>
+      </section>
 
-        <header className="mt-8 mb-10">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Privacy Policy
-          </h1>
-          <p className="mt-3 text-muted-foreground">
-            Last updated {LAST_UPDATED}. This page explains what
-            LincolnNavigation.com collects, why, and who it&rsquo;s shared
-            with — written in plain language, not legal boilerplate. It
-            isn&rsquo;t legal advice, just an honest account of how the app
-            actually works.
-          </p>
-        </header>
+      <section>
+        <h2>2. Who is responsible for your data</h2>
+        <p>
+          The data controller is <strong>{LEGAL_NAME}</strong>, operator of{" "}
+          {SITE_NAME}
+          {LEGAL_ADDRESS ? <>, {LEGAL_ADDRESS}</> : null}. Contact for all
+          privacy matters: {mail}.
+          {DPC_REGISTRATION ? (
+            <>
+              {" "}We are registered with the Data Protection Commission of
+              Ghana under registration number <strong>{DPC_REGISTRATION}</strong>.
+            </>
+          ) : null}
+        </p>
+        <p>
+          We process personal data in line with Ghana&rsquo;s{" "}
+          <strong>Data Protection Act, 2012 (Act 843)</strong>. Where visitors
+          from the European Economic Area or the United Kingdom use the app, we
+          also apply the rights and principles of the EU and UK General Data
+          Protection Regulation (GDPR).
+        </p>
+      </section>
 
-        <div className="space-y-10 text-sm leading-relaxed text-muted-foreground [&_h2]:mb-3 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-foreground [&_p+p]:mt-3 [&_strong]:text-foreground [&_ul]:mt-3 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:pl-5">
-          <section>
-            <h2>The short version</h2>
-            <p>
-              You can use the map, search, and directions without an
-              account or giving us anything. Signing in only adds sync
-              (saved places, trip history) and Premium. Hazard reports are
-              anonymous — we never link one to who sent it. We don&rsquo;t
-              sell your data to anyone.
-            </p>
-          </section>
+      <section>
+        <h2>3. What we collect and why</h2>
+        <LegalTable>
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>When</th>
+                <th>Why (legal basis)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Email address; name and profile picture if you sign in with Google</td>
+                <td>Only if you create an account</td>
+                <td>To run your account (contract)</td>
+              </tr>
+              <tr>
+                <td>Saved places, home/work, recent searches</td>
+                <td>Signed in: stored on our servers. Signed out: stays in your browser only</td>
+                <td>To sync them across your devices (contract)</td>
+              </tr>
+              <tr>
+                <td>Precise device location</td>
+                <td>Only after you allow it in your browser</td>
+                <td>To show you on the map, route you and warn of nearby hazards (consent; you can withdraw it in browser settings)</td>
+              </tr>
+              <tr>
+                <td>Live position, optional name and destination</td>
+                <td>Only while you use &ldquo;Share trip&rdquo;</td>
+                <td>To show your trip to the people you send the link to (consent)</td>
+              </tr>
+              <tr>
+                <td>Vehicle name, plate, type; driver&rsquo;s latest position and daily totals</td>
+                <td>Only for Pro Fleet accounts, and only while a driver taps &ldquo;Start sharing&rdquo;</td>
+                <td>To provide fleet tracking to the business (contract with the business; the driver&rsquo;s consent)</td>
+              </tr>
+              <tr>
+                <td>Hazard type, location, time, optional note</td>
+                <td>When you report or vote on a hazard</td>
+                <td>To warn other road users (legitimate interest in road safety)</td>
+              </tr>
+              <tr>
+                <td>One photo and approximate location</td>
+                <td>Only when you use &ldquo;What is this?&rdquo; and agree to the prompt</td>
+                <td>To identify a landmark (consent)</td>
+              </tr>
+              <tr>
+                <td>Billing email, Paystack transaction reference, plan, amount, date</td>
+                <td>When you buy Premium or Pro</td>
+                <td>To grant the plan, answer billing questions and meet tax and accounting law (contract; legal obligation)</td>
+              </tr>
+              <tr>
+                <td>IP address, browser type, pages requested</td>
+                <td>Every visit, as part of normal web traffic</td>
+                <td>To deliver the site, stop abuse and keep it secure (legitimate interest)</td>
+              </tr>
+              <tr>
+                <td>What you write to us</td>
+                <td>If you email us or use a contact, business or advertising form</td>
+                <td>To reply to you (legitimate interest; steps toward a contract)</td>
+              </tr>
+            </tbody>
+          </table>
+        </LegalTable>
+        <p>
+          The contact, business and advertising forms on this site do not send
+          anything to our servers: they open your own email app with a message
+          ready to send, so we only receive what you choose to send.
+        </p>
+      </section>
 
-          <section>
-            <h2>Account information</h2>
-            <p>
-              If you sign in, we store your email address and, if you use
-              Google to sign in, whatever basic profile info Google shares
-              for that (typically your name and avatar). If you continue
-              as a guest, none of this applies — nothing is collected.
-            </p>
-            <p>
-              Signing in keeps you signed in on that device using a secure
-              session cookie issued by our auth provider, Supabase. It
-              contains a signed token, not your password.
-            </p>
-          </section>
+      <section>
+        <h2>4. Location in more detail</h2>
+        <p>
+          Location is the most sensitive thing a map handles, so here is
+          exactly what happens. Your browser gives your position to the app on
+          your device. A coordinate is sent to our servers only when a feature
+          needs it to answer a request: the weather at that spot, the address
+          of that spot, places or hazards near it, or a route that starts
+          there. Those requests are answered and not stored against you. We
+          keep no history of where you have been.
+        </p>
+        <p>
+          With <strong>Share trip</strong>, we keep only your most recent
+          position, and delete it when the share ends (you stop it, or the 1,
+          4 or 12 hours you chose runs out). Anyone with the link can see your
+          position until then, so share it only with people you trust.
+          Sharing only reports while the app is open.
+        </p>
+        <p>
+          With <strong>Fleet tools</strong>, a business can see the latest
+          position of a vehicle only while its driver has chosen to share.
+          We keep that latest position plus running daily totals (distance,
+          time moving, top speed), not a route history. Businesses must tell
+          their drivers about this and have a lawful basis to track them; see
+          our <Link href="/terms">Terms</Link>.
+        </p>
+      </section>
 
-          <section>
-            <h2>Saved places &amp; trip history</h2>
-            <p>
-              If you&rsquo;re signed in, favourites, home/work, and recent
-              searches (name, address, coordinates) are stored on our
-              servers against your account so they follow you across
-              devices. If you&rsquo;re signed out, the same information
-              stays only in your browser&rsquo;s local storage and is
-              never sent to us.
-            </p>
-          </section>
+      <section>
+        <h2>5. Hazard reports stay anonymous</h2>
+        <p>
+          We store the hazard itself (what, where, when, any note) but never
+          who reported it. To stop spam and double votes, we turn your
+          connection (IP address and browser type) into a one-way scrambled
+          code using a secret key. It cannot be turned back into your IP
+          address, is never shown with a report, and is deleted within two
+          hours, or when the hazard expires for vote records. Your raw IP
+          address is not stored. Please don&rsquo;t put personal details,
+          names or number plates in hazard notes.
+        </p>
+      </section>
 
-          <section>
-            <h2>Location</h2>
-            <p>
-              If you allow it, your browser&rsquo;s location is used to
-              centre the map on you, set a &ldquo;current location&rdquo;
-              starting point for directions, and track your position
-              during turn-by-turn navigation. This happens on your device.
-              A coordinate is sent to our servers only when it&rsquo;s
-              needed to answer a specific request — looking up the
-              weather at that spot, reverse-geocoding it to an address, or
-              finding nearby hazards — and isn&rsquo;t stored against you
-              unless you explicitly save it as a place.
-            </p>
-          </section>
+      <section>
+        <h2>6. Who we share data with</h2>
+        <p>
+          We do not sell or rent personal data. We share only what each
+          service needs to power a feature, under its own privacy terms:
+        </p>
+        <ul>
+          <li><strong>Vercel</strong> (hosting, aggregate cookie-free analytics)</li>
+          <li><strong>Supabase</strong> (accounts, saved places, trip history, trip shares, fleet data)</li>
+          <li><strong>Upstash</strong> (hazard reports and abuse rate limiting)</li>
+          <li><strong>Paystack</strong> (payments)</li>
+          <li><strong>Google</strong> (Google sign-in if you choose it; place search via Google Places; display ads via AdSense when ads are shown; web fonts)</li>
+          <li><strong>Search, address and place data:</strong> Mapbox, OpenStreetMap Nominatim, Overpass API servers, Foursquare, Wikipedia</li>
+          <li><strong>Routing:</strong> OpenRouteService (HeiGIT), OSRM, GraphHopper, Valhalla</li>
+          <li><strong>Weather and alerts:</strong> Open-Meteo, OpenWeatherMap, GDACS</li>
+          <li><strong>Map imagery:</strong> OpenFreeMap, Esri, OpenTopoMap, AWS Terrain Tiles, Mapillary (Street view). Loading map tiles means your browser asks these servers for the area you are viewing.</li>
+          <li><strong>Anthropic</strong> (landmark identification, only with your permission)</li>
+          <li><strong>WhatsApp</strong>, only if you tap a share-to-WhatsApp button</li>
+          <li><strong>Booking.com, Viator, GetYourGuide, Eventbrite</strong>, only if you tap a &ldquo;Book&rdquo; link and leave our site. See our <Link href="/advertising-policy">Advertising &amp; Affiliates</Link> page.</li>
+        </ul>
+        <p>
+          We may also disclose data if Ghanaian or other applicable law
+          requires it, to protect people from harm, or as part of a sale or
+          reorganisation of the service, in which case this policy continues
+          to apply.
+        </p>
+      </section>
 
-          <section>
-            <h2>Live location sharing</h2>
-            <p>
-              If you choose &ldquo;Share trip&rdquo;, we create a private
-              link and store your latest position, a name and destination
-              if you add them, and when the share ends. Anyone who has the
-              link can see your position until you stop or the time you
-              chose (1, 4 or 12 hours) runs out. We keep only your most
-              recent position, no history, and delete it when the share
-              ends. Sharing only reports while the app is open. No account
-              is needed on either side.
-            </p>
-          </section>
+      <section>
+        <h2>7. International transfers</h2>
+        <p>
+          Several of these providers store or process data outside Ghana,
+          including in the United States and the European Union. When that
+          happens we rely on providers that offer adequate safeguards, such as
+          standard contractual clauses, as required by the Data Protection
+          Act and the GDPR.
+        </p>
+      </section>
 
-          <section>
-            <h2>Fleet tools (Pro)</h2>
-            <p>
-              A business using Fleet tools stores its vehicles (name, plate,
-              type) on its account. A driver who opens the link they were
-              sent and taps &ldquo;Start sharing&rdquo; shares that
-              vehicle&rsquo;s latest position with the business until they
-              stop. We keep the latest position and running daily totals
-              (distance, time moving, top speed), not a history of where
-              the vehicle has been.
-            </p>
-          </section>
+      <section>
+        <h2>8. How long we keep it</h2>
+        <ul>
+          <li><strong>Account data, saved places, trip history:</strong> until you delete them or your account.</li>
+          <li><strong>Trip shares:</strong> deleted when the share ends.</li>
+          <li><strong>Fleet data:</strong> until the business deletes the vehicle or its account.</li>
+          <li><strong>Hazard reports:</strong> automatically deleted when they expire, between a few hours and 30 days depending on the hazard type (a crash clears sooner than a damaged road).</li>
+          <li><strong>Anti-abuse codes and rate-limit counters:</strong> a few minutes to two hours.</li>
+          <li><strong>Landmark photos:</strong> not stored; discarded once the answer is returned.</li>
+          <li><strong>Payment records:</strong> as long as tax and accounting law requires, then deleted.</li>
+          <li><strong>Emails to us:</strong> as long as needed to deal with your request.</li>
+        </ul>
+      </section>
 
-          <section>
-            <h2>Identifying a landmark (Premium)</h2>
-            <p>
-              If you use &ldquo;What is this?&rdquo;, you are asked first.
-              The one photo you take, and your approximate location if it
-              is on, is sent to Anthropic&rsquo;s AI service to work out what
-              you are looking at. We don&rsquo;t store the photo or the
-              answer. Please don&rsquo;t photograph people. The result is
-              a guess and can be wrong.
-            </p>
-          </section>
+      <section>
+        <h2>9. Your rights</h2>
+        <p>Under the Data Protection Act, 2012 (Act 843), and where it applies the GDPR, you can:</p>
+        <ul>
+          <li>ask whether we hold data about you and get a copy of it;</li>
+          <li>have inaccurate data corrected;</li>
+          <li>have your data deleted, including your whole account;</li>
+          <li>object to processing, or ask us to restrict it;</li>
+          <li>withdraw consent at any time (for example, turn off location in your browser), without affecting what was done before;</li>
+          <li>receive the data you gave us in a portable format;</li>
+          <li>not be subject to decisions made solely by automated means that significantly affect you. We make none.</li>
+        </ul>
+        <p>
+          Email {mail} from the address on your account. We will reply within
+          one month and may need to confirm it is you first. There is no
+          charge. Data saved while signed out lives only in your browser; you
+          can clear it by clearing this site&rsquo;s data.
+        </p>
+        <p>
+          If you are unhappy with how we handle your data, please tell us
+          first. You also have the right to complain to the{" "}
+          <a href="https://www.dataprotection.org.gh" target="_blank" rel="noopener noreferrer">
+            Data Protection Commission of Ghana
+          </a>
+          , or to the data protection authority where you live.
+        </p>
+      </section>
 
-          <section>
-            <h2>Hazard reports</h2>
-            <p>
-              Reporting a hazard (police checkpoint, accident, flooding,
-              and so on) is anonymous by design. We store the hazard
-              itself — what it is, where it is, when it was reported, and
-              any note you added — but never who reported it. To stop
-              spam and duplicate votes, we generate a one-way scrambled
-              code from your connection at the moment you report or
-              vote, which can&rsquo;t be reversed to identify you and is
-              never attached to the report. Your raw IP address and
-              browser details are never stored.
-            </p>
-          </section>
+      <section>
+        <h2>10. Cookies and similar storage</h2>
+        <p>
+          We use a few essential cookies, browser storage for your settings,
+          and, when ads are shown, Google&rsquo;s advertising cookies. The
+          full list is in our <Link href="/cookies">Cookie Policy</Link>.
+        </p>
+      </section>
 
-          <section>
-            <h2>Premium &amp; payments</h2>
-            <p>
-              If you subscribe to Premium, payment is handled entirely by
-              our payment processor, Paystack, on their own secure
-              checkout page — we never see or store your card details.
-              After payment, we receive your email and the transaction
-              reference back from Paystack, which we use to set a cookie
-              confirming your Premium status on that device. That cookie
-              is signed to prevent tampering and includes your billing
-              email so we can confirm the subscription is yours; it
-              isn&rsquo;t readable by anyone but your browser and our
-              servers.
-            </p>
-          </section>
+      <section>
+        <h2>11. Security</h2>
+        <p>
+          Data is encrypted in transit (HTTPS). Account data is protected by
+          row-level access rules so each account can only reach its own
+          records, and payment and plan cookies are signed to prevent
+          tampering. No system is perfectly secure; if we learn of a breach
+          that affects your data we will notify you and the Data Protection
+          Commission as the law requires. To report a vulnerability, see our{" "}
+          <Link href="/security">Security</Link> page.
+        </p>
+      </section>
 
-          <section>
-            <h2>Cookies</h2>
-            <p>We use a small number of cookies:</p>
-            <ul>
-              <li>
-                <strong>Sign-in session</strong> — keeps you signed in,
-                only set if you create an account.
-              </li>
-              <li>
-                <strong>Premium status</strong> — confirms an active
-                subscription, only set if you subscribe.
-              </li>
-              <li>
-                <strong>Advertising</strong> — if display ads are shown
-                on the site, Google may set its own advertising cookies
-                as part of that. We don&rsquo;t control what those do;
-                see{" "}
-                <a
-                  href="https://policies.google.com/technologies/ads"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground underline underline-offset-2"
-                >
-                  Google&rsquo;s advertising policy
-                </a>
-                .
-              </li>
-            </ul>
-          </section>
+      <section>
+        <h2>12. Children</h2>
+        <p>
+          The app is not directed at children under 13, and we do not
+          knowingly collect their data. Users under 18 should have a parent
+          or guardian&rsquo;s permission, and may not buy a paid plan
+          without it. If you believe a child has given us personal data,
+          email {mail} and we will delete it.
+        </p>
+      </section>
 
-          <section>
-            <h2>Analytics</h2>
-            <p>
-              We use Vercel Analytics to see aggregate traffic like page
-              views and which pages are popular. It&rsquo;s
-              privacy-friendly by design — it doesn&rsquo;t use cookies or
-              track you individually across sites.
-            </p>
-          </section>
+      <section>
+        <h2>13. Changes to this policy</h2>
+        <p>
+          We will update the date at the top when this policy changes. If a
+          change materially affects how we use your data, we will also tell
+          signed-in users by email or in the app before it takes effect.
+        </p>
+      </section>
 
-          <section>
-            <h2>Who we share information with</h2>
-            <p>
-              We don&rsquo;t sell your data. Information is shared only
-              with the services that make the app work, each only
-              receiving what it needs to do its job:
-            </p>
-            <ul>
-              <li>
-                <strong>Supabase</strong> — account, saved places, and
-                trip history storage.
-              </li>
-              <li>
-                <strong>Google</strong> — if you sign in with Google, or
-                if display ads are shown on the site.
-              </li>
-              <li>
-                <strong>Mapbox and OpenStreetMap (Nominatim)</strong> —
-                search and address lookup.
-              </li>
-              <li>
-                <strong>Open-Meteo and OpenWeatherMap</strong> — weather
-                data.
-              </li>
-              <li>
-                <strong>OpenRouteService and OSRM</strong> — route
-                calculation.
-              </li>
-              <li>
-                <strong>Paystack</strong> — Premium subscription payments.
-              </li>
-              <li>
-                <strong>Upstash</strong> — hazard report storage and
-                rate limiting.
-              </li>
-              <li>
-                <strong>Anthropic</strong> — identifying a landmark from a
-                photo you choose to take (Premium).
-              </li>
-              <li>
-                <strong>Mapillary</strong> — street-level photos, when you
-                open Street view.
-              </li>
-              <li>
-                <strong>Booking.com, Viator, GetYourGuide and
-                Eventbrite</strong> — when you tap a &ldquo;Book&rdquo;
-                button you leave our site and their own terms and privacy
-                policies apply. We may earn a commission on some
-                bookings.
-              </li>
-              <li>
-                <strong>Vercel</strong> — hosting and the analytics
-                described above.
-              </li>
-            </ul>
-            <p>
-              Each of these only sees what&rsquo;s necessary for the
-              feature it powers — a search box lookup doesn&rsquo;t reach
-              our payment processor, and vice versa.
-            </p>
-          </section>
-
-          <section>
-            <h2>Your choices</h2>
-            <p>
-              You can use the entire app without an account. If you have
-              one, you can sign out at any time from your account page.
-              To delete your account and the data tied to it, email us at{" "}
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className="text-foreground underline underline-offset-2"
-              >
-                {CONTACT_EMAIL}
-              </a>{" "}
-              and we&rsquo;ll remove it. Saved places and history kept
-              only in your browser (signed-out use) can be cleared any
-              time by clearing your browser&rsquo;s site data.
-            </p>
-          </section>
-
-          <section>
-            <h2>Children</h2>
-            <p>
-              LincolnNavigation.com isn&rsquo;t directed at children under
-              13, and we don&rsquo;t knowingly collect information from
-              them.
-            </p>
-          </section>
-
-          <section>
-            <h2>Changes to this policy</h2>
-            <p>
-              If this page changes in a meaningful way, we&rsquo;ll update
-              the date at the top. Continuing to use the app after a
-              change means you&rsquo;re okay with the update.
-            </p>
-          </section>
-
-          <section>
-            <h2>Contact</h2>
-            <p>
-              Questions about this policy or your data — use our{" "}
-              <Link
-                href="/contact"
-                className="text-foreground underline underline-offset-2"
-              >
-                contact page
-              </Link>{" "}
-              or email us at{" "}
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className="text-foreground underline underline-offset-2"
-              >
-                {CONTACT_EMAIL}
-              </a>
-              .
-            </p>
-          </section>
-        </div>
-      </div>
-    <SiteFooter />
-    </main>
+      <section>
+        <h2>14. Contact</h2>
+        <p>
+          Privacy questions and requests: {mail}, or use our{" "}
+          <Link href="/contact">contact page</Link>.
+        </p>
+      </section>
+    </LegalPage>
   )
 }

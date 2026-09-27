@@ -13,6 +13,11 @@ const PAGES: { path: string; priority: number; changeFrequency: MetadataRoute.Si
   { path: "/contact", priority: 0.5, changeFrequency: "yearly" },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" },
+  { path: "/cookies", priority: 0.2, changeFrequency: "yearly" },
+  { path: "/refunds", priority: 0.2, changeFrequency: "yearly" },
+  { path: "/advertising-policy", priority: 0.2, changeFrequency: "yearly" },
+  { path: "/attributions", priority: 0.2, changeFrequency: "yearly" },
+  { path: "/security", priority: 0.1, changeFrequency: "yearly" },
 ]
 
 export default function sitemap(): MetadataRoute.Sitemap {
