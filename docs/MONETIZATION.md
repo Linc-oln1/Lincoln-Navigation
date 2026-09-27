@@ -179,3 +179,22 @@ for both, `requirePro` (lib/premium-guard) only for Pro. Checkout takes
 was tagged `pro_monthly` **and** the amount paid covers `PRO_PRICE_PESEWAS`.
 A later Premium purchase never replaces a still-valid Pro cookie.
 Every Pro feature on /pricing is now built; nothing is marked "Coming soon". Pro's "multiple vehicles" is covered by Fleet (up to 25 per account, `MAX_VEHICLES` in `lib/fleet-server.ts`).
+
+
+## Restoring a plan on another device
+
+The plan cookie is per device. Every verified payment is now also recorded in
+`plan_purchases` (`supabase/migrations/0005_plan_purchases.sql` — run once),
+tied to the buyer's Paystack email and, if signed in, their account.
+`POST /api/billing/restore` (signed-in only) finds the best live plan for the
+account, for payments made with the account's verified email, or for a payment
+reference from a receipt, links it to the account and mints a fresh cookie whose
+expiry is the payment's own expiry (never extended). `components/site/plan-restorer.tsx`
+does this quietly once per browser session when someone is signed in with no plan
+on the device; the account page has "Restore my plan" and a reference field.
+A payment already linked to another account is never re-linked. Until 0005 is
+run, recording fails quietly (logged) and restore finds nothing; payments still
+unlock as before.
+
+Renewal reminder: `components/map/plan-expiry-notice.tsx` shows a dismissible
+"ends in N days · Renew" chip in the last 5 days; the account page shows the same.

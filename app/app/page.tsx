@@ -25,6 +25,7 @@ import { RoadAlerts } from "@/components/map/road-alerts"
 import { RoutePlanner } from "@/components/map/route-planner"
 import { FleetPanel } from "@/components/map/fleet-panel"
 import { RunCard, type Run } from "@/components/map/run-card"
+import { PlanExpiryNotice } from "@/components/map/plan-expiry-notice"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -483,6 +484,7 @@ function MapNavigator() {
       />
 
       <OfflineMaps isPremium={isPremium} center={mapCenter} />
+      <PlanExpiryNotice />
       <RoutePlanner
         isPro={isPro}
         onStartRun={(stops) =>

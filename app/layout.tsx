@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { RegisterServiceWorker } from '@/components/pwa/register-service-worker'
+import { PlanRestorer } from '@/components/site/plan-restorer'
 import { AdSenseScript } from '@/components/ads/adsense-script'
 import { Toaster } from '@/components/ui/toaster'
 import { LanguageProvider } from '@/components/i18n/language-provider'
@@ -61,6 +62,7 @@ export default function RootLayout({
         <LanguageProvider>{children}</LanguageProvider>
         <Toaster />
         <RegisterServiceWorker />
+        <PlanRestorer />
         <AdSenseScript />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

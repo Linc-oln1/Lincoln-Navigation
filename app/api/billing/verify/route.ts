@@ -14,6 +14,8 @@ import {
   PREMIUM_COOKIE_NAME,
   verifyPremiumCookie,
 } from "@/lib/premium-cookie"
+import { getSessionUser } from "@/lib/supabase/server"
+import { recordPurchase } from "@/lib/plan-store"
 import {
   PREMIUM_CURRENCY,
   PREMIUM_PRICE_PESEWAS,
@@ -84,6 +86,18 @@ export async function GET(req: Request) {
   if (!Number.isFinite(paidAtMs)) return fail("payment-not-confirmed")
   const expiresAt = Math.floor(paidAtMs / 1000) + PLAN_DAYS * 24 * 60 * 60
   if (expiresAt <= Math.floor(Date.now() / 1000)) return fail("payment-expired")
+
+  // Remember the payment (and the account, if they're signed in) so the plan
+  // can be restored on another device. Best effort: never blocks the unlock.
+  const user = await getSessionUser()
+  await recordPurchase({
+    reference,
+    plan,
+    email,
+    userId: user?.id ?? null,
+    paidAtMs,
+    expiresAtSec: expiresAt,
+  })
 
   // Don't let a later Premium purchase replace a still-valid Pro cookie.
   const existing = req.headers
