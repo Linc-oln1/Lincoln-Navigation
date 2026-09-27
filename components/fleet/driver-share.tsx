@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { MapPin, Radio, Square } from "lucide-react"
+import { useI18n } from "@/components/i18n/language-provider"
+import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 
 /**
  * The page a driver opens from the link their dispatcher sent. No account:
@@ -14,6 +16,7 @@ const SEND_EVERY_MS = 8000
 type Status = "loading" | "invalid" | "ready" | "sharing" | "denied" | "error"
 
 export function DriverShare({ token }: { token: string }) {
+  const { t } = useI18n()
   const [vehicle, setVehicle] = useState<{ name: string; plate: string | null } | null>(null)
   const [status, setStatus] = useState<Status>("loading")
   const [sentAt, setSentAt] = useState<Date | null>(null)
@@ -104,25 +107,33 @@ export function DriverShare({ token }: { token: string }) {
   }, [])
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
+    <main className="relative flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
+      {/* Drivers may not read English: let them pick their language on the spot. */}
+      <div className="absolute right-4 top-4">
+        <LanguageSwitcher
+          buttonClass="border border-border text-foreground hover:bg-secondary"
+          menuClass="border-border bg-card text-foreground"
+          showLabel
+        />
+      </div>
       <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-xl">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/15">
           {status === "sharing" ? <Radio className="h-6 w-6 animate-pulse text-primary" /> : <MapPin className="h-6 w-6 text-primary" />}
         </div>
 
-        {status === "loading" && <p className="text-sm text-muted-foreground">Loading…</p>}
+        {status === "loading" && <p className="text-sm text-muted-foreground">{t("drive.loading")}</p>}
 
         {status === "invalid" && (
           <>
-            <h1 className="text-lg font-semibold">This link isn&rsquo;t valid</h1>
+            <h1 className="text-lg font-semibold">{t("drive.invalidTitle")}</h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              It may have been replaced. Ask your dispatcher for a new link.
+              {t("drive.invalidBody")}
             </p>
           </>
         )}
 
         {status === "error" && (
-          <p className="text-sm text-muted-foreground">Couldn&rsquo;t reach the server. Check your connection and reload.</p>
+          <p className="text-sm text-muted-foreground">{t("drive.error")}</p>
         )}
 
         {(status === "ready" || status === "sharing" || status === "denied") && vehicle && (
@@ -133,32 +144,32 @@ export function DriverShare({ token }: { token: string }) {
             {status === "sharing" ? (
               <>
                 <p className="mt-4 text-sm">
-                  Sharing your location with your dispatcher.
+                  {t("drive.sharing")}
                   {sentAt && (
                     <span className="block text-xs text-muted-foreground">
-                      Last sent {sentAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" })}
+                      {t("drive.lastSent", { time: sentAt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit", second: "2-digit" }) })}
                     </span>
                   )}
                 </p>
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Keep this page open with the screen on. Don&rsquo;t hold the phone while driving.
+                  {t("drive.keepOpen")}
                 </p>
                 <button
                   type="button"
                   onClick={stop}
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-secondary/70"
                 >
-                  <Square className="h-4 w-4" /> Stop sharing
+                  <Square className="h-4 w-4" /> {t("drive.stop")}
                 </button>
               </>
             ) : (
               <>
                 <p className="mt-4 text-sm text-muted-foreground">
-                  Your dispatcher will see where this vehicle is while you share. You can stop at any time.
+                  {t("drive.intro")}
                 </p>
                 {status === "denied" && (
                   <p role="alert" className="mt-3 text-sm text-destructive">
-                    Location is blocked. Allow location for this site in your browser settings, then try again.
+                    {t("drive.denied")}
                   </p>
                 )}
                 <button
@@ -166,7 +177,7 @@ export function DriverShare({ token }: { token: string }) {
                   onClick={start}
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
                 >
-                  <Radio className="h-4 w-4" /> Start sharing my location
+                  <Radio className="h-4 w-4" /> {t("drive.start")}
                 </button>
               </>
             )}
