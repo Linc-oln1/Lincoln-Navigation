@@ -31,6 +31,10 @@ function metres(aLat: number, aLng: number, bLat: number, bLng: number) {
   return 2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(h)))
 }
 
+// Mapillary's own limits: a point search reaches at most 50 m; anything wider
+// has to be a bounding box (whose area may not exceed 0.01 square degrees).
+const POINT_RADIUS_MAX_M = 50
+
 /**
  * Photos within `radius` metres of a point, closest first. Throws on a network
  * or token problem; returns [] when the spot simply has no coverage.
@@ -41,10 +45,18 @@ export async function imagesNear(lat: number, lng: number, radius: number, signa
   const params = new URLSearchParams({
     access_token: MAPILLARY_TOKEN,
     fields: "id,computed_geometry,is_pano,captured_at",
-    closeto: `${lng},${lat}`,
-    radius: String(radius),
-    limit: "50",
+    limit: "100",
   })
+  if (radius <= POINT_RADIUS_MAX_M) {
+    params.set("lat", String(lat))
+    params.set("lng", String(lng))
+    params.set("radius", String(radius))
+  } else {
+    // A square box around the point, then trimmed to a circle below.
+    const dLat = radius / 111_320
+    const dLng = radius / (111_320 * Math.max(0.2, Math.cos((lat * Math.PI) / 180)))
+    params.set("bbox", [lng - dLng, lat - dLat, lng + dLng, lat + dLat].map((n) => n.toFixed(6)).join(","))
+  }
   const res = await fetch(`https://graph.mapillary.com/images?${params}`, { signal })
   if (!res.ok) throw new Error(`Mapillary ${res.status}`)
 
@@ -67,6 +79,7 @@ export async function imagesNear(lat: number, lng: number, radius: number, signa
         },
       ]
     })
+    .filter((img) => img.distanceM <= radius)
     .sort((a, b) => a.distanceM - b.distanceM)
 }
 

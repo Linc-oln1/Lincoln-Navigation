@@ -250,7 +250,8 @@ agreements with each business and is not built.
 A "Street view" button on a place card (`components/map/location-details.tsx` →
 `components/map/street-view.tsx`) opens Mapillary photos near the place: drag to
 look around, arrows to move along the street, full 360° for panoramas. It looks
-within 60 m, then 200 m, prefers a 360° or newer photo when it is nearly as
+within 50 m (Mapillary's limit for a point search), then 200 m, then 400 m (bounding-box
+searches, max 0.01 sq deg), prefers a 360° or newer photo when it is nearly as
 close as the nearest, and says so when there is no coverage. The viewer library
 (`mapillary-js`) is only downloaded when the viewer opens. **The button is hidden
 until a token is set:**
@@ -262,8 +263,8 @@ until a token is set:**
 
 Free; the token is public by design (client token). Imagery is CC BY-SA 4.0 by
 Mapillary contributors and the viewer shows that credit. Coverage in Ghana is
-good in Accra and other big towns, patchy elsewhere. Built and tested against
-mocked API responses only — please try it with your real token.
+good in Accra and other big towns, patchy elsewhere. Tested against the real Mapillary API with a real token: photos load in Accra, Kumasi and Tamale. Note: a first version used a
+`closeto`/60 m search that the real API rejects — the mocked tests had hidden it.
 
 
 ## Landmark recognition — "What is this?" (Premium)

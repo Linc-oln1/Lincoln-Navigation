@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { ExternalLink, Loader2, X } from "lucide-react"
 import "mapillary-js/dist/mapillary.css"
 import { useI18n } from "@/components/i18n/language-provider"
@@ -13,9 +14,9 @@ interface StreetViewProps {
   onClose: () => void
 }
 
-// Look close first; widen once before giving up (a place's pin is often on the
+// Look close first (50 m is Mapillary's limit for a point search); widen once before giving up (a place's pin is often on the
 // building, a little off the road the photos were taken from).
-const RADII_M = [60, 200] as const
+const RADII_M = [50, 200, 400] as const
 const LOAD_TIMEOUT_MS = 20_000
 
 type Phase = "searching" | "loading" | "ready" | "none" | "error"
@@ -70,6 +71,9 @@ export function StreetView({ lat, lng, title, onClose }: StreetViewProps) {
           const id = (e as { image?: { id?: string } })?.image?.id
           clearTimeout(timer)
           setPhase("ready")
+          try {
+            v.resize()
+          } catch {}
           // Follow the viewer as the person moves along the street.
           if (id) setImage((cur) => (cur && cur.id === id ? cur : { ...(cur ?? best!), id }))
         })
@@ -81,7 +85,15 @@ export function StreetView({ lat, lng, title, onClose }: StreetViewProps) {
     }
     void run()
 
+    const onResize = () => {
+      try {
+        ;(viewer as unknown as { resize?: () => void } | null)?.resize?.()
+      } catch {}
+    }
+    window.addEventListener("resize", onResize)
+
     return () => {
+      window.removeEventListener("resize", onResize)
       cancelled = true
       controller.abort()
       clearTimeout(timer)
@@ -91,7 +103,10 @@ export function StreetView({ lat, lng, title, onClose }: StreetViewProps) {
     }
   }, [lat, lng])
 
-  return (
+  // Rendered into <body>: the place card it opens from is a transformed,
+  // blurred sheet, which would otherwise trap "fixed" inside the card and
+  // leave the viewer a strip a few hundred pixels tall.
+  return createPortal(
     <div className="fixed inset-0 z-[1700] flex flex-col bg-black" role="dialog" aria-modal="true" aria-label={t("street.title")}>
       <div className="flex items-center gap-3 bg-card/95 px-4 py-3 text-foreground">
         <div className="min-w-0 flex-1">
@@ -115,8 +130,12 @@ export function StreetView({ lat, lng, title, onClose }: StreetViewProps) {
       </div>
 
       <div className="relative min-h-0 flex-1">
-        {/* The viewer draws into this element. */}
-        <div ref={container} className="absolute inset-0" />
+        {/* The viewer draws into the inner element. mapillary.css gives it its own
+            position and a percentage height, so it needs a sized parent (an
+            absolutely-positioned box) rather than being the box itself. */}
+        <div className="absolute inset-0">
+          <div ref={container} style={{ width: "100%", height: "100%" }} />
+        </div>
 
         {(phase === "searching" || phase === "loading") && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/70 text-sm text-white">
@@ -135,6 +154,7 @@ export function StreetView({ lat, lng, title, onClose }: StreetViewProps) {
       </div>
 
       <p className="bg-card/95 px-4 py-2 text-[11px] text-muted-foreground">{t("street.credit")}</p>
-    </div>
+    </div>,
+    document.body
   )
 }
