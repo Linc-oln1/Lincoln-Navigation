@@ -26,6 +26,7 @@ import { RoutePlanner } from "@/components/map/route-planner"
 import { FleetPanel } from "@/components/map/fleet-panel"
 import { RunCard, type Run } from "@/components/map/run-card"
 import { PlanExpiryNotice } from "@/components/map/plan-expiry-notice"
+import { TripShare } from "@/components/map/trip-share"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { X as CloseIcon, Sparkles, TriangleAlert } from "lucide-react"
 
@@ -535,6 +536,9 @@ function MapNavigator() {
 
       {/* WEATHER */}
       <WeatherWidget center={weatherCenter ?? mapCenter} />
+
+      {/* SHARE MY LIVE LOCATION */}
+      <TripShare position={userLocation} destinationName={selectedLocation?.name ?? null} />
 
       {/* REPORT A HAZARD */}
       {hazardsApi.configured && !reportOpen && !selectedHazard && (

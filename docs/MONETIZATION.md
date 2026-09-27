@@ -198,3 +198,20 @@ unlock as before.
 
 Renewal reminder: `components/map/plan-expiry-notice.tsx` shows a dismissible
 "ends in N days · Renew" chip in the last 5 days; the account page shows the same.
+
+
+## Live location sharing (free, no account)
+
+"Share trip" on the map (`components/map/trip-share.tsx`) starts a share
+(`POST /api/share`); friends open `/track/<view token>`
+(`components/track/track-view.tsx`, polls `/api/share/view` every 7 s). Two
+secrets, both stored only as hashes in `trip_shares`
+(`supabase/migrations/0006_trip_shares.sql` — run once): the view link, and a
+sender key kept in the sender's localStorage (`ln_trip_share`) that
+updates/stops the share (`/api/share/update`, `/api/share/stop`). Only the latest
+position is stored and it is cleared on stop or expiry (1 h / 4 h / 12 h max).
+Web pages can't track in the background, so it only reports while the app is
+open — the sheet says so. Limits: 10 shares/hour per address, updates throttled
+to 1 per 3 s, and wrong-token guessing is cut off after 30 misses per 10 min
+(`lib/rate-limit.ts`, shared via Upstash). `/track/` is disallowed in robots.txt
+and carries `noindex`.
