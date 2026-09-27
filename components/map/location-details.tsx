@@ -2,11 +2,14 @@
 
 import { useI18n } from "@/components/i18n/language-provider"
 
-import { X, Navigation, Share2, Star, MapPin, Phone, Globe, Clock, Lock } from "lucide-react"
+import { X, Navigation, Share2, Star, MapPin, Phone, Globe, Clock, Lock, Images } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { usePremium } from "@/hooks/use-premium"
 import { openStatus } from "@/lib/opening-hours"
+import { useState } from "react"
+import { StreetView } from "@/components/map/street-view"
+import { STREET_VIEW_ENABLED } from "@/lib/mapillary"
 import { BookLinks } from "@/components/map/book-links"
 import { travelKindFor } from "@/lib/travel-partners"
 
@@ -39,6 +42,7 @@ export function LocationDetails({
 }: LocationDetailsProps) {
   const { t } = useI18n()
   const { isPremium } = usePremium()
+  const [streetOpen, setStreetOpen] = useState(false)
   if (!location) return null
 
   const status = openStatus(location.openingHours)
@@ -203,6 +207,21 @@ export function LocationDetails({
           </a>
         )}
       </div>
+
+      {/* Street-level photos (only when a Mapillary token is configured) */}
+      {STREET_VIEW_ENABLED && (
+        <div className="px-4 pb-4">
+          <button
+            type="button"
+            onClick={() => setStreetOpen(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary/60 px-4 py-2.5 text-sm font-semibold hover:bg-secondary"
+          >
+            <Images className="h-4 w-4 text-primary" aria-hidden />
+            {t("street.button")}
+          </button>
+        </div>
+      )}
+      {streetOpen && <StreetView lat={location.lat} lng={location.lng} title={location.name} onClose={() => setStreetOpen(false)} />}
 
       {/* Travel: hotels, attractions, tours, car rentals, event venues */}
       {(() => {

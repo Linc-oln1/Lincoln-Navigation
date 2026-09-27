@@ -243,3 +243,24 @@ here are venues plus an Eventbrite search — there is no free events data sourc
 for Ghana). If a programme wants different parameters, change the builders in
 `lib/travel-partners.ts`. Real direct booking/payment (Paystack) would need
 agreements with each business and is not built.
+
+
+## Street-level imagery (Mapillary)
+
+A "Street view" button on a place card (`components/map/location-details.tsx` →
+`components/map/street-view.tsx`) opens Mapillary photos near the place: drag to
+look around, arrows to move along the street, full 360° for panoramas. It looks
+within 60 m, then 200 m, prefers a 360° or newer photo when it is nearly as
+close as the nearest, and says so when there is no coverage. The viewer library
+(`mapillary-js`) is only downloaded when the viewer opens. **The button is hidden
+until a token is set:**
+
+1. https://www.mapillary.com/dashboard/developers → register an application →
+   copy its **Client Token**.
+2. Vercel → Settings → Environment Variables → `NEXT_PUBLIC_MAPILLARY_TOKEN`
+   (all environments) → redeploy.
+
+Free; the token is public by design (client token). Imagery is CC BY-SA 4.0 by
+Mapillary contributors and the viewer shows that credit. Coverage in Ghana is
+good in Accra and other big towns, patchy elsewhere. Built and tested against
+mocked API responses only — please try it with your real token.
