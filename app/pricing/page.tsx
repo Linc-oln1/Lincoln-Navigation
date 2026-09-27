@@ -144,8 +144,24 @@ function PricingContent() {
         )}
         {paymentError && (
           <div className="mb-8 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm">
-            We couldn&rsquo;t confirm that payment ({paymentError}). You have not
-            been charged for an incomplete transaction.
+            {paymentError === "payment-expired" ? (
+              <>
+                That payment is more than 31 days old, so the plan it bought has
+                already run out. Buy again below to renew.
+              </>
+            ) : paymentError === "payment-not-a-plan" ? (
+              <>
+                That payment wasn&rsquo;t for a Premium or Pro plan, so nothing was
+                unlocked. If you were charged for a plan, email
+                info@lincolnnavigation.com with your payment reference.
+              </>
+            ) : (
+              <>
+                We couldn&rsquo;t confirm that payment ({paymentError}). If you
+                were charged, wait a minute and open the link from your payment
+                email again, or contact info@lincolnnavigation.com.
+              </>
+            )}
           </div>
         )}
         {isPremium && !welcome && !welcomePro && (
