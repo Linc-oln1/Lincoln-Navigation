@@ -64,7 +64,7 @@ export function AccountLink({
   }
 
   // After signing in, come back to this page (the landing page goes to the map).
-  const next = pathname && pathname !== "/" && !pathname.startsWith("/login") ? pathname : "/app"
+  const next = pathname && pathname !== "/" && !/^\/(login|signup|reset-password)/.test(pathname) ? pathname : "/app"
   return (
     <Link href={`/login?next=${encodeURIComponent(next)}`} onClick={onNavigate} className={className}>
       {t("nav.signIn")}

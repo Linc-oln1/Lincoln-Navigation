@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         // Not for search results: the API, account and sign-in pages, the
         // callback, and the private driver and trip-sharing links (/drive/<secret>, /track/<secret>).
-        disallow: ["/api/", "/account", "/login", "/auth/", "/drive/", "/track/"],
+        disallow: ["/api/", "/account", "/login", "/signup", "/reset-password", "/auth/", "/drive/", "/track/"],
       },
     ],
     sitemap: `${SITE_BASE}/sitemap.xml`,
