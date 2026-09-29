@@ -16,3 +16,22 @@ Emails → Templates. Regenerate them by editing and re-pasting the HTML.
 Links go to `/auth/confirm?token_hash={{ .TokenHash }}&type=…&next=…` (verified server-side,
 so they work on any device). Variables used: `{{ .TokenHash }}`, `{{ .Token }}`, `{{ .Email }}`,
 `{{ .NewEmail }}`, `{{ .SiteURL }}`, and `{{ .Data.full_name }}` (set by /signup).
+
+## Security notices
+
+Sent after an account change (off by default — each has an "Enable
+notification" switch in the same dashboard page). No action link; a
+"Secure my account" button goes to /login.
+
+| Supabase template | Subject | File |
+|---|---|---|
+| Password changed | Your LincolnNavigation password was changed | `notify-password-changed.html` |
+| Email address changed | Your LincolnNavigation email address was changed | `notify-email-changed.html` |
+| Phone number changed | Your LincolnNavigation phone number was changed | `notify-phone-changed.html` |
+| Sign-in method linked | A new sign-in method was added to your account | `notify-identity-linked.html` |
+| Sign-in method removed | A sign-in method was removed from your account | `notify-identity-unlinked.html` |
+| MFA method added | Two-step verification was added to your account | `notify-mfa-added.html` |
+| MFA method removed | Two-step verification was removed from your account | `notify-mfa-removed.html` |
+
+Extra variables used here: `{{ .OldEmail }}`, `{{ .Phone }}`, `{{ .OldPhone }}`,
+`{{ .Provider }}`, `{{ .FactorType }}`.
