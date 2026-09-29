@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { AUTH_ENABLED } from "@/lib/supabase/config"
@@ -5,6 +6,7 @@ import { getSessionUser } from "@/lib/supabase/server"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { AccountPlanRow } from "@/components/site/account-plan"
+import { AccountSignInMethods } from "@/components/site/account-sign-in-methods"
 
 export const metadata = { title: "Account — Lincoln Navigation" }
 
@@ -27,6 +29,9 @@ export default async function AccountPage() {
     <Shell>
       <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
         <Row label="Signed in as" value={user.email ?? "—"} />
+        <Suspense>
+          <AccountSignInMethods />
+        </Suspense>
         <AccountPlanRow />
       </dl>
 

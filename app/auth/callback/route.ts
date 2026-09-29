@@ -25,5 +25,9 @@ export async function GET(request: Request) {
     }
   }
 
+  // A failed "Connect Google" from the account page goes back there.
+  if (next.startsWith("/account")) {
+    return NextResponse.redirect(`${origin}/account?link_error=1`)
+  }
   return NextResponse.redirect(`${origin}/login?error=auth`)
 }
