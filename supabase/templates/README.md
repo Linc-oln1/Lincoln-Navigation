@@ -13,5 +13,6 @@ Emails → Templates. Regenerate them by editing and re-pasting the HTML.
 | Invite user | You're invited to LincolnNavigation | `invite-user.html` |
 | Reauthentication | Your LincolnNavigation verification code | `reauthentication.html` |
 
-Variables used: `{{ .ConfirmationURL }}`, `{{ .Token }}`, `{{ .Email }}`,
+Links go to `/auth/confirm?token_hash={{ .TokenHash }}&type=…&next=…` (verified server-side,
+so they work on any device). Variables used: `{{ .TokenHash }}`, `{{ .Token }}`, `{{ .Email }}`,
 `{{ .NewEmail }}`, `{{ .SiteURL }}`, and `{{ .Data.full_name }}` (set by /signup).

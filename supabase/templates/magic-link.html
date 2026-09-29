@@ -28,11 +28,11 @@
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td align="center" bgcolor="#1d4466" style="border-radius:16px;">
-                  <a href="{{ .ConfirmationURL }}" style="display:block;padding:17px 24px;font-family:Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:16px;">Sign in &rarr;</a>
+                  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/app" style="display:block;padding:17px 24px;font-family:Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:16px;">Sign in &rarr;</a>
                 </td>
               </tr>
             </table>
-            <p style="margin:20px 0 0 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#7a8590;">Button not working? Copy this link into your browser:<br><a href="{{ .ConfirmationURL }}" style="color:#1d4466;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+            <p style="margin:20px 0 0 0;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#7a8590;">Button not working? Copy this link into your browser:<br><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/app" style="color:#1d4466;word-break:break-all;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email&amp;next=/app</a></p>
             <p style="margin:28px 0 0 0;font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#5b6875;">Didn&rsquo;t ask for this? You can safely ignore this email &mdash; nothing will change.</p>
           </td>
         </tr>

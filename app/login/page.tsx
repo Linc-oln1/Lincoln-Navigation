@@ -47,7 +47,11 @@ function LoginContent() {
   const [busy, setBusy] = useState<Busy>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(
-    params.get("error") ? "That sign-in link didn't work. Try again." : null,
+    params.get("error") === "link"
+      ? "That email link has expired or was already used. Request a new one below."
+      : params.get("error")
+        ? "That sign-in link didn't work. Try again."
+        : null,
   )
 
   const nextQuery = next !== "/app" ? `?next=${encodeURIComponent(next)}` : ""
