@@ -1,11 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { MapPin, MousePointerClick, Store } from "lucide-react"
 import { ADVERTISE_CONTACT_EMAIL } from "@/lib/monetization"
+import { SponsorCheckout } from "@/components/sponsor/sponsor-checkout"
 
 const OPTIONS = [
   {
@@ -30,7 +31,7 @@ export default function AdvertisePage() {
     business: "",
     name: "",
     email: "",
-    interest: "Sponsored place",
+    interest: "Display advertising",
     message: "",
   })
 
@@ -69,14 +70,21 @@ export default function AdvertisePage() {
           ))}
         </div>
 
+        <Suspense>
+          <SponsorCheckout contactEmail={ADVERTISE_CONTACT_EMAIL} />
+        </Suspense>
+
         <form
-          className="mt-12 space-y-4"
+          className="mt-16 space-y-4"
           onSubmit={(e) => {
             e.preventDefault()
             window.location.href = mailto
           }}
         >
-          <h2 className="text-lg font-semibold">Tell us about your business</h2>
+          <h2 className="text-lg font-semibold">Something else in mind?</h2>
+          <p className="-mt-2 text-sm text-muted-foreground">
+            Display ads, featured partnerships or a bigger campaign — tell us about your business.
+          </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <input
               required

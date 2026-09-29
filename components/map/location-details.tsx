@@ -12,6 +12,7 @@ import { StreetView } from "@/components/map/street-view"
 import { STREET_VIEW_ENABLED } from "@/lib/mapillary"
 import { BookLinks } from "@/components/map/book-links"
 import { travelKindFor } from "@/lib/travel-partners"
+import { trackSponsor } from "@/lib/sponsored-places"
 
 interface LocationDetailsProps {
   location: {
@@ -21,6 +22,7 @@ interface LocationDetailsProps {
     lng: number
     type?: string
     sponsored?: boolean
+    sponsorId?: string
     url?: string
     phone?: string
     website?: string
@@ -200,6 +202,7 @@ export function LocationDetails({
             href={location.url}
             target="_blank"
             rel="noopener noreferrer nofollow sponsored"
+            onClick={() => location.sponsorId && trackSponsor(location.sponsorId, "website")}
             className="flex items-center gap-3 text-sm text-primary hover:underline"
           >
             <Globe className="w-4 h-4 flex-shrink-0" />

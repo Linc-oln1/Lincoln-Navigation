@@ -71,6 +71,8 @@ interface Location {
   // Set for paid placements picked from the Explore Nearby panel —
   // drives the "Sponsored" tag + advertiser link in LocationDetails.
   sponsored?: boolean
+  /** The sponsor's id, for counting "Visit website" taps. */
+  sponsorId?: string
   url?: string
   // Business details (Premium), from the Explore Nearby result.
   phone?: string
@@ -354,6 +356,7 @@ function MapNavigator() {
         lng: place.lng,
         type: place.type,
         sponsored: place.sponsored,
+        sponsorId: place.sponsored ? place.id : undefined,
         url: place.url,
         phone: place.phone,
         website: place.website,

@@ -166,6 +166,49 @@ export const ADVERTISE_CONTACT_EMAIL =
   process.env.NEXT_PUBLIC_ADVERTISE_EMAIL?.trim() ||
   "advertise@lincolnnavigation.com"
 
+/** How long one sponsorship payment keeps a listing live, from approval. */
+export const SPONSOR_DAYS = 30
+
+export type SponsorPackageId = "local" | "citywide"
+
+/**
+ * Sponsored-place packages sold on /advertise. One payment = one
+ * category for SPONSOR_DAYS; the listing shows when the map is centred
+ * within `radiusKm` of the business. Prices can be overridden per
+ * deployment with the NEXT_PUBLIC_SPONSOR_*_PESEWAS env vars.
+ */
+export const SPONSOR_PACKAGES: {
+  id: SponsorPackageId
+  label: string
+  radiusKm: number
+  pricePesewas: number
+  blurb: string
+}[] = [
+  {
+    id: "local",
+    label: "Local",
+    radiusKm: 5,
+    pricePesewas: Number(process.env.NEXT_PUBLIC_SPONSOR_LOCAL_PESEWAS || 20000), // GHS 200
+    blurb: "Seen by people browsing within 5 km of your business.",
+  },
+  {
+    id: "citywide",
+    label: "City-wide",
+    radiusKm: 25,
+    pricePesewas: Number(process.env.NEXT_PUBLIC_SPONSOR_CITYWIDE_PESEWAS || 60000), // GHS 600
+    blurb: "Seen across the city — anyone browsing within 25 km.",
+  },
+]
+
+export function sponsorPackage(id: string) {
+  return SPONSOR_PACKAGES.find((p) => p.id === id) ?? null
+}
+
+/** Human-readable sponsorship price, e.g. "GHS 200.00". */
+export function formatSponsorPrice(pesewas: number): string {
+  return formatPrice(pesewas)
+}
+
 /**
  * House promo — our own ad for the advertising programme, shown in
  * the "Explore Nearby" panel for any category that has no paid

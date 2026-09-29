@@ -5,17 +5,14 @@
 // labelled "Sponsored") whenever the map is centred within
 // `radiusKm` of it.
 //
-// This list is intentionally EMPTY until real advertisers sign up
-// — the app never shows fabricated businesses. Add an entry only
-// for a business that has actually paid. See docs/MONETIZATION.md
-// and the /advertise page.
-//
-// To add a sponsor, append an object matching SponsoredPlace. The
-// `category` MUST be one of the ids in components/map/places-panel
-// CATEGORIES so it slots into the right results list.
+// Sponsors live in Supabase (0007_sponsors.sql) and are managed at
+// /admin/sponsors; the app fetches the live ones from /api/sponsored.
+// Only businesses that have actually paid are ever listed — the app
+// never shows fabricated businesses. See docs/MONETIZATION.md.
 
 import type { Place } from "@/lib/geocoding"
 
+/** A live sponsor as served by /api/sponsored (public fields only). */
 export interface SponsoredPlace {
   id: string
   name: string
@@ -30,24 +27,35 @@ export interface SponsoredPlace {
   url?: string
   /** Show this sponsor when the map centre is within this many km. */
   radiusKm: number
-  /** Campaign window — entry is ignored outside it. ISO dates. */
-  startsAt?: string
-  endsAt?: string
 }
 
-export const SPONSORED_PLACES: SponsoredPlace[] = [
-  {
-    id: "sponsor-franchman-enterprise",
-    name: "Franchman Enterprise",
-    address: "Blofonyo Ln, Abossey Okai, Accra · GA-216-6164",
-    // Geocoded from "Blofonyo Lane, Abossey Okai, Accra" — the
-    // business itself isn't mapped in OpenStreetMap yet.
-    lat: 5.5605857,
-    lng: -0.231748,
-    category: "shop",
-    radiusKm: 8,
-  },
+/**
+ * Categories a business can sponsor. Ids MUST match the ones in
+ * components/map/places-panel CATEGORIES so listings slot into the
+ * right results. (Transport hubs like airports are left out.)
+ */
+export const SPONSOR_CATEGORIES: { id: string; label: string }[] = [
+  { id: "restaurant", label: "Restaurants" },
+  { id: "cafe", label: "Cafes" },
+  { id: "shop", label: "Shopping" },
+  { id: "supermarket", label: "Supermarkets" },
+  { id: "bank", label: "Banks" },
+  { id: "fuel", label: "Gas stations" },
+  { id: "hotel", label: "Hotels" },
+  { id: "tourism", label: "Attractions" },
+  { id: "hospital", label: "Hospitals" },
+  { id: "pharmacy", label: "Pharmacies" },
+  { id: "parking", label: "Parking" },
+  { id: "cinema", label: "Cinemas" },
+  { id: "gym", label: "Gyms" },
+  { id: "tour", label: "Tours & travel agents" },
+  { id: "car_rental", label: "Car rentals" },
+  { id: "event_venue", label: "Event venues" },
 ]
+
+export function sponsorCategoryLabel(id: string): string {
+  return SPONSOR_CATEGORIES.find((c) => c.id === id)?.label ?? id
+}
 
 const EARTH_RADIUS_KM = 6371
 
@@ -65,21 +73,17 @@ function distanceKm(a: [number, number], b: [number, number]): number {
 
 /**
  * Sponsored places to pin at the top of `category` results, given
- * the current map centre ([lat, lng]). Returns [] when there are
- * no active, in-range sponsors — the common case.
+ * the live sponsors and the current map centre ([lat, lng]). Returns
+ * [] when there are no in-range sponsors — the common case.
  */
 export function getSponsoredPlaces(
+  sponsors: SponsoredPlace[],
   category: string,
   mapCenter: [number, number],
 ): (Place & { sponsored: true; tagline?: string; url?: string })[] {
-  const now = Date.now()
-
-  return SPONSORED_PLACES.filter((s) => s.category === category)
-    .filter((s) => {
-      if (s.startsAt && now < Date.parse(s.startsAt)) return false
-      if (s.endsAt && now > Date.parse(s.endsAt)) return false
-      return distanceKm(mapCenter, [s.lat, s.lng]) <= s.radiusKm
-    })
+  return sponsors
+    .filter((s) => s.category === category)
+    .filter((s) => distanceKm(mapCenter, [s.lat, s.lng]) <= s.radiusKm)
     .map((s) => ({
       id: s.id,
       name: s.name,
@@ -91,4 +95,18 @@ export function getSponsoredPlaces(
       tagline: s.tagline,
       url: s.url,
     }))
+}
+
+/** Where to send view/click counts. Fire-and-forget; never throws. */
+export function trackSponsor(id: string, kind: "impression" | "click" | "website") {
+  try {
+    const body = JSON.stringify({ id, kind })
+    if (typeof navigator !== "undefined" && navigator.sendBeacon) {
+      navigator.sendBeacon("/api/sponsored/track", new Blob([body], { type: "application/json" }))
+    } else {
+      void fetch("/api/sponsored/track", { method: "POST", body, keepalive: true }).catch(() => {})
+    }
+  } catch {
+    /* tracking must never break the map */
+  }
 }

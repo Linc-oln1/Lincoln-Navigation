@@ -45,20 +45,33 @@ Notes:
 Local businesses pay to be pinned to the top of their category in
 the "Explore Nearby" panel, labelled **Sponsored**.
 
-- Data lives in [`lib/sponsored-places.ts`](../lib/sponsored-places.ts).
-  The list is **empty on purpose** — the app never shows fabricated
-  businesses. Add an entry only for a business that has actually
-  paid.
-- Each entry needs a `category` matching an id in the `CATEGORIES`
-  list in `components/map/places-panel.tsx`
-  (`restaurant`, `hotel`, `fuel`, …), a lat/lng, and a `radiusKm`
-  (how close the map centre must be for it to appear). Optional
-  `startsAt` / `endsAt` bound the campaign.
-- The `/advertise` page is the sales funnel — it emails enquiries to
-  `NEXT_PUBLIC_ADVERTISE_EMAIL`.
-
-A natural next step is to move this list into a database / CMS with a
-self-serve dashboard, but the static file is enough to start selling.
+- **Sponsors live in Supabase** (`sponsors` + `sponsor_daily_stats`,
+  [`supabase/migrations/0007_sponsors.sql`](../supabase/migrations/0007_sponsors.sql)).
+  The map fetches the live ones from `/api/sponsored` (cached ~1 min)
+  and filters by category and map centre in the browser
+  ([`lib/sponsored-places.ts`](../lib/sponsored-places.ts)). Only
+  businesses that have actually paid are ever listed.
+- **Packages** (`SPONSOR_PACKAGES` in `lib/monetization.ts`): Local
+  (5 km) GHS 200 and City-wide (25 km) GHS 600, per 30 days
+  (`SPONSOR_DAYS`), one category each. Override prices with
+  `NEXT_PUBLIC_SPONSOR_LOCAL_PESEWAS` / `NEXT_PUBLIC_SPONSOR_CITYWIDE_PESEWAS`.
+- **Buying:** `/advertise#buy` → `/api/sponsor/checkout` saves the
+  listing as `awaiting_payment` and opens Paystack →
+  `/api/sponsor/verify` checks the amount and marks it
+  `pending_review`. Nothing goes live until it's approved.
+- **Managing:** `/admin/sponsors` (only for emails in `ADMIN_EMAILS`;
+  everyone else gets a 404). Approve (live for 30 days from now),
+  extend/renew by 30 days, pause, end, reject, edit, and add a sponsor
+  who paid by MoMo/cash. Rejecting a paid listing does **not** refund
+  it — do that in the Paystack dashboard.
+- **Stats:** the panel counts a view per sponsor per page load, an
+  open when the listing is tapped, and "Visit website" taps
+  (`/api/sponsored/track`, capped per visitor per hour, live sponsors
+  only). Daily totals in `sponsor_daily_stats`; the admin page shows
+  the last 30 days and all-time.
+- Categories a business can pick are `SPONSOR_CATEGORIES` in
+  `lib/sponsored-places.ts` — ids must match `CATEGORIES` in
+  `components/map/places-panel.tsx`.
 
 ### House promo
 

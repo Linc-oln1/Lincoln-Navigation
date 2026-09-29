@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils"
 import { searchNearbyPlaces, type Place } from "@/lib/geocoding"
 import { usePremium } from "@/hooks/use-premium"
 import { openStatus } from "@/lib/opening-hours"
-import { getSponsoredPlaces } from "@/lib/sponsored-places"
+import { getSponsoredPlaces, trackSponsor, type SponsoredPlace } from "@/lib/sponsored-places"
 import { AdSlot } from "@/components/ads/ad-slot"
 import { HOUSE_PROMO, HOUSE_PROMO_ENABLED } from "@/lib/monetization"
 
@@ -118,6 +118,18 @@ function webHref(url: string) {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`
 }
 
+// Live sponsors, fetched once per page load and shared by every render.
+let sponsorsRequest: Promise<SponsoredPlace[]> | null = null
+function loadSponsors(): Promise<SponsoredPlace[]> {
+  sponsorsRequest ??= fetch("/api/sponsored")
+    .then((r) => (r.ok ? r.json() : { sponsors: [] }))
+    .then((d: { sponsors?: SponsoredPlace[] }) => d.sponsors ?? [])
+    .catch(() => [])
+  return sponsorsRequest
+}
+// One view per sponsor per page load, however often the list re-renders.
+const sponsorsSeen = new Set<string>()
+
 export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: PlacesPanelProps) {
   const { t } = useI18n()
   // Advanced business discovery (Premium): hours, phone, website, filters.
@@ -190,9 +202,22 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
   // Paid placements for the current category, pinned above organic
   // results. Empty unless a real advertiser is in range (see
   // lib/sponsored-places.ts).
+  const [liveSponsors, setLiveSponsors] = useState<SponsoredPlace[]>([])
+  useEffect(() => {
+    if (isOpen) loadSponsors().then(setLiveSponsors)
+  }, [isOpen])
   const sponsored = selectedCategory
-    ? getSponsoredPlaces(selectedCategory, mapCenter)
+    ? getSponsoredPlaces(liveSponsors, selectedCategory, mapCenter)
     : []
+  const sponsoredIds = sponsored.map((p) => p.id).join(",")
+  useEffect(() => {
+    if (isLoading || !sponsoredIds) return
+    for (const id of sponsoredIds.split(",")) {
+      if (sponsorsSeen.has(id)) continue
+      sponsorsSeen.add(id)
+      trackSponsor(id, "impression")
+    }
+  }, [sponsoredIds, isLoading])
 
   // Per-place extras, worked out once per render. Premium sorts nearest first
   // and can filter; free visitors keep the plain list.
@@ -306,7 +331,10 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
               {sponsored.map((place) => (
                 <button
                   key={place.id}
-                  onClick={() => onSelectPlace(place)}
+                  onClick={() => {
+                    trackSponsor(place.id, "click")
+                    onSelectPlace(place)
+                  }}
                   className="w-full flex items-start gap-3 p-3 rounded-lg border border-primary/30 bg-primary/[0.06] hover:bg-primary/10 transition-colors text-left"
                 >
                   <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
