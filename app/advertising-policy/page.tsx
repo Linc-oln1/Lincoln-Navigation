@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { LegalPage } from "@/components/legal/legal-page"
 import { CONTACT_EMAIL, LEGAL_UPDATED } from "@/lib/legal"
+import { SPONSOR_DAYS } from "@/lib/monetization"
 
 export const metadata = {
   title: "Advertising & Affiliates — Lincoln Navigation",
@@ -33,12 +34,25 @@ export default function AdvertisingPolicyPage() {
 
       <section>
         <h2>2. For advertisers</h2>
+        <h3>Buying a sponsored listing online</h3>
+        <ul>
+          <li>You can buy a sponsored listing on the <Link href="/advertise">Advertise</Link> page. The package, price and area it covers are shown before you pay, and you pay once through Paystack.</li>
+          <li>One payment covers one listing in one category for {SPONSOR_DAYS} days, counted from the day it goes live. It does <strong>not</strong> renew automatically; to keep it running, pay again or ask us to extend it.</li>
+          <li><strong>Every listing is reviewed before it goes live.</strong> Paying does not guarantee approval. We may ask you to change the name, promo line, link or location so it is accurate and follows this policy.</li>
+          <li><strong>If we don&rsquo;t approve your listing, we refund the full amount</strong> through Paystack to the account or wallet you paid with.</li>
+          <li>You are responsible for the details you give us. If the location you pick is wrong, tell us and we will correct it.</li>
+        </ul>
+        <h3>Other advertising</h3>
         <p>
-          Placements are agreed in writing (email is fine) with the price,
-          dates and content. By advertising with us you confirm that your ad
-          is truthful, that you have the rights to everything in it, and that
-          it complies with the laws of Ghana, including consumer protection
-          and advertising standards.
+          Display ads, featured partnerships and other placements are agreed
+          in writing (email is fine) with the price, dates and content.
+        </p>
+        <h3>Your responsibilities</h3>
+        <p>
+          By advertising with us, online or otherwise, you confirm that your
+          ad is truthful, that you have the rights to everything in it, and
+          that it complies with the laws of Ghana, including consumer
+          protection and advertising standards.
         </p>
         <h3>We do not accept ads for</h3>
         <ul>
@@ -56,8 +70,9 @@ export default function AdvertisingPolicyPage() {
           these rules, we refund the unused part.
         </p>
         <p>
-          We report impressions and clicks in good faith but do not guarantee
-          a particular number of views, clicks or sales.
+          We count views, listing opens and website taps in good faith and
+          share them with you, but we do not guarantee a particular number of
+          views, clicks or sales.
         </p>
       </section>
 

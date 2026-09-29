@@ -21,11 +21,18 @@ export default function RefundsPage() {
       path="/refunds"
       updated={LEGAL_UPDATED.refunds}
       intro={
+        <>
         <p>
           Premium and Pro are one-off payments for 31 days of access. They do
           not renew automatically, so there is nothing to cancel. Here is
           when you can get your money back.
         </p>
+        <p>
+          This page covers Premium and Pro. Refunds for sponsored listings
+          bought on the Advertise page are covered by our{" "}
+          <Link href="/advertising-policy">Advertising policy</Link>.
+        </p>
+        </>
       }
     >
       <section>

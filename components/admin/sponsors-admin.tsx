@@ -143,7 +143,7 @@ function SponsorCard({
     s.status === "pending_review"
       ? [
           { label: `Approve & start ${SPONSOR_DAYS} days`, action: "approve", primary: true },
-          { label: "Reject", action: "reject", confirm: "Reject this paid listing? Remember to refund it in Paystack if you agreed to." },
+          { label: "Reject", action: "reject", confirm: "Reject this paid listing? The advertising policy promises a full refund — issue it in the Paystack dashboard." },
         ]
       : s.status === "active" && !expired
         ? [

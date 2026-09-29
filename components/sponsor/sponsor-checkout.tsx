@@ -79,7 +79,7 @@ export function SponsorCheckout({ contactEmail }: { contactEmail: string }) {
       <section id="buy" className="mt-12 rounded-2xl border border-primary/30 bg-primary/[0.06] p-6">
         <h2 className="text-lg font-semibold">Payment received — thank you!</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          We&rsquo;ll check your listing and switch it on, usually within one working day. It then
+          We&rsquo;ll review your listing and switch it on once it&rsquo;s approved. It then
           runs for {SPONSOR_DAYS} days from the day it goes live. Questions? Email{" "}
           <a href={`mailto:${contactEmail}`} className="font-semibold text-primary hover:underline">
             {contactEmail}
@@ -94,7 +94,7 @@ export function SponsorCheckout({ contactEmail }: { contactEmail: string }) {
     <section id="buy" className="mt-12">
       <h2 className="text-2xl font-bold tracking-tight">Get a sponsored listing</h2>
       <p className="mt-2 text-sm text-muted-foreground">
-        {`Your business pinned to the top of its category in Explore Nearby, labelled “Sponsored”. Pay once for ${SPONSOR_DAYS} days — no auto-renewal. We review every listing before it goes live, and you get a report of views and clicks.`}
+        {`Your business pinned to the top of its category in Explore Nearby, labelled “Sponsored”. Pay once for ${SPONSOR_DAYS} days — no auto-renewal. We review every listing before it goes live — if we can’t approve it, we refund you in full — and you get a report of views and clicks.`}
       </p>
 
       {returnError && (
