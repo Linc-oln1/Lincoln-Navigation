@@ -109,7 +109,8 @@ export default function AttributionsPage() {
         <h2>Destination photos</h2>
         <p>
           The photos of Ghana&apos;s attractions on our{" "}
-          <a href="/features">Features page</a> come from Wikimedia Commons.
+          <a href="/features">Features page</a> (several of which also appear
+          on the home page) come from Wikimedia Commons.
         </p>
         <ul>
           {GHANA_DESTINATIONS.map((d) => (

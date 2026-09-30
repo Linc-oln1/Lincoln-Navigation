@@ -24,6 +24,7 @@ import { AdSlot } from "@/components/ads/ad-slot"
 import { useI18n } from "@/components/i18n/language-provider"
 import { SiteFooter } from "@/components/site/site-footer"
 import { AccountLink } from "@/components/site/account-link"
+import { GHANA_DESTINATIONS } from "@/lib/ghana-destinations"
 
 /* =========================================================
    LANDING PAGE
@@ -42,18 +43,26 @@ interface Destination {
   id: string
   name: string
   region: string
-  variant: SceneVariant
+  // Hand-drawn <DestinationScene> fallback, only needed for a place
+  // without a photo.
+  variant?: SceneVariant
   // Original-wording summaries drawn from public historical
   // references (Wikipedia, Britannica, and Ghana Museums & Monuments
   // Board sources) — not quoted text. sourceUrl points visitors to
   // the primary reference for the full story.
   fact: string
   sourceUrl: string
-  // Real photo path under /public, when one is available. Falls
-  // back to the hand-drawn <DestinationScene> when omitted — e.g.
-  // Kakum and Cape Coast Castle still use the illustration below
-  // because no clean, unwatermarked photo has been supplied yet.
+  // Real photo path under /public, when one is available.
   photo?: string
+  // Required for CC-licensed photos (Wikimedia Commons); shown under
+  // the facts panel and listed on /attributions.
+  photoCredit?: { author: string; licence: string; source: string }
+}
+
+const commonsCredit = (id: string) => {
+  const d = GHANA_DESTINATIONS.find((x) => x.id === id)
+  if (!d) throw new Error(`No Commons credit for ${id}`)
+  return d.credit
 }
 
 const DESTINATIONS: Destination[] = [
@@ -72,9 +81,21 @@ const DESTINATIONS: Destination[] = [
     name: "Cape Coast Castle",
     region: "Central Region — Atlantic Coast",
     variant: "capecoast",
+    photo: "/landing/photos/cape-coast.jpg",
+    photoCredit: commonsCredit("cape-coast"),
     fact:
       "Cape Coast Castle began in 1653 as a Swedish timber trading post, then changed hands between Danish, Dutch, and English traders before England seized it for good in 1664 and rebuilt it in stone. For roughly two centuries afterward it operated as one of the largest slave-trading forts on the Gold Coast — its underground dungeons, cut directly into the bedrock, held hundreds of captured Africans at a time before they were marched through the castle's \"Door of No Return\" onto ships bound across the Atlantic. It's now preserved as a UNESCO World Heritage Site, one of the most visited memorials to the transatlantic slave trade in the world.",
     sourceUrl: "https://en.wikipedia.org/wiki/Cape_Coast_Castle",
+  },
+  {
+    id: "elmina",
+    name: "Elmina Castle",
+    region: "Central Region — Atlantic Coast",
+    photo: "/landing/photos/elmina.jpg",
+    photoCredit: commonsCredit("elmina"),
+    fact:
+      "The Portuguese built Elmina in 1482 as São Jorge da Mina, the first European trading post on the Gulf of Guinea — which makes it the oldest European building still standing in sub-Saharan Africa. It was set up to trade for gold, but over the following centuries it became a major holding point in the transatlantic slave trade. The Dutch captured it in 1637 and held it until 1872, when it passed to the British. Together with Cape Coast Castle and the other forts along this shore, it is a UNESCO World Heritage Site.",
+    sourceUrl: "https://en.wikipedia.org/wiki/Elmina_Castle",
   },
   {
     id: "monument",
@@ -97,6 +118,16 @@ const DESTINATIONS: Destination[] = [
     sourceUrl: "https://en.wikipedia.org/wiki/Akosombo_Dam",
   },
   {
+    id: "wli",
+    name: "Wli Waterfalls",
+    region: "Volta Region — Agumatsa Hills",
+    photo: "/landing/photos/wli.jpg",
+    photoCredit: commonsCredit("wli"),
+    fact:
+      "Wli is Ghana's highest waterfall, falling from the forested Agumatsa hills near Hohoe, just short of the border with Togo. The falls sit inside the Agumatsa Wildlife Sanctuary, where a colony of thousands of fruit bats roosts in the cliffs around the water. From Wli village, a walk of under an hour through the forest reaches the lower falls; a steeper climb leads on to the upper falls for those who want the full view.",
+    sourceUrl: "https://en.wikipedia.org/wiki/Wli_waterfalls",
+  },
+  {
     id: "mole",
     name: "Mole National Park",
     region: "Savannah Region — Wildlife Safari",
@@ -105,6 +136,16 @@ const DESTINATIONS: Destination[] = [
     fact:
       "Mole started out as a wildlife refuge in 1958 and became a full national park in 1971; at over 4,500 square kilometres of savanna, it's now Ghana's largest protected area. Around 800 elephants roam its grasslands and waterholes today, alongside more than 90 other mammal species — hippos, buffalo, warthogs, and antelope like kob, roan, and hartebeest — plus over 340 recorded bird species. Sitting far from Ghana's densely populated south, Mole has remained one of the least disturbed ecosystems in West Africa and an important site for long-term wildlife research.",
     sourceUrl: "https://en.wikipedia.org/wiki/Mole_National_Park",
+  },
+  {
+    id: "larabanga",
+    name: "Larabanga Mosque",
+    region: "Savannah Region — Near Mole",
+    photo: "/landing/photos/larabanga.jpg",
+    photoCredit: commonsCredit("larabanga"),
+    fact:
+      "Larabanga's whitewashed mud-and-timber mosque is built in the Sudano-Sahelian style, its walls bristling with wooden beams that double as scaffolding for re-plastering after each rainy season. Local tradition dates it to 1421, which would make it one of the oldest mosques in West Africa, and it keeps an old handwritten Qur'an. Weather wears the adobe down, so it has been restored many times — most recently in 2023 — with the World Monuments Fund among its long-time backers. It sits about 4 km from Mole National Park's entrance.",
+    sourceUrl: "https://en.wikipedia.org/wiki/Larabanga_Mosque",
   },
 ]
 
@@ -253,9 +294,9 @@ export default function LandingPage() {
         <div key={current.id} className="absolute inset-0 landing-zoom-in">
           {current.photo ? (
             <DestinationPhoto src={current.photo} alt={current.name} />
-          ) : (
+          ) : current.variant ? (
             <DestinationScene variant={current.variant} />
-          )}
+          ) : null}
 
           {/* text */}
           <div className="absolute left-6 sm:left-14 top-[26%] sm:top-[30%] max-w-[85vw]">
@@ -307,6 +348,20 @@ export default function LandingPage() {
                 >
                   Read more on Wikipedia →
                 </a>
+                {current.photoCredit && (
+                  <p className="mt-2 text-[11px] text-white/50">
+                    Photo:{" "}
+                    <a
+                      href={current.photoCredit.source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline underline-offset-2 hover:text-white/80"
+                    >
+                      {current.photoCredit.author}
+                    </a>
+                    , {current.photoCredit.licence}, via Wikimedia Commons
+                  </p>
+                )}
               </div>
             )}
           </div>
