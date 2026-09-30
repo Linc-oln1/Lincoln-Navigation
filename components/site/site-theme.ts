@@ -1,4 +1,4 @@
-export type SiteVariant = "app" | "gold" | "light"
+export type SiteVariant = "app" | "gold" | "light" | "violet"
 
 /** Colour classes for the shared header and footer, per page theme. */
 export const SITE_THEME: Record<
@@ -43,5 +43,16 @@ export const SITE_THEME: Record<
     active: "text-black font-semibold",
     pill: "bg-[#1c1c1c] text-white",
     menu: "bg-white border-black/10",
+  },
+  // Near-black with a violet accent — the /pricing page.
+  violet: {
+    bar: "bg-transparent",
+    border: "border-white/10",
+    text: "text-white",
+    muted: "text-white/55",
+    hover: "hover:text-white",
+    active: "text-[#c4b5fd] font-semibold",
+    pill: "bg-[#8b5cf6] text-white",
+    menu: "bg-[#14101f] border-white/10",
   },
 }
