@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Compass, CloudSun, Route, MousePointerClick } from "lucide-react"
+import { useNearViewport } from "@/hooks/use-near-viewport"
 
 /**
  * Scroll-triggered "product tour" section for the landing page.
@@ -49,6 +50,9 @@ export function ProductShowcase() {
   const bgVideoRef = useRef<HTMLVideoElement>(null)
   const [visible, setVisible] = useState(false)
   const [activeCity, setActiveCity] = useState<CityId | null>(null)
+  // The poster shows until the visitor nears the section; only then
+  // is the video fetched.
+  const loadVideo = useNearViewport(sectionRef)
 
   // one-time staggered reveal once the section is in view
   useEffect(() => {
@@ -160,13 +164,13 @@ export function ProductShowcase() {
       <video
         ref={bgVideoRef}
         className="showcase-bg"
-        src="/landing/video/showcase-bg.mp4"
+        src={loadVideo ? "/landing/video/showcase-bg.mp4" : undefined}
         poster="/showcase-section-bg.webp"
         autoPlay
         loop
         muted
         playsInline
-        preload="auto"
+        preload="none"
         aria-hidden="true"
       />
 

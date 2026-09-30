@@ -15,7 +15,7 @@ export default function BusinessPage() {
       <div className="pointer-events-none fixed inset-0 -z-0" aria-hidden>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/landing/photos/monument.jpg"
+          src="/landing/photos/monument.webp"
           alt=""
           className="h-full w-full scale-110 object-cover opacity-40 blur-[3px] grayscale"
         />

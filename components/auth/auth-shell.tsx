@@ -97,7 +97,7 @@ function PhotoPanel() {
     <aside className="relative hidden w-1/2 shrink-0 overflow-hidden lg:block">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/landing/photos/volta.jpg"
+        src="/landing/photos/volta.webp"
         alt="The Adomi Bridge over the Volta River"
         className="absolute inset-0 h-full w-full object-cover"
       />

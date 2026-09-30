@@ -2,6 +2,7 @@
 
 import { MapPin, Radio, Navigation, Mail } from "lucide-react"
 import { useScrollReveal } from "@/hooks/use-scroll-reveal"
+import { useNearViewport } from "@/hooks/use-near-viewport"
 
 const FEATURES = [
   {
@@ -43,6 +44,8 @@ const FEATURES = [
  */
 export function LithosFeatures() {
   const { ref, visible } = useScrollReveal<HTMLElement>()
+  // Below the hero: fetch the video only as the visitor scrolls toward it.
+  const loadVideo = useNearViewport(ref)
 
   return (
     <section
@@ -52,12 +55,12 @@ export function LithosFeatures() {
     >
       <video
         className="absolute inset-0 w-full h-full object-cover z-0"
-        src="/landing/video/about-bg.mp4"
+        src={loadVideo ? "/landing/video/about-bg.mp4" : undefined}
         autoPlay
         loop
         muted
         playsInline
-        preload="auto"
+        preload="none"
       />
 
       <div className="relative z-10 max-w-6xl mx-auto">

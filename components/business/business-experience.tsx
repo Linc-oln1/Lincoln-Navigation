@@ -101,7 +101,7 @@ export function BusinessExperience() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/landing/photos/monument.jpg"
+          src="/landing/photos/monument.webp"
           alt=""
           className="absolute inset-0 h-full w-full object-cover object-[50%_8%] lg:object-[50%_30%]"
         />

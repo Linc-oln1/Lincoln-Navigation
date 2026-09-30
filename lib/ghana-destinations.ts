@@ -32,7 +32,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "nature",
     lat: 5.3524,
     lng: -1.383,
-    photo: "/features/places/kakum.jpg",
+    photo: "/features/places/kakum.webp",
     credit: { author: "Chiappinik (it.wikipedia)", licence: "CC BY 2.5 IT", source: "https://commons.wikimedia.org/wiki/File:Kakum.jpg" },
   },
   {
@@ -42,7 +42,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "heritage",
     lat: 5.1036,
     lng: -1.2413,
-    photo: "/features/places/cape-coast.jpg",
+    photo: "/features/places/cape-coast.webp",
     credit: { author: "Rjruiziii", licence: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Cape_Coast_Castle,_Cape_Coast,_Ghana.JPG" },
   },
   {
@@ -52,7 +52,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "heritage",
     lat: 5.0826,
     lng: -1.3486,
-    photo: "/features/places/elmina.jpg",
+    photo: "/features/places/elmina.webp",
     credit: { author: "Damien Halleux Radermecker", licence: "CC BY-SA 2.0", source: "https://commons.wikimedia.org/wiki/File:Elmina_Castle_-_Ghana.jpg" },
   },
   {
@@ -62,7 +62,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "waterfall",
     lat: 7.1286,
     lng: 0.6012,
-    photo: "/features/places/wli.jpg",
+    photo: "/features/places/wli.webp",
     credit: { author: "Stig Nygaard", licence: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Wli_Lower_Fall-4.jpg" },
   },
   {
@@ -72,7 +72,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "wildlife",
     lat: 9.2607,
     lng: -1.8484,
-    photo: "/features/places/mole.jpg",
+    photo: "/features/places/mole.webp",
     credit: { author: "Stig Nygaard", licence: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Elefant_Ghana.jpg" },
   },
   {
@@ -82,7 +82,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "heritage",
     lat: 9.2186,
     lng: -1.8606,
-    photo: "/features/places/larabanga.jpg",
+    photo: "/features/places/larabanga.webp",
     credit: { author: "Sathyan Velumani", licence: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Larabanga_Mosque_Ghana.jpg" },
   },
   {
@@ -92,7 +92,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "waterfall",
     lat: 6.1929,
     lng: -0.2193,
-    photo: "/features/places/boti.jpg",
+    photo: "/features/places/boti.webp",
     credit: { author: "magwanwagwan", licence: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Boti_Falls,_Eastern_Region.JPG" },
   },
   {
@@ -102,7 +102,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "wildlife",
     lat: 10.9869,
     lng: -1.111,
-    photo: "/features/places/paga.jpg",
+    photo: "/features/places/paga.webp",
     credit: { author: "Dieu-Donné Gameli", licence: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Friendly_Paga_Crocodile_I.jpg" },
   },
   {
@@ -112,7 +112,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "culture",
     lat: 5.0006,
     lng: -2.3475,
-    photo: "/features/places/nzulezo.jpg",
+    photo: "/features/places/nzulezo.webp",
     credit: { author: "Chiappinik (it.wikipedia)", licence: "CC BY 2.5 IT", source: "https://commons.wikimedia.org/wiki/File:Nzulezo1.jpg" },
   },
   {
@@ -122,7 +122,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "landmark",
     lat: 6.2997,
     lng: 0.059,
-    photo: "/features/places/akosombo.jpg",
+    photo: "/features/places/akosombo.webp",
     credit: { author: "SandisterTei", licence: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Akosombo_Dam_from_the_Volta_Hotel.JPG" },
   },
   {
@@ -132,7 +132,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "nature",
     lat: 5.8481,
     lng: -0.176,
-    photo: "/features/places/aburi.jpg",
+    photo: "/features/places/aburi.webp",
     credit: { author: "Lionel Scheepmans", licence: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Aburi_garden_2.jpg" },
   },
   {
@@ -142,7 +142,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "beach",
     lat: 5.5597,
     lng: -0.1497,
-    photo: "/features/places/labadi.jpg",
+    photo: "/features/places/labadi.webp",
     credit: { author: "Stig Nygaard", licence: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Solnedgang_p%C3%A5_Labadi_beach.jpg" },
   },
   {
@@ -152,7 +152,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "heritage",
     lat: 5.5447,
     lng: -0.2034,
-    photo: "/features/places/nkrumah.jpg",
+    photo: "/features/places/nkrumah.webp",
     credit: { author: "Erik B. Anderson", licence: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Kwame_Nkrumah_Memorial_Park.jpg" },
   },
   {
@@ -162,7 +162,7 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
     category: "landmark",
     lat: 5.547,
     lng: -0.1925,
-    photo: "/features/places/black-star.jpg",
+    photo: "/features/places/black-star.webp",
     credit: { author: "Rjruiziii", licence: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Independence_Square,_Accra,_Ghana.JPG" },
   },
 ]
