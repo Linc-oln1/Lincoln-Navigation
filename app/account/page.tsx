@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { AccountPlanRow } from "@/components/site/account-plan"
 import { AccountSignInMethods } from "@/components/site/account-sign-in-methods"
+import { T } from "@/components/i18n/rich-text"
 
 export const metadata = { title: "Account — Lincoln Navigation" }
 
@@ -28,7 +29,7 @@ export default async function AccountPage() {
   return (
     <Shell>
       <dl className="divide-y divide-border rounded-2xl border border-border bg-card">
-        <Row label="Signed in as" value={user.email ?? "—"} />
+        <Row label={<T k="ac.signedInAs" />} value={user.email ?? "—"} />
         <Suspense>
           <AccountSignInMethods />
         </Suspense>
@@ -40,13 +41,13 @@ export default async function AccountPage() {
           type="submit"
           className="rounded-xl border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary transition-colors"
         >
-          Sign out
+          <T k="ac.signOut" />
         </button>
       </form>
 
       <p className="mt-8 text-sm text-muted-foreground">
         <Link href="/pricing" className="font-semibold text-primary hover:underline">
-          See plans →
+          <T k="ac.seePlansArrow" />
         </Link>
       </p>
     </Shell>
@@ -59,7 +60,7 @@ function Shell({ children }: { children: React.ReactNode }) {
       <SiteHeader />
       <div className="mx-auto w-full max-w-lg flex-1 px-6 py-14">
         <h1 className="m-0 mt-8 mb-8 text-3xl font-extrabold tracking-tight">
-          Account
+          <T k="ac.title" />
         </h1>
         {children}
       </div>
@@ -73,7 +74,7 @@ function Row({
   value,
   hint,
 }: {
-  label: string
+  label: React.ReactNode
   value: string
   hint?: string
 }) {

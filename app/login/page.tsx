@@ -18,8 +18,11 @@ import {
   Terms,
   callbackUrl,
   topLinkClass,
+  useAuthMsg,
   useNextParam,
+  type AuthMsg,
 } from "@/components/auth/auth-shell"
+import { useI18n } from "@/components/i18n/language-provider"
 
 type Busy = null | "google" | "email" | "reset"
 
@@ -36,6 +39,8 @@ function LoginContent() {
   const next = useNextParam()
   const router = useRouter()
   const { user } = useSession()
+  const { t } = useI18n()
+  const msg = useAuthMsg()
 
   // Already signed in? Nothing to do here — carry on to where they were going.
   useEffect(() => {
@@ -45,13 +50,9 @@ function LoginContent() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [busy, setBusy] = useState<Busy>(null)
-  const [info, setInfo] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(
-    params.get("error") === "link"
-      ? "That email link has expired or was already used. Request a new one below."
-      : params.get("error")
-        ? "That sign-in link didn't work. Try again."
-        : null,
+  const [info, setInfo] = useState<AuthMsg | null>(null)
+  const [error, setError] = useState<AuthMsg | null>(
+    params.get("error") === "link" ? { k: "au.errLink" } : params.get("error") ? { k: "au.errSignin" } : null,
   )
 
   const nextQuery = next !== "/app" ? `?next=${encodeURIComponent(next)}` : ""
@@ -63,11 +64,7 @@ function LoginContent() {
     setInfo(null)
     const { error } = await createClient().auth.signInWithPassword({ email, password })
     if (error) {
-      setError(
-        error.message === "Invalid login credentials"
-          ? "That email and password don't match. If you used to sign in with an email link, use “Forgot password?” to set one."
-          : error.message,
-      )
+      setError(error.message === "Invalid login credentials" ? { k: "au.errCreds" } : { raw: error.message })
       setBusy(null)
       return
     }
@@ -76,7 +73,7 @@ function LoginContent() {
 
   async function forgotPassword() {
     if (!email) {
-      setError("Enter your email address first, then tap “Forgot password?”.")
+      setError({ k: "au.errNeedEmail" })
       return
     }
     setBusy("reset")
@@ -85,8 +82,8 @@ function LoginContent() {
       redirectTo: callbackUrl("/reset-password"),
     })
     setBusy(null)
-    if (error) setError(error.message)
-    else setInfo(`We sent a password reset link to ${email}.`)
+    if (error) setError({ raw: error.message })
+    else setInfo({ k: "au.resetSent", p: { email } })
   }
 
   async function signInWithGoogle() {
@@ -97,7 +94,7 @@ function LoginContent() {
       options: { redirectTo: callbackUrl(next) },
     })
     if (error) {
-      setError(error.message)
+      setError({ raw: error.message })
       setBusy(null)
     }
   }
@@ -106,16 +103,16 @@ function LoginContent() {
     <AuthShell
       topLink={
         <>
-          New to LincolnNavigation?{" "}
+          {t("au.newHere")}{" "}
           <Link href={`/signup${nextQuery}`} className={topLinkClass}>
-            Create account
+            {t("au.createAccount")}
           </Link>
         </>
       }
       icon={<Route className="h-5 w-5" />}
-      eyebrow="Your journey continues"
-      title="Welcome back"
-      subtitle="Sign in to pick up right where you left off."
+      eyebrow={t("au.loginEyebrow")}
+      title={t("au.loginTitle")}
+      subtitle={t("au.loginSub")}
     >
       {!AUTH_ENABLED ? (
         <Notice>
@@ -126,7 +123,7 @@ function LoginContent() {
         <>
           <form onSubmit={signIn} className="space-y-6">
             <Field
-              label="Email address"
+              label={t("au.email")}
               type="email"
               autoComplete="email"
               required
@@ -136,12 +133,12 @@ function LoginContent() {
             />
             <PasswordField
               id="password"
-              label="Password"
+              label={t("au.password")}
               autoComplete="current-password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder={t("au.pwPh")}
               aside={
                 <button
                   type="button"
@@ -149,16 +146,16 @@ function LoginContent() {
                   disabled={busy !== null}
                   className="text-sm font-semibold text-[#1d4466] hover:underline underline-offset-4"
                 >
-                  {busy === "reset" ? "Sending…" : "Forgot password?"}
+                  {busy === "reset" ? t("au.sending") : t("au.forgot")}
                 </button>
               }
             />
-            {error && <Notice tone="error">{error}</Notice>}
-            {info && <Notice>{info}</Notice>}
-            <SubmitButton busy={busy === "email"}>Sign in</SubmitButton>
+            {error && <Notice tone="error">{msg(error)}</Notice>}
+            {info && <Notice>{msg(info)}</Notice>}
+            <SubmitButton busy={busy === "email"}>{t("nav.signIn")}</SubmitButton>
           </form>
 
-          <Divider>Simple, secure access to your map</Divider>
+          <Divider>{t("au.divider")}</Divider>
           <AltMethods
             next={next}
             onGoogle={signInWithGoogle}

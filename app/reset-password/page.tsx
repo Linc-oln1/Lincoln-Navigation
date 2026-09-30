@@ -16,7 +16,11 @@ import {
   PasswordField,
   SubmitButton,
   topLinkClass,
+  useAuthMsg,
+  type AuthMsg,
 } from "@/components/auth/auth-shell"
+import { useI18n } from "@/components/i18n/language-provider"
+import { fillNodes } from "@/components/i18n/rich-text"
 
 export default function ResetPasswordPage() {
   return (
@@ -31,19 +35,21 @@ function ResetContent() {
   const { user, loading } = useSession()
   const [password, setPassword] = useState("")
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<AuthMsg | null>(null)
+  const { t } = useI18n()
+  const msg = useAuthMsg()
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
     if (password.length < 8) {
-      setError("Use at least 8 characters for your password.")
+      setError({ k: "au.errShort" })
       return
     }
     setBusy(true)
     setError(null)
     const { error } = await createClient().auth.updateUser({ password })
     setBusy(false)
-    if (error) setError(error.message)
+    if (error) setError({ raw: error.message })
     else router.replace("/app")
   }
 
@@ -51,34 +57,38 @@ function ResetContent() {
     <AuthShell
       topLink={
         <Link href="/login" className={topLinkClass}>
-          Back to sign in
+          {t("au.backToSignIn")}
         </Link>
       }
       icon={<KeyRound className="h-5 w-5" />}
-      eyebrow="Almost there"
-      title="Set a new password"
-      subtitle="Choose a password you'll use to sign in from now on."
+      eyebrow={t("au.resetEyebrow")}
+      title={t("au.resetTitle")}
+      subtitle={t("au.resetSub")}
     >
       {loading ? null : !user ? (
         <Notice>
-          Open the reset link from your email to set a new password. Links
-          expire after a while — you can request a fresh one from{" "}
-          <Link href="/login" className="font-semibold underline">sign in</Link>.
+          {fillNodes(t("au.openLink"), {
+            signIn: (
+              <Link href="/login" className="font-semibold underline">
+                {t("au.signInLower")}
+              </Link>
+            ),
+          })}
         </Notice>
       ) : (
         <form onSubmit={save} className="space-y-6">
           <PasswordField
             id="password"
-            label="New password"
+            label={t("au.newPw")}
             autoComplete="new-password"
             required
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="At least 8 characters"
+            placeholder={t("au.pwNewPh")}
           />
-          {error && <Notice tone="error">{error}</Notice>}
-          <SubmitButton busy={busy}>Save password</SubmitButton>
+          {error && <Notice tone="error">{msg(error)}</Notice>}
+          <SubmitButton busy={busy}>{t("au.savePw")}</SubmitButton>
         </form>
       )}
     </AuthShell>

@@ -3,6 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { usePremium } from "@/hooks/use-premium"
+import { useI18n } from "@/components/i18n/language-provider"
+import type { MessageKey } from "@/lib/i18n/messages"
 
 /** The signed-in user's plan, plus a way to get a paid plan back on this device. */
 export function AccountPlanRow() {
@@ -10,10 +12,12 @@ export function AccountPlanRow() {
   const [open, setOpen] = useState(false)
   const [reference, setReference] = useState("")
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+  // Kept as a key so it follows a language switch.
+  const [message, setMessage] = useState<{ k: MessageKey; p?: Record<string, string> } | null>(null)
+  const { t, lang } = useI18n()
 
-  const plan = isPro ? "Pro" : isPremium ? "Premium" : "Free"
-  const until = expiresAt ? new Date(expiresAt).toLocaleDateString() : null
+  const plan = isPro ? "Pro" : isPremium ? "Premium" : t("ac.planFree")
+  const until = expiresAt ? new Date(expiresAt).toLocaleDateString(lang) : null
   const daysLeft = expiresAt ? Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86_400_000) : null
 
   async function restore(e?: React.FormEvent) {
@@ -27,21 +31,17 @@ export function AccountPlanRow() {
         body: JSON.stringify(reference.trim() ? { reference: reference.trim() } : {}),
       })
       const data = await res.json().catch(() => null)
-      if (res.status === 429) setMessage("Too many attempts. Try again in a few minutes.")
-      else if (!res.ok) setMessage("Couldn\u2019t check right now. Try again.")
+      if (res.status === 429) setMessage({ k: "ac.tooMany" })
+      else if (!res.ok) setMessage({ k: "ac.cantCheck" })
       else if (data?.restored) {
-        setMessage(`Restored: ${data.plan === "pro" ? "Pro" : "Premium"} plan.`)
+        setMessage({ k: "ac.restored", p: { plan: data.plan === "pro" ? "Pro" : "Premium" } })
         window.dispatchEvent(new Event("focus")) // usePremium re-reads the cookie
       } else {
-        setMessage(
-          reference.trim()
-            ? "We couldn\u2019t find an active plan for that reference."
-            : "No active plan found for your account. If you paid with a different email, enter your payment reference."
-        )
+        setMessage({ k: reference.trim() ? "ac.noRef" : "ac.noPlan" })
         setOpen(true)
       }
     } catch {
-      setMessage("Couldn\u2019t check right now. Try again.")
+      setMessage({ k: "ac.cantCheck" })
     } finally {
       setBusy(false)
     }
@@ -50,20 +50,23 @@ export function AccountPlanRow() {
   return (
     <div className="px-4 py-3.5">
       <div className="flex items-start justify-between gap-4">
-        <dt className="text-sm text-muted-foreground">Plan</dt>
+        <dt className="text-sm text-muted-foreground">{t("ac.plan")}</dt>
         <dd className="text-right">
           <span className="text-sm font-medium">{plan}</span>
           <p className="mt-0.5 text-xs text-muted-foreground">
             {isPremium ? (
               <>
-                Active{until ? ` until ${until}` : ""}
-                {daysLeft !== null && daysLeft <= 7 ? ` (${daysLeft <= 0 ? "ends today" : `${daysLeft} day${daysLeft === 1 ? "" : "s"} left`})` : ""}.
+                {until ? t("ac.activeUntil", { date: until }) : t("ac.active")}
+                {daysLeft !== null && daysLeft <= 7
+                  ? ` (${daysLeft <= 0 ? t("ac.endsToday") : daysLeft === 1 ? t("ac.dayLeft") : t("ac.daysLeft", { n: daysLeft })})`
+                  : ""}
+                .
               </>
             ) : (
               <>
-                Upgrade for Live View, offline maps, voice and more.{" "}
+                {t("ac.upgrade")}{" "}
                 <Link href="/pricing" className="font-semibold text-primary hover:underline">
-                  See plans
+                  {t("ac.seePlans")}
                 </Link>
               </>
             )}
@@ -73,9 +76,9 @@ export function AccountPlanRow() {
 
       {isPremium && daysLeft !== null && daysLeft <= 7 && (
         <p className="mt-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs">
-          Your plan ends soon and doesn&rsquo;t renew by itself.{" "}
+          {t("ac.endsSoon")}{" "}
           <Link href="/pricing" className="font-semibold text-primary hover:underline">
-            Renew on the plans page
+            {t("ac.renew")}
           </Link>
           .
         </p>
@@ -89,28 +92,28 @@ export function AccountPlanRow() {
             disabled={busy}
             className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-semibold hover:bg-secondary/70 disabled:opacity-60"
           >
-            {busy ? "Checking…" : "Restore my plan"}
+            {busy ? t("ac.checking") : t("ac.restore")}
           </button>
           <p className="mt-1.5 text-[11px] text-muted-foreground">
-            Paid before? This finds your plan and puts it back on this device.
+            {t("ac.restoreHint")}
           </p>
           <button type="button" onClick={() => setOpen((o) => !o)} className="mt-2 text-[11px] font-semibold text-primary hover:underline">
-            Paid with a different email?
+            {t("ac.diffEmail")}
           </button>
           {open && (
             <form onSubmit={restore} className="mt-2 flex gap-2">
               <input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
-                placeholder="Payment reference from your receipt"
+                placeholder={t("ac.refPh")}
                 className="min-w-0 flex-1 rounded-lg border border-border bg-input px-3 py-1.5 text-xs outline-none focus:border-primary"
               />
               <button type="submit" disabled={busy || !reference.trim()} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50">
-                Restore
+                {t("ac.restoreBtn")}
               </button>
             </form>
           )}
-          {message && <p role="status" className="mt-2 text-xs text-muted-foreground">{message}</p>}
+          {message && <p role="status" className="mt-2 text-xs text-muted-foreground">{t(message.k, message.p)}</p>}
         </div>
       )}
     </div>

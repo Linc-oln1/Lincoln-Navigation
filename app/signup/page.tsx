@@ -18,8 +18,12 @@ import {
   Terms,
   callbackUrl,
   topLinkClass,
+  useAuthMsg,
   useNextParam,
+  type AuthMsg,
 } from "@/components/auth/auth-shell"
+import { useI18n } from "@/components/i18n/language-provider"
+import { fillNodes } from "@/components/i18n/rich-text"
 
 type Busy = null | "google" | "email"
 
@@ -35,6 +39,8 @@ function SignupContent() {
   const next = useNextParam()
   const router = useRouter()
   const { user } = useSession()
+  const { t } = useI18n()
+  const msg = useAuthMsg()
 
   useEffect(() => {
     if (user) router.replace(next)
@@ -45,14 +51,14 @@ function SignupContent() {
   const [password, setPassword] = useState("")
   const [busy, setBusy] = useState<Busy>(null)
   const [sent, setSent] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<AuthMsg | null>(null)
 
   const nextQuery = next !== "/app" ? `?next=${encodeURIComponent(next)}` : ""
 
   async function signUp(e: React.FormEvent) {
     e.preventDefault()
     if (password.length < 8) {
-      setError("Use at least 8 characters for your password.")
+      setError({ k: "au.errShort" })
       return
     }
     setBusy("email")
@@ -67,7 +73,7 @@ function SignupContent() {
     })
     setBusy(null)
     if (error) {
-      setError(error.message)
+      setError({ raw: error.message })
       return
     }
     // With email confirmation on, there's no session until they click the link.
@@ -83,7 +89,7 @@ function SignupContent() {
       options: { redirectTo: callbackUrl(next) },
     })
     if (error) {
-      setError(error.message)
+      setError({ raw: error.message })
       setBusy(null)
     }
   }
@@ -92,16 +98,16 @@ function SignupContent() {
     <AuthShell
       topLink={
         <>
-          Already have an account?{" "}
+          {t("au.haveAccount")}{" "}
           <Link href={`/login${nextQuery}`} className={topLinkClass}>
-            Sign in
+            {t("nav.signIn")}
           </Link>
         </>
       }
       icon={<Navigation className="h-5 w-5" />}
-      eyebrow="A better way to explore"
-      title="Create your account"
-      subtitle="Save your favourite places and make every trip yours."
+      eyebrow={t("au.signupEyebrow")}
+      title={t("au.signupTitle")}
+      subtitle={t("au.signupSub")}
     >
       {!AUTH_ENABLED ? (
         <Notice>
@@ -109,23 +115,22 @@ function SignupContent() {
           connected (see docs/SUPABASE_SETUP.md).
         </Notice>
       ) : sent ? (
-        <Notice title="Check your email">
-          We sent a confirmation link to <strong>{email}</strong>. Open it on
-          this device to finish creating your account.
+        <Notice title={t("au.checkEmail")}>
+          {fillNodes(t("au.confirmSent"), { email: <strong>{email}</strong> })}
         </Notice>
       ) : (
         <>
           <form onSubmit={signUp} className="space-y-6">
             <Field
-              label="Full name"
+              label={t("au.fullName")}
               autoComplete="name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
+              placeholder={t("au.namePh")}
             />
             <Field
-              label="Email address"
+              label={t("au.email")}
               type="email"
               autoComplete="email"
               required
@@ -135,19 +140,19 @@ function SignupContent() {
             />
             <PasswordField
               id="password"
-              label="Password"
+              label={t("au.password")}
               autoComplete="new-password"
               required
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="At least 8 characters"
+              placeholder={t("au.pwNewPh")}
             />
-            {error && <Notice tone="error">{error}</Notice>}
-            <SubmitButton busy={busy === "email"}>Create account</SubmitButton>
+            {error && <Notice tone="error">{msg(error)}</Notice>}
+            <SubmitButton busy={busy === "email"}>{t("au.createAccount")}</SubmitButton>
           </form>
 
-          <Divider>Simple, secure access to your map</Divider>
+          <Divider>{t("au.divider")}</Divider>
           <AltMethods
             next={next}
             onGoogle={signInWithGoogle}

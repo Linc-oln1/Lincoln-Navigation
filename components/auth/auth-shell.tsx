@@ -10,6 +10,9 @@ import { useSearchParams } from "next/navigation"
 import { Lora, DM_Sans } from "next/font/google"
 import { ArrowRight, Compass, Eye, EyeOff, Loader2, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useI18n } from "@/components/i18n/language-provider"
+import { fillNodes } from "@/components/i18n/rich-text"
+import type { MessageKey } from "@/lib/i18n/messages"
 
 const serif = Lora({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-auth-serif" })
 const sans = DM_Sans({ subsets: ["latin"], variable: "--font-auth-sans" })
@@ -21,6 +24,18 @@ export function useNextParam() {
   const params = useSearchParams()
   const raw = params.get("next") || "/app"
   return raw.startsWith("/") && !raw.startsWith("//") ? raw : "/app"
+}
+
+/**
+ * A message to show on an auth screen: a translation key (re-translated on
+ * every render, so it follows a language switch) or raw text from the auth
+ * service, which comes in English.
+ */
+export type AuthMsg = { k: MessageKey; p?: Record<string, string | number> } | { raw: string }
+
+export function useAuthMsg() {
+  const { t } = useI18n()
+  return (m: AuthMsg) => ("raw" in m ? m.raw : t(m.k, m.p))
 }
 
 export function callbackUrl(next: string) {
@@ -42,6 +57,7 @@ export function AuthShell({
   subtitle: string
   children: ReactNode
 }) {
+  const { t } = useI18n()
   return (
     <main
       className={cn(
@@ -83,7 +99,7 @@ export function AuthShell({
             <span>&copy; {YEAR} LincolnNavigation</span>
             <span className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#4caf6e]" />
-              Safe travels
+              {t("au.safeTravels")}
             </span>
           </div>
         </section>
@@ -93,12 +109,13 @@ export function AuthShell({
 }
 
 function PhotoPanel() {
+  const { t } = useI18n()
   return (
     <aside className="relative hidden w-1/2 shrink-0 overflow-hidden lg:block">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/landing/photos/volta.webp"
-        alt="The Adomi Bridge over the Volta River"
+        alt={t("au.photoAlt")}
         className="absolute inset-0 h-full w-full object-cover"
       />
 
@@ -113,16 +130,15 @@ function PhotoPanel() {
         <div className="max-w-xl">
           <span className="inline-flex items-center gap-2.5 rounded-full border border-white/35 bg-white/15 px-4 py-2 text-[13px] font-medium uppercase tracking-wide backdrop-blur-md [text-shadow:none]">
             <span className="h-2 w-2 rounded-full bg-[#5fd08a]" />
-            Your next great route starts here
+            {t("au.badge")}
           </span>
           <h2 className="mt-8 font-[family-name:var(--font-auth-serif)] text-6xl leading-[1.05] tracking-tight xl:text-7xl">
-            Find your way.
+            {t("au.heroTitle1")}
             <br />
-            <em className="font-normal text-white/85">Feel the journey.</em>
+            <em className="font-normal text-white/85">{t("au.heroTitle2")}</em>
           </h2>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-white/90">
-            The places you love, the roads you take, and a little more wonder
-            in every mile across Ghana.
+            {t("au.heroLead")}
           </p>
           <div className="mt-8 flex items-center gap-4">
             <div className="flex -space-x-2.5 [text-shadow:none]">
@@ -138,7 +154,7 @@ function PhotoPanel() {
                 </span>
               ))}
             </div>
-            <p className="text-white/90">Made for the curious, wherever they roam.</p>
+            <p className="text-white/90">{t("au.heroCurious")}</p>
           </div>
         </div>
 
@@ -146,7 +162,7 @@ function PhotoPanel() {
           <span>&copy; {YEAR} LincolnNavigation</span>
           <span className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
-            Find your own way
+            {t("au.findOwnWay")}
           </span>
         </div>
       </div>
@@ -179,6 +195,7 @@ export function PasswordField({
   ...props
 }: { label: string; aside?: ReactNode } & React.InputHTMLAttributes<HTMLInputElement>) {
   const [show, setShow] = useState(false)
+  const { t } = useI18n()
   return (
     <div>
       <span className="mb-2 flex items-center justify-between text-[15px] font-medium text-[#14263a]">
@@ -190,7 +207,7 @@ export function PasswordField({
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
-          aria-label={show ? "Hide password" : "Show password"}
+          aria-label={show ? t("au.hidePw") : t("au.showPw")}
           className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-[#4b5a68] transition-colors hover:bg-[#ece7d3]"
         >
           {show ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
@@ -238,6 +255,7 @@ export function AltMethods({
   googleBusy: boolean
   disabled: boolean
 }) {
+  const { t } = useI18n()
   return (
     <div className="grid grid-cols-2 gap-3">
       <button
@@ -253,7 +271,7 @@ export function AltMethods({
         href={next}
         className="flex h-12 items-center justify-center rounded-2xl border border-[#e3dfd2] bg-white text-sm font-medium text-[#14263a] transition-colors hover:bg-[#f8f5e8]"
       >
-        Continue as guest
+        {t("au.guest")}
       </Link>
     </div>
   )
@@ -276,18 +294,25 @@ export function Notice({ tone = "info", title, children }: { tone?: "info" | "er
   )
 }
 
+const termsLinkClass =
+  "font-medium text-[#14263a] underline decoration-[#c9c3ae] underline-offset-4 hover:decoration-[#14263a]"
+
 export function Terms() {
+  const { t } = useI18n()
   return (
     <p className="mt-6 text-center text-sm text-[#5b6875]">
-      By continuing, you agree to our{" "}
-      <Link href="/terms" className="font-medium text-[#14263a] underline decoration-[#c9c3ae] underline-offset-4 hover:decoration-[#14263a]">
-        Terms
-      </Link>{" "}
-      and{" "}
-      <Link href="/privacy" className="font-medium text-[#14263a] underline decoration-[#c9c3ae] underline-offset-4 hover:decoration-[#14263a]">
-        Privacy Policy
-      </Link>
-      .
+      {fillNodes(t("au.agree"), {
+        terms: (
+          <Link href="/terms" className={termsLinkClass}>
+            {t("au.terms")}
+          </Link>
+        ),
+        privacy: (
+          <Link href="/privacy" className={termsLinkClass}>
+            {t("au.privacy")}
+          </Link>
+        ),
+      })}
     </p>
   )
 }
