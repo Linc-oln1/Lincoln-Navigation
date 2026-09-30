@@ -169,8 +169,8 @@ function PricingContent() {
         <header className="text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#c4b5fd]">Pricing</p>
           <h1 className="mt-4 text-4xl leading-tight tracking-tight sm:text-6xl">
-            <span className="font-extrabold">Clear</span>{" "}
-            <span className="font-light text-white/90">pricing, in cedis.</span>
+            <span className="font-extrabold">Every road.</span>{" "}
+            <span className="block font-light text-white/90 sm:inline">One simple price.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/60 sm:text-lg">
             The map, search and directions are free forever. Pay only for the extras you want — 31
