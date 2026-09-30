@@ -212,18 +212,28 @@ function MapNavigator() {
   /* =======================================================
      LANDING PAGE HANDOFF
 
-     The marketing landing page's "Plan a route" widget sends
-     people here as /app?to=<destination>&mode=<travelMode>.
-     On first load, resolve that destination through the same
-     geocoder the in-app search bar uses, drop a marker on it,
-     and open the directions panel with the requested transport
-     mode already selected — so the trip they planned on the
-     landing page is waiting for them, not just a blank map.
+     The marketing pages send people here in two shapes:
+       /app?to=<destination>&mode=<travelMode>
+         — resolve the destination through the same geocoder the
+           in-app search bar uses.
+       /app?lat=<lat>&lng=<lng>&name=<label>[&mode=<travelMode>]
+         — a known place (the /features destinations); drop the
+           pin on those exact coordinates, no geocoding.
+     Either way a marker goes on the place. With a `mode` the
+     directions panel opens with that transport mode selected, so
+     the trip planned on the landing page is waiting; without one
+     ("View on the map") the visitor just sees the place, and the
+     map's weather widget and hazard markers for that area.
   ======================================================= */
 
   useEffect(() => {
     const toQuery = searchParams.get("to")?.trim()
-    if (!toQuery) return
+    const lat = Number.parseFloat(searchParams.get("lat") ?? "")
+    const lng = Number.parseFloat(searchParams.get("lng") ?? "")
+    const hasCoords =
+      Number.isFinite(lat) && Number.isFinite(lng) &&
+      Math.abs(lat) <= 90 && Math.abs(lng) <= 180
+    if (!toQuery && !hasCoords) return
 
     const modeParam = searchParams.get("mode")
     const requestedMode = VALID_TRAVEL_MODES.includes(
@@ -236,32 +246,42 @@ function MapNavigator() {
 
     ;(async () => {
       try {
-        const results = await geocode(toQuery, { limit: 1 })
-        const best = results[0]
+        let place: { name: string; address: string; lat: number; lng: number; type?: string }
+        if (hasCoords) {
+          const name = searchParams.get("name")?.trim().slice(0, 120) || toQuery || "Dropped pin"
+          place = { name, address: "Ghana", lat, lng }
+        } else {
+          const results = await geocode(toQuery!, { limit: 1 })
+          if (!results[0]) return
+          place = results[0]
+        }
 
-        if (!best || cancelled) return
+        if (cancelled) return
 
-        setMapCenter([best.lat, best.lng])
+        setMapCenter([place.lat, place.lng])
         setSelectedLocation({
-          name: best.name,
-          address: best.address,
-          lat: best.lat,
-          lng: best.lng,
-          type: best.type,
+          name: place.name,
+          address: place.address,
+          lat: place.lat,
+          lng: place.lng,
+          type: place.type,
         })
         setMarkers([
           {
-            position: [best.lat, best.lng],
-            title: best.name,
-            description: best.address,
+            position: [place.lat, place.lng],
+            title: place.name,
+            description: place.address,
           },
         ])
 
         if (requestedMode) {
           setInitialTravelMode(requestedMode)
+          setActivePanel("directions")
+        } else if (!hasCoords) {
+          // Older /app?to= links without a mode still open directions,
+          // as they always have.
+          setActivePanel("directions")
         }
-
-        setActivePanel("directions")
       } catch {
         // The landing page's widget is a convenience, not a
         // guarantee — if geocoding fails, the user just lands on

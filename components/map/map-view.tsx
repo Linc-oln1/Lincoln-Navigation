@@ -1963,8 +1963,11 @@ export function MapView({
       curve: 1.4,
       essential: true,
     })
+    // mapInstance: a center/markers change that lands before the map
+    // finishes building (e.g. an /app?lat=&lng= link) is replayed once
+    // it exists, instead of being dropped.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [center[0], center[1], markers.length])
+  }, [center[0], center[1], markers.length, mapInstance])
 
   /* =======================================================
      MARKERS
@@ -1997,7 +2000,7 @@ export function MapView({
 
       markerObjectsRef.current.push(markerObject)
     })
-  }, [markers])
+  }, [markers, mapInstance])
 
   /* =======================================================
      ROUTE

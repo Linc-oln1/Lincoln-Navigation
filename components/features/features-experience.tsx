@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react"
 import { AccountLink } from "@/components/site/account-link"
+import { DestinationConditions, mapHref } from "@/components/features/destination-conditions"
 import { GHANA_DESTINATIONS } from "@/lib/ghana-destinations"
 import { cn } from "@/lib/utils"
 
@@ -94,11 +95,14 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
   const planRoute = (e: React.FormEvent) => {
     e.preventDefault()
     const trimmed = to.trim()
-    // Use the curated geocoder query when the field still names the
-    // picked place; otherwise send whatever the visitor typed.
-    const query = selected && trimmed === selected.name ? selected.query : trimmed
+    // While the field still names the picked place, route to its exact
+    // coordinates; otherwise geocode whatever the visitor typed.
+    if (selected && trimmed === selected.name) {
+      router.push(mapHref(selected, mode))
+      return
+    }
     const params = new URLSearchParams({ mode })
-    if (query) params.set("to", query)
+    if (trimmed) params.set("to", trimmed)
     router.push(`/app?${params.toString()}`)
   }
 
@@ -259,13 +263,7 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
               </div>
             </div>
 
-            {selected && to === selected.name && (
-              <div className="mt-3 flex items-center gap-3 rounded-2xl border border-black/10 bg-white/60 p-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={selected.photo} alt="" className="h-14 w-16 flex-shrink-0 rounded-xl object-cover" />
-                <p className="text-xs leading-snug opacity-75">{selected.blurb}</p>
-              </div>
-            )}
+            {selected && to === selected.name && <DestinationConditions destination={selected} />}
 
             <button
               type="submit"
