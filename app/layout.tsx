@@ -12,7 +12,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Lincoln Navigations - Ghana Maps',
+  title: 'Lincoln Navigation - Ghana Maps',
   description: 'Navigate Ghana with precision. Your trusted map navigator for exploring Ghana.',
   manifest: '/manifest.webmanifest',
   icons: {

@@ -701,7 +701,7 @@ function MapNavigator() {
       <div className="absolute bottom-20 md:bottom-4 left-4 z-[999]">
         <div className="bg-card/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-border">
           <p className="text-xs text-muted-foreground">
-            Lincoln Navigations • Ghana
+            Lincoln Navigation • Ghana
           </p>
         </div>
       </div>
