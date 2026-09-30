@@ -1,6 +1,7 @@
 import type { LangCode } from "@/lib/i18n/languages"
 import { MAP_EN, MAP_TR } from "@/lib/i18n/map-messages"
 import { FEATURES_EN, FEATURES_TR } from "@/lib/i18n/features-messages"
+import { HOME_EN, HOME_TR } from "@/lib/i18n/home-messages"
 
 /**
  * English is the source of truth. Every other language may leave a key out
@@ -95,7 +96,7 @@ const baseEn = {
 
 } as const
 
-const en = { ...baseEn, ...MAP_EN, ...FEATURES_EN } as const
+const en = { ...baseEn, ...MAP_EN, ...FEATURES_EN, ...HOME_EN } as const
 
 export type MessageKey = keyof typeof en
 
@@ -1155,7 +1156,7 @@ const BASE: Record<LangCode, Dict> = {
 export const MESSAGES: Record<LangCode, Dict> = Object.fromEntries(
   (Object.keys(BASE) as LangCode[]).map((code) => [
     code,
-    { ...BASE[code], ...(MAP_TR[code] ?? {}), ...(FEATURES_TR[code] ?? {}) },
+    { ...BASE[code], ...(MAP_TR[code] ?? {}), ...(FEATURES_TR[code] ?? {}), ...(HOME_TR[code] ?? {}) },
   ]),
 ) as Record<LangCode, Dict>
 
