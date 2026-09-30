@@ -22,20 +22,18 @@ const NAV_LINKS: { id: string; labelKey: MessageKey }[] = [
   { id: "Contact", labelKey: "nav.contact" },
 ]
 
-/* "Live Map" opens the app; "About" opens the dedicated /about
-   page. */
+/* "Features" opens the /features destinations page, "Live Map"
+   opens the app, "About" opens the dedicated /about page. */
 const NAV_ROUTES: Record<string, string> = {
+  Features: "/features",
   "Live Map": "/app",
   About: "/about",
   Contact: "/contact",
 }
 
-/* "Features" lives in the mission section below — scroll-margin on
-   its target (see lithos-features.tsx) keeps the fixed nav from
-   covering it. */
-const NAV_SCROLL_TARGETS: Record<string, string> = {
-  Features: "features",
-}
+/* In-page scroll targets for nav items without a route (none at
+   the moment — "Features" moved to its own page). */
+const NAV_SCROLL_TARGETS: Record<string, string> = {}
 
 /**
  * Full-screen dark hero, built to spec: a video background that

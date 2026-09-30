@@ -1842,3 +1842,22 @@ input {
         animation: none !important;
     }
 }
+/* ---- /features ----
+   The Africa-map wallpaper sits at viewport height on the right on
+   desktop; its left edge (which carries the poster's legend) is
+   feathered into the matching paper colour so there's no hard seam.
+   The poster is 735×956, so it spans 76.9vh wide at 100vh tall. */
+@media (min-width: 1024px) {
+    .features-wallpaper {
+        --wp-left: calc(100vw - 76.9vh);
+        -webkit-mask-image: linear-gradient(to right, transparent var(--wp-left), #000 calc(var(--wp-left) + 140px));
+        mask-image: linear-gradient(to right, transparent var(--wp-left), #000 calc(var(--wp-left) + 140px));
+    }
+}
+
+.features-rail {
+    scrollbar-width: none;
+}
+.features-rail::-webkit-scrollbar {
+    display: none;
+}

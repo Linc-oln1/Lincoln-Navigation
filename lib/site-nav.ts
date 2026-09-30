@@ -8,6 +8,7 @@ export interface NavLink {
 /** Top bar links. */
 export const HEADER_LINKS: NavLink[] = [
   { labelKey: "nav.map", href: "/app" },
+  { labelKey: "nav.features", href: "/features" },
   { labelKey: "nav.pricing", href: "/pricing" },
   { labelKey: "nav.about", href: "/about" },
   { labelKey: "nav.business", href: "/business" },
@@ -21,6 +22,7 @@ export const FOOTER_GROUPS: { titleKey: MessageKey; links: NavLink[] }[] = [
     titleKey: "footer.product",
     links: [
       { labelKey: "nav.liveMap", href: "/app" },
+      { labelKey: "nav.features", href: "/features" },
       { labelKey: "nav.pricing", href: "/pricing" },
     ],
   },

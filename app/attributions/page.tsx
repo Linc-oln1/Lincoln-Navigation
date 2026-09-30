@@ -1,5 +1,6 @@
 import { LegalPage, LegalTable } from "@/components/legal/legal-page"
 import { LEGAL_UPDATED } from "@/lib/legal"
+import { GHANA_DESTINATIONS } from "@/lib/ghana-destinations"
 
 export const metadata = {
   title: "Map Data & Attributions — Lincoln Navigation",
@@ -102,6 +103,22 @@ export default function AttributionsPage() {
           The map itself also shows the credits for whatever layer is on
           screen (tap the ⓘ icon in the corner of the map).
         </p>
+      </section>
+
+      <section>
+        <h2>Destination photos</h2>
+        <p>
+          The photos of Ghana&apos;s attractions on our{" "}
+          <a href="/features">Features page</a> come from Wikimedia Commons.
+        </p>
+        <ul>
+          {GHANA_DESTINATIONS.map((d) => (
+            <li key={d.id}>
+              <strong>{d.name}</strong>:{" "}
+              <a href={d.credit.source} target="_blank" rel="noopener noreferrer">{d.credit.author}</a>, {d.credit.licence}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section>
