@@ -1,12 +1,14 @@
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { BusinessExperience } from "@/components/business/business-experience"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "For business — Lincoln Navigation",
   description:
     "Ghana-first navigation for logistics, delivery, taxi, ride-hailing, bus, insurance, government, automotive, university and fleet customers.",
-}
+  path: "/business",
+})
 
 export default function BusinessPage() {
   return (

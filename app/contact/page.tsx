@@ -3,12 +3,14 @@ import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { ContactForm } from "@/components/contact/contact-form"
 import { ADVERTISE_CONTACT_EMAIL } from "@/lib/monetization"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "Contact us — Lincoln Navigation",
   description:
     "Get in touch with the LincolnNavigation team — questions, feedback, bug reports and advertising.",
-}
+  path: "/contact",
+})
 
 const INFO_EMAIL = "info@lincolnnavigation.com"
 

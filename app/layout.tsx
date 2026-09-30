@@ -6,14 +6,31 @@ import { PlanRestorer } from '@/components/site/plan-restorer'
 import { AdSenseScript } from '@/components/ads/adsense-script'
 import { Toaster } from '@/components/ui/toaster'
 import { LanguageProvider } from '@/components/i18n/language-provider'
+import { SITE_BASE } from '@/lib/site-base'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  // Makes relative URLs in metadata (share images, canonical links)
+  // absolute, which link previews require.
+  metadataBase: new URL(SITE_BASE),
   title: 'Lincoln Navigation - Ghana Maps',
   description: 'Navigate Ghana with precision. Your trusted map navigator for exploring Ghana.',
+  // Site-wide share preview; pages override title/description via
+  // lib/page-meta.ts, and the image comes from app/opengraph-image.tsx.
+  openGraph: {
+    title: 'Lincoln Navigation - Ghana Maps',
+    description: 'Maps and turn-by-turn directions built for how Ghana actually moves.',
+    siteName: 'Lincoln Navigation',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Lincoln Navigation - Ghana Maps',
+    description: 'Maps and turn-by-turn directions built for how Ghana actually moves.',
+  },
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [

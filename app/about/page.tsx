@@ -2,12 +2,14 @@ import Link from "next/link"
 import { Compass, Route, MapPin, WifiOff } from "lucide-react"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "About — Lincoln Navigation",
   description:
     "Lincoln Navigation is a maps and navigation app built for how Ghana actually moves.",
-}
+  path: "/about",
+})
 
 const PILLARS = [
   {
