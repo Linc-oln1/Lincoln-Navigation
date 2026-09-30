@@ -17,6 +17,8 @@ import {
   type PlanFeature,
 } from "@/lib/monetization"
 import { usePremium } from "@/hooks/use-premium"
+import { useLocalCurrency } from "@/hooks/use-local-currency"
+import { BASE_CURRENCY, PICKER_CURRENCIES, RATES_CREDIT_URL, currencyName, formatConverted } from "@/lib/currency"
 import { AgreeLine } from "@/components/site-links"
 import { cn } from "@/lib/utils"
 
@@ -100,6 +102,19 @@ const CALLOUTS: Record<PlanId, { target: CalloutTarget; side: "left" | "right"; 
   ],
 }
 
+/** What Paystack actually charges, e.g. "GHS 90.00". */
+function ghsLabel(pesewas: number): string {
+  return `${PREMIUM_CURRENCY} ${(pesewas / 100).toFixed(2)}`
+}
+
+/** The visitor's display currency, passed down to the card and callouts. */
+interface Money {
+  currency: string
+  rate: number
+  /** Showing a non-GHS estimate (rates loaded and a foreign currency chosen). */
+  converted: boolean
+}
+
 function splitPrice(pesewas: number): { whole: string; cents: string } {
   const whole = Math.floor(pesewas / 100).toLocaleString()
   const cents = pesewas % 100
@@ -132,6 +147,18 @@ function PricingContent() {
   const welcomePro = welcomeParam === "pro"
   const paymentError = params.get("error")
   const plan = PLANS.find((p) => p.id === planId)!
+  const cur = useLocalCurrency()
+  const money: Money = { currency: cur.currency, rate: cur.rate, converted: cur.ready && cur.isConverted }
+  // The price callout must stay true when the card shows an estimate.
+  const callouts = CALLOUTS[plan.id].map((c) =>
+    c.target === "price" && money.converted && plan.pesewas > 0
+      ? {
+          ...c,
+          title: `Shown in ${money.currency}`,
+          body: `An estimate at today's rate. You're charged ${ghsLabel(plan.pesewas)}; your bank's rate may differ a little.`,
+        }
+      : c,
+  )
 
   const choosePlan = (id: PlanId) => {
     setPlanId(id)
@@ -226,7 +253,35 @@ function PricingContent() {
           ))}
         </div>
 
-        <PlanStage plan={plan}>
+        {cur.ready && cur.availableRates && (
+          <div className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-white/50">
+            <label htmlFor="price-currency">Prices in</label>
+            <select
+              id="price-currency"
+              value={cur.currency}
+              onChange={(e) => cur.setCurrency(e.target.value)}
+              className="rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-white outline-none focus:border-[#a78bfa]"
+            >
+              {Array.from(new Set([cur.currency, ...PICKER_CURRENCIES]))
+                .filter((c) => c === BASE_CURRENCY || cur.availableRates?.[c])
+                .map((c) => (
+                  <option key={c} value={c} className="bg-[#14101f]">
+                    {c} — {currencyName(c)}
+                  </option>
+                ))}
+            </select>
+            {money.converted && (
+              <span className="basis-full text-center sm:basis-auto">
+                Estimate — you pay in cedis ·{" "}
+                <a href={RATES_CREDIT_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white/80">
+                  Rates By Exchange Rate API
+                </a>
+              </span>
+            )}
+          </div>
+        )}
+
+        <PlanStage plan={plan} callouts={callouts}>
           {(refs) => (
             <PlanCard
               key={plan.id}
@@ -239,6 +294,7 @@ function PricingContent() {
               busy={busy}
               error={error}
               onSubmit={checkout}
+              money={money}
             />
           )}
         </PlanStage>
@@ -307,7 +363,15 @@ interface CardRefs {
  * since the card's content changes per plan) with a connector line; on
  * narrower screens they drop into a grid under the card.
  */
-function PlanStage({ plan, children }: { plan: Plan; children: (refs: CardRefs) => React.ReactNode }) {
+function PlanStage({
+  plan,
+  callouts,
+  children,
+}: {
+  plan: Plan
+  callouts: (typeof CALLOUTS)[PlanId]
+  children: (refs: CardRefs) => React.ReactNode
+}) {
   const stageRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const refs: CardRefs = {
@@ -346,8 +410,6 @@ function PlanStage({ plan, children }: { plan: Plan; children: (refs: CardRefs) 
       window.removeEventListener("resize", measure)
     }
   }, [measure, plan.id])
-
-  const callouts = CALLOUTS[plan.id]
 
   return (
     <div className="mt-8">
@@ -415,6 +477,7 @@ function PlanCard({
   busy,
   error,
   onSubmit,
+  money,
 }: {
   plan: Plan
   refs: CardRefs
@@ -425,8 +488,10 @@ function PlanCard({
   busy: boolean
   error: string | null
   onSubmit: (e: React.FormEvent) => void
+  money: Money
 }) {
   const { whole, cents } = splitPrice(plan.pesewas)
+  const local = money.converted ? formatConverted((plan.pesewas / 100) * money.rate, money.currency) : null
   const Icon = plan.icon
   const [showAllUpsell, setShowAllUpsell] = useState(false)
   const upsell = plan.upsell
@@ -450,13 +515,33 @@ function PlanCard({
           </div>
 
           <div ref={refs.price} className="mt-6 flex items-baseline gap-1.5">
-            <span className="text-lg font-semibold text-white/70">{PREMIUM_CURRENCY}</span>
-            <span className="text-6xl font-bold tracking-tight">{whole}</span>
-            {cents && <span className="text-2xl font-bold text-white/80">{cents}</span>}
+            {local ? (
+              <>
+                {plan.pesewas > 0 && (
+                  <span className="text-2xl font-semibold text-white/55" title="Estimate">
+                    ≈
+                  </span>
+                )}
+                <span className="text-lg font-semibold text-white/70">{local.symbol}</span>
+                <span className="text-6xl font-bold tracking-tight">{local.number}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-lg font-semibold text-white/70">{PREMIUM_CURRENCY}</span>
+                <span className="text-6xl font-bold tracking-tight">{whole}</span>
+                {cents && <span className="text-2xl font-bold text-white/80">{cents}</span>}
+              </>
+            )}
           </div>
           <p ref={refs.terms} className="mt-2 text-sm font-medium text-white/75">
             {plan.terms}
           </p>
+          {local && plan.pesewas > 0 && (
+            <p className="mt-1 text-xs text-white/50">
+              Charged as <span className="font-semibold text-white/75">{ghsLabel(plan.pesewas)}</span> · your bank
+              converts it
+            </p>
+          )}
 
           <div ref={refs.cta} className="mt-6">
             {plan.id === "free" ? (
