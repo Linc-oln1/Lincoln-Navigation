@@ -21,40 +21,42 @@ import {
   X,
 } from "lucide-react"
 import { AccountLink } from "@/components/site/account-link"
+import { useI18n } from "@/components/i18n/language-provider"
 import { DestinationConditions, mapHref } from "@/components/features/destination-conditions"
 import { GHANA_DESTINATIONS } from "@/lib/ghana-destinations"
+import type { MessageKey } from "@/lib/i18n/messages"
 import { cn } from "@/lib/utils"
 
 type TravelMode = "driving" | "motorcycle" | "bus" | "walking" | "cycling"
 
-const MODES: { mode: TravelMode; icon: typeof Car; label: string }[] = [
-  { mode: "driving", icon: Car, label: "Drive" },
-  { mode: "bus", icon: Bus, label: "Trotro" },
-  { mode: "motorcycle", icon: Motorbike, label: "Moto" },
-  { mode: "walking", icon: Footprints, label: "Walk" },
-  { mode: "cycling", icon: Bike, label: "Bike" },
+const MODES: { mode: TravelMode; icon: typeof Car }[] = [
+  { mode: "driving", icon: Car },
+  { mode: "bus", icon: Bus },
+  { mode: "motorcycle", icon: Motorbike },
+  { mode: "walking", icon: Footprints },
+  { mode: "cycling", icon: Bike },
 ]
 
-const NAV = [
-  { label: "Features", href: "/features" },
-  { label: "Live Map", href: "/app" },
-  { label: "Pricing", href: "/pricing" },
-  { label: "Business", href: "/business" },
-  { label: "About", href: "/about" },
+const NAV: { labelKey: MessageKey; href: string }[] = [
+  { labelKey: "nav.features", href: "/features" },
+  { labelKey: "nav.liveMap", href: "/app" },
+  { labelKey: "nav.pricing", href: "/pricing" },
+  { labelKey: "nav.business", href: "/business" },
+  { labelKey: "nav.about", href: "/about" },
 ]
 
-const PERKS = [
-  { icon: ShieldAlert, label: "Live hazard alerts" },
-  { icon: Route, label: "Every way you move" },
-  { icon: CloudSun, label: "Weather on the map" },
-  { icon: Smartphone, label: "Free to install" },
+const PERKS: { icon: typeof Car; labelKey: MessageKey }[] = [
+  { icon: ShieldAlert, labelKey: "ft.perk.hazards" },
+  { icon: Route, labelKey: "ft.perk.modes" },
+  { icon: CloudSun, labelKey: "ft.perk.weather" },
+  { icon: Smartphone, labelKey: "ft.perk.free" },
 ]
 
-const STATS = [
-  { value: "16", label: "Regions mapped" },
-  { value: "5", label: "Ways to travel" },
-  { value: `${GHANA_DESTINATIONS.length}`, label: "Places featured here" },
-  { value: "GHS 0", label: "To start navigating" },
+const STATS: { value: string; labelKey: MessageKey }[] = [
+  { value: "16", labelKey: "ft.stat.regions" },
+  { value: "5", labelKey: "ft.stat.modes" },
+  { value: `${GHANA_DESTINATIONS.length}`, labelKey: "ft.stat.places" },
+  { value: "GHS 0", labelKey: "ft.stat.free" },
 ]
 
 // Ink and accent pulled from the wallpaper's own palette — slate
@@ -73,6 +75,7 @@ const GLASS = "bg-[#f4f1e8]/80 backdrop-blur-xl border border-white/60 shadow-[0
  */
 export function FeaturesExperience({ displayFont }: { displayFont: string }) {
   const router = useRouter()
+  const { t } = useI18n()
   const railRef = useRef<HTMLDivElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [selectedId, setSelectedId] = useState(GHANA_DESTINATIONS[0].id)
@@ -126,22 +129,22 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo/lincoln-navigation-logo.webp" alt="" aria-hidden className="h-10 w-auto" />
             <span className="leading-tight">
-              <span className="block text-xs sm:text-sm font-bold tracking-[0.18em] uppercase">Lincoln Navigation</span>
-              <span className="hidden sm:block text-[10px] tracking-[0.25em] uppercase opacity-60">Explore · Route · Arrive</span>
+              <span className="block whitespace-nowrap text-xs sm:text-sm font-bold tracking-[0.18em] uppercase">Lincoln Navigation</span>
+              <span className="hidden sm:block whitespace-nowrap text-[10px] tracking-[0.25em] uppercase opacity-60">{t("ft.tagline")}</span>
             </span>
           </Link>
 
-          <nav className={cn("hidden lg:flex items-center gap-1 rounded-full px-2 py-1.5", GLASS)}>
+          <nav className={cn("hidden xl:flex items-center gap-1 rounded-full px-2 py-1.5", GLASS)}>
             {NAV.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 className={cn(
-                  "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+                  "whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
                   l.href === "/features" ? "bg-[#1c2a33] text-white" : "hover:bg-black/5",
                 )}
               >
-                {l.label}
+                {t(l.labelKey)}
               </Link>
             ))}
           </nav>
@@ -152,17 +155,17 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
             </span>
             <a
               href="#plan"
-              className="hidden sm:inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
+              className="hidden sm:inline-flex items-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"
               style={{ backgroundColor: ACCENT }}
             >
-              Plan Your Trip <ArrowRight className="h-4 w-4" />
+              {t("ft.planTrip")} <ArrowRight className="h-4 w-4" />
             </a>
             <button
               type="button"
               onClick={() => setMenuOpen((o) => !o)}
-              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-label={menuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
               aria-expanded={menuOpen}
-              className={cn("lg:hidden flex h-10 w-10 items-center justify-center rounded-full", GLASS)}
+              className={cn("xl:hidden flex h-10 w-10 items-center justify-center rounded-full", GLASS)}
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -170,10 +173,10 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
         </header>
 
         {menuOpen && (
-          <div className={cn("mx-4 -mt-2 mb-4 flex flex-col rounded-2xl p-2 lg:hidden", GLASS)}>
+          <div className={cn("mx-4 -mt-2 mb-4 flex flex-col rounded-2xl p-2 xl:hidden", GLASS)}>
             {NAV.map((l) => (
               <Link key={l.href} href={l.href} onClick={() => setMenuOpen(false)} className="rounded-xl px-4 py-3 text-base font-medium hover:bg-black/5">
-                {l.label}
+                {t(l.labelKey)}
               </Link>
             ))}
             <span className="flex px-2 py-2 sm:hidden">
@@ -187,18 +190,17 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
           <div className={cn("rounded-3xl p-6 sm:p-8 lg:rounded-none lg:bg-transparent lg:p-0 lg:backdrop-blur-none lg:border-0 lg:shadow-none", GLASS)}>
             <p className="hero-anim hero-fade flex items-center gap-3 text-xs font-semibold tracking-[0.3em] uppercase" style={{ color: ACCENT }}>
               <span className="h-px w-8" style={{ backgroundColor: ACCENT }} />
-              Ghana is waiting
+              {t("ft.eyebrow")}
             </p>
             <h1
               className={cn(displayFont, "hero-anim hero-fade mt-5 max-w-[11ch] text-[2.6rem] leading-[1.02] sm:text-6xl xl:text-7xl")}
               style={{ animationDelay: "0.08s", letterSpacing: "-0.02em" }}
             >
-              Find Your Way to Ghana&apos;s Wonders
+              {t("ft.title")}
             </h1>
             <span className="mt-6 block h-px w-12 bg-current opacity-30" />
             <p className="hero-anim hero-fade mt-6 max-w-md text-base leading-relaxed opacity-80" style={{ animationDelay: "0.16s" }}>
-              Castles on the coast, walkways above the rainforest, waterfalls and elephants — and
-              turn-by-turn routes to every one of them, by car, trotro, moto or on foot.
+              {t("ft.lead")}
             </p>
             <div className="hero-anim hero-fade mt-8 flex flex-wrap items-center gap-5" style={{ animationDelay: "0.24s" }}>
               <a
@@ -206,15 +208,15 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
                 className="inline-flex items-center gap-2 rounded-lg px-6 py-3.5 text-sm font-semibold text-white shadow-lg transition hover:brightness-110"
                 style={{ backgroundColor: ACCENT }}
               >
-                Explore Destinations <ArrowRight className="h-4 w-4" />
+                {t("ft.explore")} <ArrowRight className="h-4 w-4" />
               </a>
               <Link href="/app" className="group inline-flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-full border border-current/30 transition group-hover:bg-[#1c2a33] group-hover:text-white">
                   <Navigation className="h-4 w-4" />
                 </span>
                 <span className="leading-tight">
-                  <span className="block text-sm font-semibold">Open the Live Map</span>
-                  <span className="block text-xs opacity-60">See it work in your browser</span>
+                  <span className="block text-sm font-semibold">{t("ft.openMap")}</span>
+                  <span className="block text-xs opacity-60">{t("ft.openMapSub")}</span>
                 </span>
               </Link>
             </div>
@@ -222,11 +224,11 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
 
           {/* ---- where to next? ---- */}
           <form id="plan" onSubmit={planRoute} className={cn("hero-anim hero-fade scroll-mt-6 self-start rounded-3xl p-5", GLASS)} style={{ animationDelay: "0.3s" }}>
-            <h2 className="text-xl font-semibold">Where to next?</h2>
-            <p className="mt-1 text-sm opacity-60">Pick a place, choose how you&apos;re going.</p>
+            <h2 className="text-xl font-semibold">{t("ft.whereNext")}</h2>
+            <p className="mt-1 text-sm opacity-60">{t("ft.pickPlace")}</p>
 
             <div className="mt-4 grid grid-cols-5 gap-1 border-b border-black/10 pb-3">
-              {MODES.map(({ mode: m, icon: Icon, label }) => (
+              {MODES.map(({ mode: m, icon: Icon }) => (
                 <button
                   key={m}
                   type="button"
@@ -238,7 +240,7 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
                   )}
                 >
                   <Icon className="h-4 w-4" />
-                  {label}
+                  {t(`ft.mode.${m}` as MessageKey)}
                 </button>
               ))}
             </div>
@@ -247,17 +249,17 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
               <div className="flex items-center gap-3 px-4 py-3">
                 <LocateFixed className="h-4 w-4 flex-shrink-0" style={{ color: ACCENT }} />
                 <div className="min-w-0">
-                  <p className="text-[11px] opacity-55">From</p>
-                  <p className="text-sm font-medium">Your current location</p>
+                  <p className="text-[11px] opacity-55">{t("ft.from")}</p>
+                  <p className="text-sm font-medium">{t("ft.currentLoc")}</p>
                 </div>
               </div>
               <div className="border-t border-black/10 px-4 py-3">
-                <label htmlFor="features-to" className="block text-[11px] opacity-55">To</label>
+                <label htmlFor="features-to" className="block text-[11px] opacity-55">{t("ft.to")}</label>
                 <input
                   id="features-to"
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  placeholder="Search a place in Ghana"
+                  placeholder={t("ft.searchPh")}
                   className="w-full bg-transparent text-sm font-medium outline-none placeholder:opacity-40"
                 />
               </div>
@@ -270,7 +272,7 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
               className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-semibold text-white transition hover:brightness-110"
               style={{ backgroundColor: ACCENT }}
             >
-              Get Directions <ArrowRight className="h-4 w-4" />
+              {t("ft.getDirections")} <ArrowRight className="h-4 w-4" />
             </button>
           </form>
         </section>
@@ -279,9 +281,9 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
         <section id="destinations" className="mx-auto grid max-w-7xl scroll-mt-6 gap-6 px-4 pb-8 sm:px-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,520px)] xl:items-end">
           <div className="min-w-0">
             <div className={cn("mb-4 inline-flex items-center gap-5 rounded-full px-5 py-2", GLASS)}>
-              <h2 className="text-lg font-semibold">Popular Destinations</h2>
+              <h2 className="text-lg font-semibold">{t("ft.popular")}</h2>
               <button type="button" onClick={() => setShowAll((s) => !s)} className="text-sm font-semibold" style={{ color: ACCENT }}>
-                {showAll ? "Show less" : "View all"}
+                {showAll ? t("ft.showLess") : t("ft.viewAll")}
               </button>
             </div>
 
@@ -296,7 +298,7 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
                 <button
                   type="button"
                   onClick={() => scrollRail(-1)}
-                  aria-label="Previous destinations"
+                  aria-label={t("ft.prev")}
                   className={cn("absolute -left-3 top-[38%] z-10 hidden h-9 w-9 items-center justify-center rounded-full sm:flex", GLASS)}
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -309,7 +311,7 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
                 <button
                   type="button"
                   onClick={() => scrollRail(1)}
-                  aria-label="More destinations"
+                  aria-label={t("ft.next")}
                   className={cn("absolute -right-3 top-[38%] z-10 hidden h-9 w-9 items-center justify-center rounded-full sm:flex", GLASS)}
                 >
                   <ArrowRight className="h-4 w-4" />
@@ -319,9 +321,9 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
           </div>
 
           <div className={cn("grid grid-cols-2 sm:grid-cols-4 rounded-3xl", GLASS)}>
-            {PERKS.map(({ icon: Icon, label }, i) => (
+            {PERKS.map(({ icon: Icon, labelKey }, i) => (
               <div
-                key={label}
+                key={labelKey}
                 className={cn(
                   "flex flex-col items-center gap-3 px-3 py-6 text-center",
                   i > 0 && "sm:border-l border-black/10",
@@ -330,7 +332,7 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
                 )}
               >
                 <Icon className="h-6 w-6" strokeWidth={1.6} />
-                <span className="text-xs font-medium leading-snug">{label}</span>
+                <span className="text-xs font-medium leading-snug">{t(labelKey)}</span>
               </div>
             ))}
           </div>
@@ -340,15 +342,15 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
         <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-8">
           <div className={cn("grid grid-cols-2 gap-y-6 rounded-3xl px-6 py-6 md:grid-cols-4", GLASS)}>
             {STATS.map((s) => (
-              <div key={s.label} className="text-center md:text-left md:pl-6 md:first:pl-0">
+              <div key={s.labelKey} className="text-center md:text-start md:ps-6 md:first:ps-0">
                 <p className={cn(displayFont, "text-3xl")}>{s.value}</p>
-                <p className="mt-1 text-xs tracking-wide uppercase opacity-60">{s.label}</p>
+                <p className="mt-1 text-xs tracking-wide uppercase opacity-60">{t(s.labelKey)}</p>
               </div>
             ))}
           </div>
 
           <details className={cn("mt-4 rounded-2xl px-5 py-3 text-xs", GLASS)}>
-            <summary className="cursor-pointer font-semibold">Photo credits</summary>
+            <summary className="cursor-pointer font-semibold">{t("ft.credits")}</summary>
             <ul className="mt-3 grid gap-1.5 sm:grid-cols-2">
               {GHANA_DESTINATIONS.map((d) => (
                 <li key={d.id} className="opacity-75">
@@ -356,7 +358,7 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
                   <a href={d.credit.source} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
                     {d.credit.author}
                   </a>
-                  , {d.credit.licence}, via Wikimedia Commons
+                  , {d.credit.licence}, {t("ft.via")}
                 </li>
               ))}
             </ul>
@@ -378,6 +380,7 @@ function DestinationCard({
   onPick: (id: string) => void
   className?: string
 }) {
+  const { t } = useI18n()
   return (
     <button
       type="button"
@@ -387,7 +390,7 @@ function DestinationCard({
       }}
       aria-pressed={active}
       className={cn(
-        "group overflow-hidden rounded-2xl text-left transition",
+        "group overflow-hidden rounded-2xl text-start transition",
         GLASS,
         active ? "ring-2 ring-[#e8702a]" : "hover:-translate-y-0.5",
         className,
@@ -405,8 +408,8 @@ function DestinationCard({
       <div className="px-3 py-2.5">
         <p className="truncate text-sm font-semibold">{d.name}</p>
         <p className="mt-0.5 flex items-center justify-between gap-2 text-[11px] opacity-60">
-          <span className="truncate">{d.region}</span>
-          <span className="flex-shrink-0 rounded-full bg-black/5 px-2 py-0.5">{d.category}</span>
+          <span className="truncate">{t(`ft.region.${d.region}` as MessageKey)}</span>
+          <span className="flex-shrink-0 rounded-full bg-black/5 px-2 py-0.5">{t(`ft.cat.${d.category}` as MessageKey)}</span>
         </p>
       </div>
     </button>

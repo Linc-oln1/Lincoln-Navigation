@@ -81,7 +81,7 @@ function ConditionIcon({
 
 /* describeWeatherCode() returns English labels; this maps them to
    translation keys (anything unmapped is shown as-is). */
-const WX_KEYS: Record<string, MessageKey> = {
+export const WX_KEYS: Record<string, MessageKey> = {
   "Clear sky": "wx.clear",
   "Mainly clear": "wx.mainlyClear",
   "Partly cloudy": "wx.partlyCloudy",

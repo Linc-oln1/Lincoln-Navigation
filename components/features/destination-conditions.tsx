@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { CheckCircle2, Map as MapIcon } from "lucide-react"
+import { useI18n } from "@/components/i18n/language-provider"
+import { WX_KEYS } from "@/components/map/weather-widget"
+import type { MessageKey } from "@/lib/i18n/messages"
 import { fetchWeather, describeWeatherCode, weatherEmoji, type Weather } from "@/lib/weather"
 import { fetchHazards, hazardKindMeta, relativeTime, type Hazard } from "@/lib/hazards"
 import { haversineMeters } from "@/lib/geo-intelligence/confidence"
@@ -32,7 +35,16 @@ export function mapHref(d: GhanaDestination, mode?: string): string {
  * from the same /api/weather and /api/hazards the map uses. Each half
  * fails on its own — no weather still shows hazards, and vice versa.
  */
+/* describeWeatherCode() labels are English; reuse the map widget's
+   translation table for them (anything unmapped shows as-is). */
+function useWeatherLabel() {
+  const { t } = useI18n()
+  return (label: string) => (WX_KEYS[label] ? t(WX_KEYS[label]) : label)
+}
+
 export function DestinationConditions({ destination: d }: { destination: GhanaDestination }) {
+  const { t } = useI18n()
+  const weatherLabel = useWeatherLabel()
   const [state, setState] = useState<Conditions>({ status: "loading" })
 
   useEffect(() => {
@@ -73,13 +85,13 @@ export function DestinationConditions({ destination: d }: { destination: GhanaDe
       <div className="flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={d.photo} alt="" className="h-14 w-16 flex-shrink-0 rounded-xl object-cover" />
-        <p className="text-xs leading-snug opacity-75">{d.blurb}</p>
+        <p className="text-xs leading-snug opacity-75">{t(`ft.blurb.${d.id}` as MessageKey)}</p>
       </div>
 
-      <p className="mt-3 text-[10px] font-semibold tracking-[0.2em] uppercase opacity-50">Right now there</p>
+      <p className="mt-3 text-[10px] font-semibold tracking-[0.2em] uppercase opacity-50">{t("ft.rightNow")}</p>
 
       {state.status === "loading" ? (
-        <div className="mt-2 space-y-2" aria-label="Loading conditions">
+        <div className="mt-2 space-y-2" aria-label={t("ft.loading")}>
           <div className="h-4 w-3/4 animate-pulse rounded bg-black/10" />
           <div className="h-4 w-1/2 animate-pulse rounded bg-black/10" />
         </div>
@@ -89,40 +101,42 @@ export function DestinationConditions({ destination: d }: { destination: GhanaDe
             <p className="flex items-baseline gap-2">
               <span aria-hidden>{weatherEmoji(weather.current.code, weather.current.isDay)}</span>
               <span className="font-semibold">{Math.round(weather.current.temp)}°C</span>
-              <span className="opacity-70">{describeWeatherCode(weather.current.code).label}</span>
+              <span className="opacity-70">{weatherLabel(describeWeatherCode(weather.current.code).label)}</span>
               {today && (
-                <span className="ml-auto text-xs opacity-55">
-                  {today.precipProbability}% rain today
+                <span className="ms-auto text-xs opacity-55">
+                  {t("ft.rainToday", { n: today.precipProbability })}
                 </span>
               )}
             </p>
           ) : (
-            <p className="text-xs opacity-55">Weather isn&apos;t available right now.</p>
+            <p className="text-xs opacity-55">{t("ft.wxUnavailable")}</p>
           )}
 
           {hazards === null ? (
-            <p className="text-xs opacity-55">Road reports aren&apos;t available right now.</p>
+            <p className="text-xs opacity-55">{t("ft.hzUnavailable")}</p>
           ) : hazards.length === 0 ? (
             <p className="flex items-center gap-2 text-xs">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-700" />
-              No road hazards reported within {NEARBY_KM} km
+              {t("ft.noHazards", { km: NEARBY_KM })}
             </p>
           ) : (
             <div>
               <p className="text-xs font-semibold text-[#b4441d]">
-                {hazards.length} road hazard{hazards.length === 1 ? "" : "s"} reported within {NEARBY_KM} km
+                {hazards.length === 1
+                  ? t("ft.hazardsOne", { km: NEARBY_KM })
+                  : t("ft.hazardsMany", { n: hazards.length, km: NEARBY_KM })}
               </p>
               <ul className="mt-1 space-y-1">
                 {hazards.slice(0, 3).map((h) => {
-                  const meta = hazardKindMeta(h.kind)
+                  const { emoji } = hazardKindMeta(h.kind)
                   return (
                     <li key={h.id} className="flex items-center gap-2 text-xs">
-                      <span aria-hidden>{meta.emoji}</span>
-                      <span className="font-medium">{meta.label}</span>
+                      <span aria-hidden>{emoji}</span>
+                      <span className="font-medium">{t(`hazard.${h.kind}` as MessageKey)}</span>
                       <span className="opacity-60">
-                        {h.km < 1 ? "under 1 km" : `${Math.round(h.km)} km`} away
-                        {h.source === "crowd_report" && ` · ${relativeTime(h.createdAt)}`}
-                        {h.source === "forecast" && " · heavy rain forecast"}
+                        {h.km < 1 ? t("ft.underKm") : t("ft.kmAway", { n: Math.round(h.km) })}
+                        {h.source === "crowd_report" && ` · ${relativeTime(h.createdAt, t)}`}
+                        {h.source === "forecast" && ` · ${t("ft.rainForecast")}`}
                       </span>
                     </li>
                   )
@@ -138,7 +152,7 @@ export function DestinationConditions({ destination: d }: { destination: GhanaDe
         className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#e8702a] hover:underline"
       >
         <MapIcon className="h-3.5 w-3.5" />
-        View on the live map
+        {t("ft.viewOnMap")}
       </Link>
     </div>
   )

@@ -4,12 +4,19 @@
  * carries its author and licence so the page (and /attributions) can
  * credit it as the CC licences require.
  */
+export type GhanaRegion = "central" | "volta" | "savannah" | "eastern" | "upperEast" | "western" | "greaterAccra"
+export type DestinationCategory = "heritage" | "nature" | "wildlife" | "waterfall" | "culture" | "landmark" | "beach"
+
+/**
+ * Region, category and the one-line blurb are shown through
+ * translation keys (ft.region.*, ft.cat.*, ft.blurb.<id> in
+ * lib/i18n/features-messages.ts); place names stay as proper nouns.
+ */
 export interface GhanaDestination {
   id: string
   name: string
-  region: string
-  category: "Heritage" | "Nature" | "Wildlife" | "Waterfall" | "Culture" | "Landmark" | "Beach"
-  blurb: string
+  region: GhanaRegion
+  category: DestinationCategory
   /** Where the pin goes on /app (the visitor entrance where there is one). */
   lat: number
   lng: number
@@ -21,9 +28,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "kakum",
     name: "Kakum National Park",
-    region: "Central Region",
-    category: "Nature",
-    blurb: "A rope walkway strung 40 m up through the rainforest canopy.",
+    region: "central",
+    category: "nature",
     lat: 5.3524,
     lng: -1.383,
     photo: "/features/places/kakum.jpg",
@@ -32,9 +38,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "cape-coast",
     name: "Cape Coast Castle",
-    region: "Central Region",
-    category: "Heritage",
-    blurb: "UNESCO-listed fort and memorial to the transatlantic slave trade.",
+    region: "central",
+    category: "heritage",
     lat: 5.1036,
     lng: -1.2413,
     photo: "/features/places/cape-coast.jpg",
@@ -43,9 +48,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "elmina",
     name: "Elmina Castle",
-    region: "Central Region",
-    category: "Heritage",
-    blurb: "Built by the Portuguese in 1482 — the oldest European building in sub-Saharan Africa.",
+    region: "central",
+    category: "heritage",
     lat: 5.0826,
     lng: -1.3486,
     photo: "/features/places/elmina.jpg",
@@ -54,9 +58,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "wli",
     name: "Wli Waterfalls",
-    region: "Volta Region",
-    category: "Waterfall",
-    blurb: "Ghana's highest waterfall, tumbling out of the Agumatsa hills.",
+    region: "volta",
+    category: "waterfall",
     lat: 7.1286,
     lng: 0.6012,
     photo: "/features/places/wli.jpg",
@@ -65,9 +68,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "mole",
     name: "Mole National Park",
-    region: "Savannah Region",
-    category: "Wildlife",
-    blurb: "Ghana's largest park — walk within sight of wild elephants.",
+    region: "savannah",
+    category: "wildlife",
     lat: 9.2607,
     lng: -1.8484,
     photo: "/features/places/mole.jpg",
@@ -76,9 +78,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "larabanga",
     name: "Larabanga Mosque",
-    region: "Savannah Region",
-    category: "Heritage",
-    blurb: "A centuries-old Sudano-Sahelian mud-and-timber mosque.",
+    region: "savannah",
+    category: "heritage",
     lat: 9.2186,
     lng: -1.8606,
     photo: "/features/places/larabanga.jpg",
@@ -87,9 +88,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "boti",
     name: "Boti Falls",
-    region: "Eastern Region",
-    category: "Waterfall",
-    blurb: "Twin \"male and female\" falls in the forest near Koforidua.",
+    region: "eastern",
+    category: "waterfall",
     lat: 6.1929,
     lng: -0.2193,
     photo: "/features/places/boti.jpg",
@@ -98,9 +98,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "paga",
     name: "Paga Crocodile Pond",
-    region: "Upper East Region",
-    category: "Wildlife",
-    blurb: "Sacred ponds where the crocodiles are famously calm.",
+    region: "upperEast",
+    category: "wildlife",
     lat: 10.9869,
     lng: -1.111,
     photo: "/features/places/paga.jpg",
@@ -109,9 +108,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "nzulezo",
     name: "Nzulezo Stilt Village",
-    region: "Western Region",
-    category: "Culture",
-    blurb: "A whole village built on stilts over Lake Tadane.",
+    region: "western",
+    category: "culture",
     lat: 5.0006,
     lng: -2.3475,
     photo: "/features/places/nzulezo.jpg",
@@ -120,9 +118,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "akosombo",
     name: "Akosombo Dam",
-    region: "Eastern Region",
-    category: "Landmark",
-    blurb: "The dam that holds back Lake Volta, the world's largest reservoir by area.",
+    region: "eastern",
+    category: "landmark",
     lat: 6.2997,
     lng: 0.059,
     photo: "/features/places/akosombo.jpg",
@@ -131,9 +128,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "aburi",
     name: "Aburi Botanical Gardens",
-    region: "Eastern Region",
-    category: "Nature",
-    blurb: "Shaded avenues of giant trees, laid out in 1890 on the Akuapem hills.",
+    region: "eastern",
+    category: "nature",
     lat: 5.8481,
     lng: -0.176,
     photo: "/features/places/aburi.jpg",
@@ -142,9 +138,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "labadi",
     name: "Labadi Beach",
-    region: "Greater Accra",
-    category: "Beach",
-    blurb: "Accra's liveliest beach, best at sunset.",
+    region: "greaterAccra",
+    category: "beach",
     lat: 5.5597,
     lng: -0.1497,
     photo: "/features/places/labadi.jpg",
@@ -153,9 +148,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "nkrumah",
     name: "Kwame Nkrumah Memorial Park",
-    region: "Greater Accra",
-    category: "Heritage",
-    blurb: "Where independence was declared in 1957, and Nkrumah now rests.",
+    region: "greaterAccra",
+    category: "heritage",
     lat: 5.5447,
     lng: -0.2034,
     photo: "/features/places/nkrumah.jpg",
@@ -164,9 +158,8 @@ export const GHANA_DESTINATIONS: GhanaDestination[] = [
   {
     id: "black-star",
     name: "Black Star Square",
-    region: "Greater Accra",
-    category: "Landmark",
-    blurb: "Independence Square and its Black Star Gate, on the Accra seafront.",
+    region: "greaterAccra",
+    category: "landmark",
     lat: 5.547,
     lng: -0.1925,
     photo: "/features/places/black-star.jpg",
