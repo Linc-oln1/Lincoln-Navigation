@@ -114,20 +114,34 @@ Files: `app/pricing/page.tsx`, `app/api/billing/checkout/route.ts`,
 `app/api/billing/verify/route.ts`, `lib/premium-cookie.ts` (HMAC
 sign/verify), `hooks/use-premium.ts` (client UI state).
 
-### Known limitations (do before charging real money)
+### Webhook
 
-- **No accounts yet.** Entitlement is a signed cookie on the paying
-  device. If the user clears cookies or switches devices they lose
-  access. Add auth + a `subscriptions` table and replace
-  `readEntitlement()` / `verifyPremiumCookie()` call sites with a
-  per-user lookup.
+`POST /api/paystack/webhook` (`app/api/paystack/webhook/route.ts`) is called
+by Paystack server-to-server on every charge, so a payment is recorded even if
+the buyer closes the tab before the redirect back to a verify route. It checks
+the `x-paystack-signature` header (HMAC-SHA512 of the raw body with
+`PAYSTACK_SECRET_KEY`), then on `charge.success`:
+
+- plan tag → `plan_purchases` row (linked to the account via `metadata.user_id`,
+  which checkout adds when the buyer is signed in) — restorable from /account;
+- `sponsor_id` → listing `awaiting_payment` → `pending_review`.
+
+Verify routes and the webhook share `lib/paystack.ts` (`planPayment`,
+`markSponsorPaid`), and every write is idempotent, so either can run first.
+It returns 500 only when our database write fails, so Paystack retries.
+The webhook records payments; it doesn't set the browser cookie — a buyer who
+never came back gets their plan through **Restore** on /account.
+
+**Setup:** Paystack dashboard → Settings → API Keys & Webhooks → Webhook URL
+`https://www.lincolnnavigation.com/api/paystack/webhook` (live mode; set the
+test-mode URL too if you test with `sk_test_`).
+
+### Known limitations
+
 - **One-off charge, not a true subscription.** The current flow
   charges once and grants ~31 days. For real recurring billing, use
-  Paystack **Plans + Subscriptions** and a webhook
-  (`charge.success`, `subscription.disable`) to extend/revoke the
-  entitlement.
-- Add a Paystack webhook endpoint and verify its signature with
-  `PAYSTACK_SECRET_KEY`.
+  Paystack **Plans + Subscriptions**; the webhook would then also handle
+  `subscription.create` / `invoice.payment_failed` / `subscription.disable`.
 
 ### Plans on /pricing
 

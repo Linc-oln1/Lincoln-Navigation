@@ -18,7 +18,11 @@ export interface PurchaseRow {
 
 const COLUMNS = "reference, plan, email, user_id, paid_at, expires_at"
 
-/** Remember a verified payment. Never throws: recording is best effort. */
+/**
+ * Remember a verified payment. Never throws: recording is best effort.
+ * Returns false only if Supabase is set up but the write failed, so the
+ * webhook can ask Paystack to retry.
+ */
 export async function recordPurchase(input: {
   reference: string
   plan: PaidPlan
@@ -26,8 +30,8 @@ export async function recordPurchase(input: {
   userId: string | null
   paidAtMs: number
   expiresAtSec: number
-}): Promise<void> {
-  if (!ADMIN_ENABLED) return
+}): Promise<boolean> {
+  if (!ADMIN_ENABLED) return true
   try {
     const { error } = await createAdminClient()
       .from("plan_purchases")
@@ -43,9 +47,14 @@ export async function recordPurchase(input: {
         },
         { onConflict: "reference" }
       )
-    if (error) console.error("[plans] could not record purchase:", error.message)
+    if (error) {
+      console.error("[plans] could not record purchase:", error.message)
+      return false
+    }
+    return true
   } catch (error) {
     console.error("[plans] could not record purchase:", error)
+    return false
   }
 }
 

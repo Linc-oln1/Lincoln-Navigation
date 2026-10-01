@@ -14,6 +14,7 @@ import {
   PREMIUM_PRICE_PESEWAS,
   PRO_PRICE_PESEWAS,
 } from "@/lib/monetization"
+import { getSessionUser } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
   const secret = process.env.PAYSTACK_SECRET_KEY
@@ -45,6 +46,10 @@ export async function POST(req: Request) {
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
     new URL(req.url).origin
 
+  // Tag the payment with the account (if signed in) so the webhook can link
+  // it even when the buyer never comes back through /api/billing/verify.
+  const user = await getSessionUser()
+
   const res = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
     headers: {
@@ -59,6 +64,7 @@ export async function POST(req: Request) {
       metadata: {
         plan: plan === "pro" ? "pro_monthly" : "premium_monthly",
         product: "LincolnNavigation.com",
+        ...(user ? { user_id: user.id } : {}),
       },
     }),
   })
