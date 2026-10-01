@@ -2,12 +2,14 @@ import Link from "next/link"
 import { LegalPage } from "@/components/legal/legal-page"
 import { CONTACT_EMAIL, LEGAL_UPDATED } from "@/lib/legal"
 import { SPONSOR_DAYS } from "@/lib/monetization"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "Advertising & Affiliates — Lincoln Navigation",
   description:
     "How LincolnNavigation.com labels ads and sponsored places, earns affiliate commission, and what advertisers may and may not promote.",
-}
+  path: "/advertising-policy",
+})
 
 export default function AdvertisingPolicyPage() {
   return (

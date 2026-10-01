@@ -1,10 +1,9 @@
 "use client"
 
-import { Suspense, useCallback, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
-import { useSearchParams } from "next/navigation"
 import { ArrowRight, Briefcase, Check, Loader2, Map as MapIcon, Sparkles } from "lucide-react"
 import {
   FREE_FEATURES,
@@ -151,25 +150,23 @@ function splitPrice(pesewas: number): { whole: string; cents: string } {
   return { whole, cents: cents ? `.${String(cents).padStart(2, "0")}` : "" }
 }
 
+// The query string is read after mount rather than with useSearchParams, so
+// the whole page is prerendered (search engines and link previews see the
+// plans, not an empty Suspense fallback).
 export default function PricingPage() {
-  return (
-    <Suspense fallback={<main className="min-h-screen bg-[#07060b]" />}>
-      <PricingContent />
-    </Suspense>
-  )
-}
-
-function PricingContent() {
-  const params = useSearchParams()
+  const [params, setParams] = useState(() => new URLSearchParams())
   const { isPremium, isPro, expiresAt, renews } = usePremium()
   const { user, loading: sessionLoading } = useSession()
   const { t, lang } = useI18n()
   // ?plan=free|pro picks the tab; coming back from a Pro payment opens Pro.
-  const [planId, setPlanId] = useState<PlanId>(() => {
-    const p = params.get("plan")
-    if (p === "free" || p === "pro") return p
-    return params.get("welcome") === "pro" ? "pro" : "premium"
-  })
+  const [planId, setPlanId] = useState<PlanId>("premium")
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    setParams(q)
+    const p = q.get("plan")
+    if (p === "free" || p === "pro") setPlanId(p)
+    else if (q.get("welcome") === "pro") setPlanId("pro")
+  }, [])
   const [busy, setBusy] = useState(false)
   const [billing, setBilling] = useState<Billing>("monthly")
   const [error, setError] = useState<string | null>(null)

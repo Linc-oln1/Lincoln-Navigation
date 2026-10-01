@@ -13,19 +13,20 @@ export const metadata: Metadata = {
   // Makes relative URLs in metadata (share images, canonical links)
   // absolute, which link previews require.
   metadataBase: new URL(SITE_BASE),
-  title: 'Lincoln Navigation - Ghana Maps',
-  description: 'Navigate Ghana with precision. Your trusted map navigator for exploring Ghana.',
+  title: 'Lincoln Navigation — Ghana Maps & Directions',
+  description:
+    'Free maps and turn-by-turn directions for Ghana — by car, trotro, motorbike, bike or on foot, with road hazards and weather on your route.',
   // Site-wide share preview; pages override title/description via
   // lib/page-meta.ts, and the image comes from app/opengraph-image.tsx.
   openGraph: {
-    title: 'Lincoln Navigation - Ghana Maps',
+    title: 'Lincoln Navigation — Ghana Maps & Directions',
     description: 'Maps and turn-by-turn directions built for how Ghana actually moves.',
     siteName: 'Lincoln Navigation',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Lincoln Navigation - Ghana Maps',
+    title: 'Lincoln Navigation — Ghana Maps & Directions',
     description: 'Maps and turn-by-turn directions built for how Ghana actually moves.',
   },
   manifest: '/manifest.webmanifest',

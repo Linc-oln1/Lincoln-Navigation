@@ -1,12 +1,14 @@
 import Link from "next/link"
 import { LegalPage, LegalTable } from "@/components/legal/legal-page"
 import { LEGAL_UPDATED, PRIVACY_EMAIL } from "@/lib/legal"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "Cookie Policy — Lincoln Navigation",
   description:
     "Every cookie and piece of browser storage LincolnNavigation.com uses, what it is for, and how to control it.",
-}
+  path: "/cookies",
+})
 
 type Row = { name: string; purpose: string; kept: string }
 

@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { LegalPage, LegalTable } from "@/components/legal/legal-page"
+import { pageMeta } from "@/lib/page-meta"
 import {
   DPC_REGISTRATION,
   LEGAL_ADDRESS,
@@ -9,11 +10,12 @@ import {
   SITE_NAME,
 } from "@/lib/legal"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "Privacy Policy — Lincoln Navigation",
   description:
     "What LincolnNavigation.com collects, why, who it is shared with, how long it is kept, and your rights under Ghana's Data Protection Act and other laws.",
-}
+  path: "/privacy",
+})
 
 const mail = <a href={`mailto:${PRIVACY_EMAIL}`}>{PRIVACY_EMAIL}</a>
 

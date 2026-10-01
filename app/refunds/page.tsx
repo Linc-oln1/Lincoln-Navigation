@@ -1,12 +1,14 @@
 import Link from "next/link"
 import { LegalPage } from "@/components/legal/legal-page"
 import { CONTACT_EMAIL, LEGAL_UPDATED } from "@/lib/legal"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "Refund Policy — Lincoln Navigation",
   description:
     "When you can get your money back for Premium or Pro on LincolnNavigation.com, and how to ask.",
-}
+  path: "/refunds",
+})
 
 // Refund windows, in one place so the page and any future code agree.
 const CHANGE_OF_MIND_HOURS = 48

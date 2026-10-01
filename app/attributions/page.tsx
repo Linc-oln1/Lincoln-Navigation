@@ -1,12 +1,14 @@
 import { LegalPage, LegalTable } from "@/components/legal/legal-page"
 import { LEGAL_UPDATED } from "@/lib/legal"
 import { GHANA_DESTINATIONS } from "@/lib/ghana-destinations"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "Map Data & Attributions — Lincoln Navigation",
   description:
     "The open data, map imagery, services and open-source software that power LincolnNavigation.com, and their licences.",
-}
+  path: "/attributions",
+})
 
 type Credit = { name: string; href: string; use: string; licence: string }
 

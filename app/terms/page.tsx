@@ -1,12 +1,14 @@
 import Link from "next/link"
 import { LegalPage } from "@/components/legal/legal-page"
 import { CONTACT_EMAIL, LEGAL_NAME, LEGAL_UPDATED, SITE_NAME } from "@/lib/legal"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "Terms of Service — Lincoln Navigation",
   description:
     "The agreement for using LincolnNavigation.com: accounts, paid plans, hazard reports, fleet tools, safe driving, and liability.",
-}
+  path: "/terms",
+})
 
 const mail = <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
 

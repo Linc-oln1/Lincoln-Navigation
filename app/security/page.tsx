@@ -1,10 +1,12 @@
 import { LegalPage } from "@/components/legal/legal-page"
 import { LEGAL_UPDATED, SECURITY_EMAIL } from "@/lib/legal"
+import { pageMeta } from "@/lib/page-meta"
 
-export const metadata = {
+export const metadata = pageMeta({
   title: "Security — Lincoln Navigation",
   description: "How to report a security vulnerability in LincolnNavigation.com.",
-}
+  path: "/security",
+})
 
 export default function SecurityPage() {
   return (
