@@ -14,27 +14,32 @@ import {
   PREMIUM_PRICE_PESEWAS,
   PRO_FEATURES,
   PRO_PRICE_PESEWAS,
+  FREE_LIMITS,
   type PlanFeature,
 } from "@/lib/monetization"
 import { usePremium } from "@/hooks/use-premium"
 import { useSession } from "@/hooks/use-session"
 import { useLocalCurrency } from "@/hooks/use-local-currency"
+import { CONTACT_EMAIL } from "@/lib/legal"
 import { BASE_CURRENCY, PICKER_CURRENCIES, RATES_CREDIT_URL, currencyName, formatConverted } from "@/lib/currency"
-import { AgreeLine } from "@/components/site-links"
+import { useI18n } from "@/components/i18n/language-provider"
+import { fillNodes } from "@/components/i18n/rich-text"
+import type { MessageKey } from "@/lib/i18n/messages"
 import { cn } from "@/lib/utils"
 
 type PlanId = "free" | "premium" | "pro"
 
 interface Plan {
   id: PlanId
+  /** "Premium" and "Pro" are product names; "Free" is translated (planName). */
   name: string
-  badge: string
+  badgeKey: MessageKey
   icon: typeof Sparkles
   pesewas: number
   /** Small line under the price. */
-  terms: string
+  termsKey: MessageKey
   /** Lead-in above the included list, for the paid tiers. */
-  lead?: string
+  leadKey?: MessageKey
   included: PlanFeature[]
   /** What the next tier up adds — shown struck through, as "not in this plan". */
   upsell?: { tier: string; features: PlanFeature[] }
@@ -44,32 +49,32 @@ const PLANS: Plan[] = [
   {
     id: "free",
     name: "Free",
-    badge: "Free forever",
+    badgeKey: "pr.badge.free",
     icon: MapIcon,
     pesewas: 0,
-    terms: "forever · no sign-up needed",
+    termsKey: "pr.terms.free",
     included: FREE_FEATURES,
     upsell: { tier: "Premium", features: PREMIUM_FEATURES },
   },
   {
     id: "premium",
     name: "Premium",
-    badge: "Recommended",
+    badgeKey: "pr.badge.premium",
     icon: Sparkles,
     pesewas: PREMIUM_PRICE_PESEWAS,
-    terms: "per month · auto-renew by card, or pay once",
-    lead: "Everything in Free, plus",
+    termsKey: "pr.terms.paid",
+    leadKey: "pr.lead.premium",
     included: PREMIUM_FEATURES,
     upsell: { tier: "Pro", features: PRO_FEATURES },
   },
   {
     id: "pro",
     name: "Pro",
-    badge: "For businesses",
+    badgeKey: "pr.badge.pro",
     icon: Briefcase,
     pesewas: PRO_PRICE_PESEWAS,
-    terms: "per month · auto-renew by card, or pay once",
-    lead: "Everything in Premium, plus",
+    termsKey: "pr.terms.paid",
+    leadKey: "pr.lead.pro",
     included: PRO_FEATURES,
   },
 ]
@@ -82,38 +87,50 @@ const UPSELL_PREVIEW = 3
  * each one points at; copy is per plan so every line stays true.
  */
 type CalloutTarget = "price" | "terms" | "cta" | "features"
-const CALLOUTS: Record<PlanId, { target: CalloutTarget; side: "left" | "right"; title: string; body: string }[]> = {
+type Callout = { target: CalloutTarget; side: "left" | "right"; title: string; body: string }
+const CALLOUTS: Record<PlanId, { target: CalloutTarget; side: "left" | "right"; key: string }[]> = {
   free: [
-    { target: "price", side: "left", title: "Actually free", body: "No card, no trial that runs out." },
-    { target: "terms", side: "right", title: "Nothing to sign", body: "Open the map and go — an account is optional." },
-    { target: "cta", side: "left", title: "One step", body: "The map opens right in your browser." },
-    { target: "features", side: "right", title: "What upgrading adds", body: "Crossed-out lines are the extras in Premium." },
+    { target: "price", side: "left", key: "actuallyFree" },
+    { target: "terms", side: "right", key: "nothingToSign" },
+    { target: "cta", side: "left", key: "oneStep" },
+    { target: "features", side: "right", key: "upgradeAdds" },
   ],
   premium: [
-    { target: "price", side: "left", title: "Transparent pricing", body: "In cedis, taxes included. What you see is what you pay." },
-    { target: "terms", side: "right", title: "Your choice", body: "Auto-renew by card and cancel anytime — or pay once with Mobile Money, bank or card for 31 days." },
-    { target: "cta", side: "left", title: "Clear next step", body: "Sign in, pick monthly or pay once, then pay securely with Paystack." },
-    { target: "features", side: "right", title: "All live today", body: "Every feature listed works now — nothing is “coming soon”." },
+    { target: "price", side: "left", key: "transparent" },
+    { target: "terms", side: "right", key: "choice" },
+    { target: "cta", side: "left", key: "nextStep" },
+    { target: "features", side: "right", key: "allLive" },
   ],
   pro: [
-    { target: "price", side: "left", title: "Transparent pricing", body: "In cedis, taxes included. What you see is what you pay." },
-    { target: "terms", side: "right", title: "Your choice", body: "Auto-renew by card and cancel anytime — or pay once with Mobile Money, bank or card for 31 days." },
-    { target: "cta", side: "left", title: "Bigger team?", body: "Talk to us about a team plan below the button." },
-    { target: "features", side: "right", title: "All live today", body: "Fleet, truck routing, runs and analytics work now." },
+    { target: "price", side: "left", key: "transparent" },
+    { target: "terms", side: "right", key: "choice" },
+    { target: "cta", side: "left", key: "team" },
+    { target: "features", side: "right", key: "allLivePro" },
   ],
 }
 
 type Billing = "monthly" | "once"
-const ONCE_DAYS_LABEL = "31 days"
-const BILLING_OPTIONS: { id: Billing; label: string; sub: string }[] = [
-  { id: "monthly", label: "Monthly", sub: "Card · auto-renews" },
-  { id: "once", label: "Pay once", sub: "MoMo, bank or card" },
+const BILLING_OPTIONS: { id: Billing; labelKey: MessageKey; subKey: MessageKey }[] = [
+  { id: "monthly", labelKey: "pr.monthly", subKey: "pr.monthlySub" },
+  { id: "once", labelKey: "pr.once", subKey: "pr.onceSub" },
 ]
+
+/** "Free" is translated; "Premium" / "Pro" are product names. */
+function planName(plan: Plan, t: (k: MessageKey) => string) {
+  return plan.id === "free" ? t("pr.free") : plan.name
+}
+
+/** A plan feature line in the visitor's language (English fallback built in). */
+function featureText(f: PlanFeature, t: (k: MessageKey, p?: Record<string, string | number>) => string) {
+  return t(`pr.f.${f.id}` as MessageKey, { n: FREE_LIMITS.savedPlaces })
+}
 
 /** Sign in, then come back to this plan's tab. */
 function signInHref(plan: PlanId) {
   return `/login?next=${encodeURIComponent(`/pricing?plan=${plan}`)}`
 }
+
+const agreeLink = "underline underline-offset-2 hover:text-white/80"
 
 /** What Paystack actually charges, e.g. "GHS 90.00". */
 function ghsLabel(pesewas: number): string {
@@ -146,6 +163,7 @@ function PricingContent() {
   const params = useSearchParams()
   const { isPremium, isPro, expiresAt, renews } = usePremium()
   const { user, loading: sessionLoading } = useSession()
+  const { t, lang } = useI18n()
   // ?plan=free|pro picks the tab; coming back from a Pro payment opens Pro.
   const [planId, setPlanId] = useState<PlanId>(() => {
     const p = params.get("plan")
@@ -164,14 +182,18 @@ function PricingContent() {
   const cur = useLocalCurrency()
   const money: Money = { currency: cur.currency, rate: cur.rate, converted: cur.ready && cur.isConverted }
   // The price callout must stay true when the card shows an estimate.
-  const callouts = CALLOUTS[plan.id].map((c) =>
+  const callouts: Callout[] = CALLOUTS[plan.id].map((c) =>
     c.target === "price" && money.converted && plan.pesewas > 0
       ? {
           ...c,
-          title: `Shown in ${money.currency}`,
-          body: `An estimate at today's rate. You're charged ${ghsLabel(plan.pesewas)}; your bank's rate may differ a little.`,
+          title: t("pr.c.shownIn.t", { currency: money.currency }),
+          body: t("pr.c.shownIn.b", { amount: ghsLabel(plan.pesewas) }),
         }
-      : c,
+      : {
+          ...c,
+          title: t(`pr.c.${c.key === "allLivePro" ? "allLive" : c.key}.t` as MessageKey),
+          body: t(`pr.c.${c.key}.b` as MessageKey),
+        },
   )
 
   const choosePlan = (id: PlanId) => {
@@ -201,10 +223,10 @@ function PricingContent() {
         return
       }
       const data = (await res.json()) as { url?: string; error?: string }
-      if (!res.ok || !data.url) throw new Error(data.error || "Could not start checkout.")
+      if (!res.ok || !data.url) throw new Error(data.error || t("pr.errStart"))
       window.location.href = data.url
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.")
+      setError(err instanceof Error ? err.message : t("pr.errGeneric"))
       setBusy(false)
     }
   }
@@ -218,52 +240,41 @@ function PricingContent() {
 
       <div className="relative z-10 mx-auto w-full max-w-6xl flex-1 px-4 pb-20 pt-12 sm:px-6 sm:pt-16">
         <header className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#c4b5fd]">Pricing</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#c4b5fd]">{t("nav.pricing")}</p>
           <h1 className="mt-4 text-4xl leading-tight tracking-tight sm:text-6xl">
-            <span className="font-extrabold">Every road.</span>{" "}
-            <span className="block font-light text-white/90 sm:inline">One simple price.</span>
+            <span className="font-extrabold">{t("pr.title1")}</span>{" "}
+            <span className="block font-light text-white/90 sm:inline">{t("pr.title2")}</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/60 sm:text-lg">
-            The map, search and directions are free forever. Pay only for the extras you want —
-            monthly by card, or once with Mobile Money.
+            {t("pr.lead")}
           </p>
         </header>
 
         <div className="mx-auto mt-8 max-w-xl space-y-3">
-          {welcome && <Notice tone="good">🎉 You&rsquo;re on Premium. Thank you for supporting the project!</Notice>}
-          {welcomePro && <Notice tone="good">🎉 You&rsquo;re on Pro. Thank you — it includes everything in Premium.</Notice>}
+          {welcome && <Notice tone="good">{t("pr.welcome")}</Notice>}
+          {welcomePro && <Notice tone="good">{t("pr.welcomePro")}</Notice>}
           {paymentError && (
             <Notice tone="bad">
-              {paymentError === "payment-expired" ? (
-                <>That payment is more than a month old, so the period it paid for has already ended. Subscribe again below.</>
-              ) : paymentError === "payment-not-a-plan" ? (
-                <>
-                  That payment wasn&rsquo;t for a Premium or Pro plan, so nothing was unlocked. If you were charged for a
-                  plan, email info@lincolnnavigation.com with your payment reference.
-                </>
-              ) : (
-                <>
-                  We couldn&rsquo;t confirm that payment ({paymentError}). If you were charged, wait a minute and open the
-                  link from your payment email again, or contact info@lincolnnavigation.com.
-                </>
-              )}
+              {paymentError === "payment-expired"
+                ? t("pr.err.expired")
+                : paymentError === "payment-not-a-plan"
+                  ? t("pr.err.notPlan", { email: CONTACT_EMAIL })
+                  : t("pr.err.other", { code: paymentError, email: CONTACT_EMAIL })}
             </Notice>
           )}
           {isPremium && !welcome && !welcomePro && (
             <Notice tone="good">
-              Your {isPro ? "Pro" : "Premium"} plan is active
               {renews
-                ? " and renews monthly. Manage it on your account page"
+                ? t("pr.activeRenews", { plan: isPro ? "Pro" : "Premium" })
                 : expiresAt
-                  ? ` until ${new Date(expiresAt).toLocaleDateString()}`
-                  : ""}
-              .
+                  ? t("pr.activeUntil", { plan: isPro ? "Pro" : "Premium", date: new Date(expiresAt).toLocaleDateString(lang) })
+                  : t("pr.active", { plan: isPro ? "Pro" : "Premium" })}
             </Notice>
           )}
         </div>
 
         {/* ---- plan switcher ---- */}
-        <div role="tablist" aria-label="Plans" className="mx-auto mt-10 flex w-fit gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur">
+        <div role="tablist" aria-label={t("pr.plansAria")} className="mx-auto mt-10 flex w-fit gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1 backdrop-blur">
           {PLANS.map((p) => (
             <button
               key={p.id}
@@ -277,14 +288,14 @@ function PricingContent() {
                 p.id === planId ? "bg-white text-[#12091f]" : "text-white/60 hover:text-white",
               )}
             >
-              {p.name}
+              {planName(p, t)}
             </button>
           ))}
         </div>
 
         {cur.ready && cur.availableRates && (
           <div className="mx-auto mt-4 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-white/50">
-            <label htmlFor="price-currency">Prices in</label>
+            <label htmlFor="price-currency">{t("pr.pricesIn")}</label>
             <select
               id="price-currency"
               value={cur.currency}
@@ -295,13 +306,13 @@ function PricingContent() {
                 .filter((c) => c === BASE_CURRENCY || cur.availableRates?.[c])
                 .map((c) => (
                   <option key={c} value={c} className="bg-[#14101f]">
-                    {c} — {currencyName(c)}
+                    {c} — {currencyName(c, lang)}
                   </option>
                 ))}
             </select>
             {money.converted && (
               <span className="basis-full text-center sm:basis-auto">
-                Estimate — you pay in cedis ·{" "}
+                {t("pr.estimate")} ·{" "}
                 <a href={RATES_CREDIT_URL} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-white/80">
                   Rates By Exchange Rate API
                 </a>
@@ -317,9 +328,9 @@ function PricingContent() {
               plan={plan}
               refs={refs}
               active={plan.id === "free" ? false : plan.id === "pro" ? isPro : isPremium}
-              activeLabel={plan.id === "premium" && isPro ? "Included in your Pro plan" : "Active — you’re all set"}
+              activeLabel={plan.id === "premium" && isPro ? t("pr.inPro") : t("pr.activeLabel")}
               topUp={topUp}
-              activeUntil={expiresAt ? new Date(expiresAt).toLocaleDateString() : null}
+              activeUntil={expiresAt ? new Date(expiresAt).toLocaleDateString(lang) : null}
               billing={billing}
               onBilling={setBilling}
               accountEmail={user?.email ?? null}
@@ -333,9 +344,9 @@ function PricingContent() {
         </PlanStage>
 
         <p className="mt-14 text-center text-sm text-white/55">
-          Run a business in Ghana?{" "}
+          {t("pr.business")}{" "}
           <Link href="/advertise" className="font-semibold text-[#c4b5fd] hover:underline">
-            Advertise or sponsor a place →
+            {t("pr.advertise")}
           </Link>
         </p>
       </div>
@@ -402,7 +413,7 @@ function PlanStage({
   children,
 }: {
   plan: Plan
-  callouts: (typeof CALLOUTS)[PlanId]
+  callouts: Callout[]
   children: (refs: CardRefs) => React.ReactNode
 }) {
   const stageRef = useRef<HTMLDivElement>(null)
@@ -533,6 +544,7 @@ function PlanCard({
   onSubmit: (e: React.FormEvent) => void
   money: Money
 }) {
+  const { t } = useI18n()
   const { whole, cents } = splitPrice(plan.pesewas)
   const local = money.converted ? formatConverted((plan.pesewas / 100) * money.rate, money.currency) : null
   const Icon = plan.icon
@@ -550,10 +562,10 @@ function PlanCard({
 
         <div className="relative">
           <div className="flex items-start justify-between gap-3">
-            <h2 className="text-2xl font-medium">{plan.name}</h2>
+            <h2 className="text-2xl font-medium">{planName(plan, t)}</h2>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1 text-[11px] font-semibold text-white/85">
               <Icon className="h-3.5 w-3.5 text-[#c4b5fd]" />
-              {plan.badge}
+              {t(plan.badgeKey)}
             </span>
           </div>
 
@@ -561,7 +573,7 @@ function PlanCard({
             {local ? (
               <>
                 {plan.pesewas > 0 && (
-                  <span className="text-2xl font-semibold text-white/55" title="Estimate">
+                  <span className="text-2xl font-semibold text-white/55" title={t("pr.estimateTitle")}>
                     ≈
                   </span>
                 )}
@@ -577,12 +589,13 @@ function PlanCard({
             )}
           </div>
           <p ref={refs.terms} className="mt-2 text-sm font-medium text-white/75">
-            {plan.terms}
+            {t(plan.termsKey)}
           </p>
           {local && plan.pesewas > 0 && (
             <p className="mt-1 text-xs text-white/50">
-              Charged as <span className="font-semibold text-white/75">{ghsLabel(plan.pesewas)}</span> · your bank
-              converts it
+              {fillNodes(t("pr.chargedAs"), {
+                amount: <span className="font-semibold text-white/75">{ghsLabel(plan.pesewas)}</span>,
+              })}
             </p>
           )}
 
@@ -592,7 +605,7 @@ function PlanCard({
                 href="/app"
                 className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-[#12091f] shadow-[0_0_0_3px_rgba(139,92,246,0.55)] transition hover:bg-white/90"
               >
-                Open the map <ArrowRight className="h-4 w-4" />
+                {t("pr.openMap")} <ArrowRight className="h-4 w-4" />
               </Link>
             ) : active && !topUp ? (
               <p className="rounded-full border border-[#a78bfa]/50 bg-[#8b5cf6]/15 px-5 py-3.5 text-center text-sm font-semibold text-[#ddd6fe]">
@@ -602,10 +615,10 @@ function PlanCard({
               <form onSubmit={onSubmit} className="space-y-3">
                 {topUp ? (
                   <p className="rounded-full border border-[#a78bfa]/50 bg-[#8b5cf6]/15 px-5 py-2.5 text-center text-xs font-semibold text-[#ddd6fe]">
-                    Active{activeUntil ? ` until ${activeUntil}` : ""} — top up below
+                    {activeUntil ? t("pr.activeTopUp", { date: activeUntil }) : t("pr.activeTopUpNoDate")}
                   </p>
                 ) : (
-                  <div role="radiogroup" aria-label="How to pay" className="grid grid-cols-2 gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
+                  <div role="radiogroup" aria-label={t("pr.howToPay")} className="grid grid-cols-2 gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
                     {BILLING_OPTIONS.map((o) => (
                       <button
                         key={o.id}
@@ -618,9 +631,9 @@ function PlanCard({
                           billing === o.id ? "bg-white text-[#12091f]" : "text-white/65 hover:text-white",
                         )}
                       >
-                        {o.label}
+                        {t(o.labelKey)}
                         <span className={cn("block text-[10px] font-medium", billing === o.id ? "text-[#12091f]/60" : "text-white/45")}>
-                          {o.sub}
+                          {t(o.subKey)}
                         </span>
                       </button>
                     ))}
@@ -628,7 +641,9 @@ function PlanCard({
                 )}
                 {accountEmail ? (
                   <p className="text-center text-xs text-white/55">
-                    Billed to <span className="font-semibold text-white/80">{accountEmail}</span>
+                    {fillNodes(t("pr.billedTo"), {
+                      email: <span className="font-semibold text-white/80">{accountEmail}</span>,
+                    })}
                   </p>
                 ) : null}
                 {accountEmail || sessionLoading ? (
@@ -641,40 +656,40 @@ function PlanCard({
                   >
                     {busy && <Loader2 className="h-4 w-4 animate-spin" />}
                     {busy
-                      ? "Starting checkout…"
+                      ? t("pr.starting")
                       : topUp
-                        ? `Add ${ONCE_DAYS_LABEL} — ${ghsLabel(plan.pesewas)}`
+                        ? t("pr.addDays", { amount: ghsLabel(plan.pesewas) })
                         : billing === "once"
-                          ? `Pay ${ghsLabel(plan.pesewas)} for ${ONCE_DAYS_LABEL}`
-                          : `Subscribe to ${plan.name}`}
+                          ? t("pr.payFor", { amount: ghsLabel(plan.pesewas) })
+                          : t("pr.subscribe", { plan: plan.name })}
                   </button>
                 ) : (
                   <Link
                     href={signInHref(plan.id)}
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-[#12091f] shadow-[0_0_0_3px_rgba(139,92,246,0.55)] transition hover:bg-white/90"
                   >
-                    Sign in to continue <ArrowRight className="h-4 w-4" />
+                    {t("pr.signIn")} <ArrowRight className="h-4 w-4" />
                   </Link>
                 )}
                 {error && <p className="text-center text-xs text-red-300">{error}</p>}
                 <p className="text-center text-[11px] leading-snug text-white/55">
-                  {topUp || billing === "once" ? (
-                    <>
-                      Mobile Money, bank or card via Paystack. One payment of {ghsLabel(plan.pesewas)} for {ONCE_DAYS_LABEL}
-                      {topUp ? ", added after your current days run out" : ""} — nothing renews.
-                    </>
-                  ) : (
-                    <>
-                      Card payment via Paystack. You&rsquo;re charged {ghsLabel(plan.pesewas)} now and every month until you
-                      cancel — cancel anytime on your account page.
-                    </>
-                  )}
+                  {topUp
+                    ? t("pr.topUpNote", { amount: ghsLabel(plan.pesewas) })
+                    : billing === "once"
+                      ? t("pr.onceNote", { amount: ghsLabel(plan.pesewas) })
+                      : t("pr.monthlyNote", { amount: ghsLabel(plan.pesewas) })}
                 </p>
-                <AgreeLine className="text-center text-white/40" purchase />
+                <p className="text-center text-[11px] leading-snug text-white/40">
+                  {fillNodes(t("pr.agree"), {
+                    terms: <Link href="/terms" className={agreeLink}>{t("au.terms")}</Link>,
+                    privacy: <Link href="/privacy" className={agreeLink}>{t("au.privacy")}</Link>,
+                    refunds: <Link href="/refunds" className={agreeLink}>{t("pr.refunds")}</Link>,
+                  })}
+                </p>
               </form>
             ) : (
               <p className="rounded-full border border-dashed border-white/20 px-5 py-3 text-center text-xs text-white/55">
-                Checkout isn&rsquo;t live yet — add your Paystack keys to enable it (see docs/MONETIZATION.md).
+                {t("pr.notLive")}
               </p>
             )}
             {plan.id === "pro" && (
@@ -682,30 +697,30 @@ function PlanCard({
                 href="/business#talk-to-us"
                 className="mt-3 block text-center text-xs font-semibold text-[#c4b5fd] hover:underline"
               >
-                Talk to us about a team plan →
+                {t("pr.team")}
               </Link>
             )}
           </div>
 
           <ul ref={refs.features} className="mt-7 space-y-2.5 text-sm">
-            {plan.lead && (
-              <li className="pb-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/45">{plan.lead}</li>
+            {plan.leadKey && (
+              <li className="pb-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/45">{t(plan.leadKey)}</li>
             )}
             {plan.included.map((f) => (
-              <li key={f.text} className="flex items-start gap-2.5">
+              <li key={f.id} className="flex items-start gap-2.5">
                 <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#a78bfa]" aria-hidden />
-                <span className="text-white/90">{f.text}</span>
+                <span className="text-white/90">{featureText(f, t)}</span>
               </li>
             ))}
             {upsell && (
               <>
                 <li className="pt-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-white/35">
-                  Not included — in {upsell.tier}
+                  {t("pr.notIncluded", { tier: upsell.tier })}
                 </li>
                 {upsellShown.map((f) => (
-                  <li key={f.text} className="flex items-start gap-2.5 text-white/35">
+                  <li key={f.id} className="flex items-start gap-2.5 text-white/35">
                     <Check className="mt-0.5 h-4 w-4 flex-shrink-0" aria-hidden />
-                    <span className="line-through decoration-white/30">{f.text}</span>
+                    <span className="line-through decoration-white/30">{featureText(f, t)}</span>
                   </li>
                 ))}
                 {hidden > 0 && (
@@ -715,7 +730,7 @@ function PlanCard({
                       onClick={() => setShowAllUpsell(true)}
                       className="text-xs font-semibold text-[#c4b5fd] hover:underline"
                     >
-                      + {hidden} more in {upsell.tier}
+                      {t("pr.more", { n: hidden, tier: upsell.tier })}
                     </button>
                   </li>
                 )}

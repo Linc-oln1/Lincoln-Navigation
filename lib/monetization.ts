@@ -84,31 +84,34 @@ export function formatProPrice(): string {
  * working. Flip it off (or delete it) when the feature ships.
  */
 export interface PlanFeature {
+  /** Looks up the translation: `pr.f.<id>` (lib/i18n/pricing-messages.ts). */
+  id: string
+  /** English text (also the fallback). */
   text: string
   soon?: boolean
 }
 
 /** What Lincoln Premium adds on top of Free — shown on /pricing. */
 export const PREMIUM_FEATURES: PlanFeature[] = [
-  { text: "AR / Live View camera navigation" },
-  { text: "No ads, anywhere" },
-  { text: "Turn-by-turn voice navigation" },
-  { text: "Multiple saved locations — unlimited saved places and trip history" },
-  { text: "Advanced traffic — live traffic on the map and traffic-aware travel times" },
-  { text: "Offline maps (save areas to your phone)" },
-  { text: "Advanced route options — fastest or shortest, avoid highways, tolls and ferries, and route choices" },
-  { text: "Real-time road alerts — hazards within 5 km of you, as they are reported" },
-  { text: "Local knowledge search — find a place by a landmark (“opposite the filling station”)" },
-  { text: "Advanced business discovery — opening hours, phone, website, distance and filters on nearby places" },
+  { id: "liveView", text: "AR / Live View camera navigation" },
+  { id: "noAds", text: "No ads, anywhere" },
+  { id: "voice", text: "Turn-by-turn voice navigation" },
+  { id: "saved", text: "Multiple saved locations — unlimited saved places and trip history" },
+  { id: "traffic", text: "Advanced traffic — live traffic on the map and traffic-aware travel times" },
+  { id: "offline", text: "Offline maps (save areas to your phone)" },
+  { id: "routeOptions", text: "Advanced route options — fastest or shortest, avoid highways, tolls and ferries, and route choices" },
+  { id: "alerts", text: "Real-time road alerts — hazards within 5 km of you, as they are reported" },
+  { id: "landmark", text: "Local knowledge search — find a place by a landmark (“opposite the filling station”)" },
+  { id: "business", text: "Advanced business discovery — opening hours, phone, website, distance and filters on nearby places" },
 ]
 
 /** What Lincoln Pro adds on top of Premium — shown on /pricing. */
 export const PRO_FEATURES: PlanFeature[] = [
-  { text: "Professional navigation — run a multi-stop route stop by stop, with progress" },
-  { text: "Fleet tools — up to 25 vehicles, and where each one is, live" },
-  { text: "Advanced routing — truck routing by height, width, length and weight" },
-  { text: "Business analytics — distance, time moving and speeds per vehicle, per day" },
-  { text: "Route optimization — enter up to 12 stops, get the best order and route" },
+  { id: "runs", text: "Professional navigation — run a multi-stop route stop by stop, with progress" },
+  { id: "fleet", text: "Fleet tools — up to 25 vehicles, and where each one is, live" },
+  { id: "truck", text: "Advanced routing — truck routing by height, width, length and weight" },
+  { id: "analytics", text: "Business analytics — distance, time moving and speeds per vehicle, per day" },
+  { id: "optimize", text: "Route optimization — enter up to 12 stops, get the best order and route" },
 ]
 
 /* --------------------- entitlement gates --------------------- */
@@ -150,13 +153,13 @@ export type TierLimits = { savedPlaces: number; tripHistory: number }
 
 /** Feature list for the free tier — shown on /pricing. */
 export const FREE_FEATURES: PlanFeature[] = [
-  { text: "Turn-by-turn navigation" },
-  { text: "Live traffic — how busy your driving route is right now" },
-  { text: "Full Ghana map and search" },
-  { text: "GPS positioning" },
-  { text: "Walking, driving, motorcycle, bus, bike, train and boat directions" },
-  { text: "Explore nearby places" },
-  { text: `Up to ${FREE_LIMITS.savedPlaces} saved places` },
+  { id: "turnByTurn", text: "Turn-by-turn navigation" },
+  { id: "freeTraffic", text: "Live traffic — how busy your driving route is right now" },
+  { id: "map", text: "Full Ghana map and search" },
+  { id: "gps", text: "GPS positioning" },
+  { id: "modes", text: "Walking, driving, motorcycle, bus, bike, train and boat directions" },
+  { id: "nearby", text: "Explore nearby places" },
+  { id: "freeSaved", text: `Up to ${FREE_LIMITS.savedPlaces} saved places` },
 ]
 
 /* ------------------------ advertising ------------------------- */
