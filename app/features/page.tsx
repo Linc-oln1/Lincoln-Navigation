@@ -1,9 +1,16 @@
-import { Playfair_Display } from "next/font/google"
+import localFont from "next/font/local"
 import { FeaturesExperience } from "@/components/features/features-experience"
 import { SiteFooter } from "@/components/site/site-footer"
 import { pageMeta } from "@/lib/page-meta"
 
-const display = Playfair_Display({ subsets: ["latin"], weight: ["400", "500"], display: "swap" })
+// Self-hosted (app/fonts, SIL OFL) so builds don't fetch from Google Fonts.
+const display = localFont({
+  src: [
+    { path: "../fonts/playfair-display-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/playfair-display-latin-500-normal.woff2", weight: "500", style: "normal" },
+  ],
+  display: "swap",
+})
 
 export const metadata = pageMeta({
   title: "Features — Discover Ghana with Lincoln Navigation",

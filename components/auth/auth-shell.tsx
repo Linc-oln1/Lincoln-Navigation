@@ -7,15 +7,30 @@
 import { useState, type ReactNode } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Lora, DM_Sans } from "next/font/google"
+import localFont from "next/font/local"
 import { ArrowRight, Compass, Eye, EyeOff, Loader2, MapPin } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useI18n } from "@/components/i18n/language-provider"
 import { fillNodes } from "@/components/i18n/rich-text"
 import type { MessageKey } from "@/lib/i18n/messages"
 
-const serif = Lora({ subsets: ["latin"], style: ["normal", "italic"], variable: "--font-auth-serif" })
-const sans = DM_Sans({ subsets: ["latin"], variable: "--font-auth-sans" })
+// Self-hosted variable fonts (app/fonts, SIL OFL) so builds don't fetch
+// from Google Fonts.
+const serif = localFont({
+  src: [
+    { path: "../../app/fonts/lora-latin-wght-normal.woff2", weight: "400 700", style: "normal" },
+    { path: "../../app/fonts/lora-latin-wght-italic.woff2", weight: "400 700", style: "italic" },
+  ],
+  variable: "--font-auth-serif",
+  display: "swap",
+})
+const sans = localFont({
+  src: "../../app/fonts/dm-sans-latin-wght-normal.woff2",
+  weight: "100 1000",
+  style: "normal",
+  variable: "--font-auth-sans",
+  display: "swap",
+})
 
 const YEAR = new Date().getFullYear()
 

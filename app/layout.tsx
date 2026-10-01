@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { RegisterServiceWorker } from '@/components/pwa/register-service-worker'
 import { PlanRestorer } from '@/components/site/plan-restorer'
@@ -9,9 +8,6 @@ import { LanguageProvider } from '@/components/i18n/language-provider'
 import { SITE_BASE } from '@/lib/site-base'
 import { ADS_ENABLED, ADSENSE_CLIENT } from '@/lib/monetization'
 import './globals.css'
-
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   // Makes relative URLs in metadata (share images, canonical links)
