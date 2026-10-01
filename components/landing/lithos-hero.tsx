@@ -18,6 +18,7 @@ interface LithosHeroProps {
 const NAV_LINKS: { id: string; labelKey: MessageKey }[] = [
   { id: "Features", labelKey: "nav.features" },
   { id: "Live Map", labelKey: "nav.liveMap" },
+  { id: "Pricing", labelKey: "nav.pricing" },
   { id: "About", labelKey: "nav.about" },
   { id: "Contact", labelKey: "nav.contact" },
 ]
@@ -27,6 +28,7 @@ const NAV_LINKS: { id: string; labelKey: MessageKey }[] = [
 const NAV_ROUTES: Record<string, string> = {
   Features: "/features",
   "Live Map": "/app",
+  Pricing: "/pricing",
   About: "/about",
   Contact: "/contact",
 }

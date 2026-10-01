@@ -3,9 +3,10 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Search, Navigation, Layers, User } from "lucide-react"
+import { ArrowLeft, Search, Navigation, Layers, Sparkles, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useSession } from "@/hooks/use-session"
+import { usePremium } from "@/hooks/use-premium"
 import { useI18n } from "@/components/i18n/language-provider"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
 import { StopNavigationDialog } from "@/components/map/stop-navigation-dialog"
@@ -21,6 +22,7 @@ interface HeaderProps {
 
 export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, activePanel, isNavigating = false }: HeaderProps) {
   const { user, authEnabled } = useSession()
+  const { isPremium } = usePremium()
   const router = useRouter()
   const { t } = useI18n()
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -58,7 +60,7 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
   return (
     <>
     <header className="absolute top-0 left-0 right-0 z-[1000] p-4">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto lg:max-w-3xl">
         {/* Logo & Search Bar */}
         <div className="bg-card/90 backdrop-blur-xl rounded-2xl border border-border shadow-2xl overflow-hidden">
           <div className="flex items-center gap-3 p-3">
@@ -103,7 +105,8 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
               <button
                 onClick={onDirectionsClick}
                 className={cn(
-                  "p-2.5 rounded-xl transition-colors",
+                  // Phones have these in the bottom bar.
+                  "hidden p-2.5 rounded-xl transition-colors sm:block",
                   activePanel === "directions"
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-secondary text-foreground"
@@ -115,7 +118,8 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
               <button
                 onClick={onPlacesClick}
                 className={cn(
-                  "p-2.5 rounded-xl transition-colors",
+                  // Phones have these in the bottom bar.
+                  "hidden p-2.5 rounded-xl transition-colors sm:block",
                   activePanel === "places"
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-secondary text-foreground"
@@ -124,6 +128,19 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
               >
                 <Layers className="w-5 h-5" />
               </button>
+
+              {/* Free visitors: one tap to the plans. Hidden once they have a plan. */}
+              {!isPremium && (
+                <Link
+                  href="/pricing"
+                  title={t("nav.goPremium")}
+                  aria-label={t("nav.goPremium")}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary/15 p-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/25 lg:px-3 lg:py-2"
+                >
+                  <Sparkles className="h-5 w-5 lg:h-4 lg:w-4" />
+                  <span className="hidden lg:inline">{t("nav.goPremium")}</span>
+                </Link>
+              )}
 
               <div className="hidden sm:block">
                 <LanguageSwitcher
