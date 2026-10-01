@@ -61,6 +61,8 @@ export interface PaystackTx {
   amount?: number
   currency?: string
   paid_at?: string | null
+  /** card, mobile_money, bank… */
+  channel?: string | null
   customer?: { email?: string }
   /**
    * Set on subscription charges (first and renewals): an object in webhooks
@@ -113,6 +115,11 @@ export type PlanPayment =
       renews: boolean
       /** Pay-once: ONCE_DAYS, and an early payment should start when the current one ends (onceExpiresAt). */
       once: boolean
+      /** For the payment history: how it was bought, what was paid, and how. */
+      kind: "monthly" | "renewal" | "once"
+      amountPesewas: number
+      currency: string
+      channel: string | null
     }
   | { ok: false; reason: "payment-not-confirmed" | "payment-not-a-plan" | "payment-expired" }
 
@@ -156,6 +163,11 @@ export function planPayment(tx: PaystackTx): PlanPayment {
     expiresAtSec,
     renews: !once && Boolean(ref?.plan_code),
     once,
+    // A monthly first payment carries our checkout tag; renewals only the Paystack plan.
+    kind: once ? "once" : tag === PLAN_TAGS.pro.monthly || tag === PLAN_TAGS.premium.monthly ? "monthly" : "renewal",
+    amountPesewas: paid,
+    currency: tx.currency ?? PREMIUM_CURRENCY,
+    channel: tx.channel ?? null,
   }
 }
 

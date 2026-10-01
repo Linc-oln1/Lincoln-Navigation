@@ -191,6 +191,10 @@ async function onCharge(tx: PaystackTx | undefined) {
     expiresAtSec: payment.once
       ? await onceExpiresAt({ email: payment.email, plan: payment.plan, reference, paidAtMs: payment.paidAtMs, days: ONCE_DAYS })
       : payment.expiresAtSec,
+    kind: payment.kind,
+    amountPesewas: payment.amountPesewas,
+    currency: payment.currency,
+    channel: payment.channel,
   }
   let saved = await recordPurchase({ ...purchase, userId })
   // An account deleted since checkout would fail the user link; keep the

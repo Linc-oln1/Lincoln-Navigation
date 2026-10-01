@@ -55,6 +55,10 @@ export async function GET(req: Request) {
     userId: user?.id ?? null,
     paidAtMs,
     expiresAtSec: expiresAt,
+    kind: payment.kind,
+    amountPesewas: payment.amountPesewas,
+    currency: payment.currency,
+    channel: payment.channel,
   })
 
   // Don't let a later Premium purchase replace a still-valid Pro cookie.

@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { AccountPlanRow } from "@/components/site/account-plan"
 import { AccountSignInMethods } from "@/components/site/account-sign-in-methods"
+import { AccountPaymentHistory } from "@/components/site/account-payment-history"
 import { T } from "@/components/i18n/rich-text"
 
 export const metadata = { title: "Account — Lincoln Navigation" }
@@ -35,6 +36,8 @@ export default async function AccountPage() {
         </Suspense>
         <AccountPlanRow />
       </dl>
+
+      <AccountPaymentHistory />
 
       <form action="/auth/signout" method="post" className="mt-6">
         <button

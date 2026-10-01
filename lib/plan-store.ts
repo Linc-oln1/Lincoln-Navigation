@@ -30,6 +30,11 @@ export async function recordPurchase(input: {
   userId: string | null
   paidAtMs: number
   expiresAtSec: number
+  /** Details for the payment history (0010_plan_purchase_details.sql). */
+  kind?: "monthly" | "renewal" | "once"
+  amountPesewas?: number
+  currency?: string
+  channel?: string | null
 }): Promise<boolean> {
   if (!ADMIN_ENABLED) return true
   try {
@@ -44,6 +49,10 @@ export async function recordPurchase(input: {
           ...(input.userId ? { user_id: input.userId } : {}),
           paid_at: new Date(input.paidAtMs).toISOString(),
           expires_at: new Date(input.expiresAtSec * 1000).toISOString(),
+          ...(input.kind ? { kind: input.kind } : {}),
+          ...(input.amountPesewas ? { amount_pesewas: input.amountPesewas } : {}),
+          ...(input.currency ? { currency: input.currency } : {}),
+          ...(input.channel ? { channel: input.channel } : {}),
         },
         { onConflict: "reference" }
       )
@@ -347,4 +356,33 @@ export async function onceExpiresAt(input: {
   } catch {
     return fromPaid
   }
+}
+
+export interface PaymentHistoryRow {
+  reference: string
+  plan: PaidPlan
+  kind: "monthly" | "renewal" | "once" | null
+  amount_pesewas: number | null
+  currency: string | null
+  channel: string | null
+  paid_at: string
+  expires_at: string
+}
+
+/** A signed-in user's Premium / Pro payments, newest first (theirs by account or sign-in email). */
+export async function paymentHistory(user: { id: string; email?: string | null }, limit = 50): Promise<PaymentHistoryRow[]> {
+  if (!ADMIN_ENABLED) return []
+  const cols = "reference, plan, kind, amount_pesewas, currency, channel, paid_at, expires_at"
+  const admin = createAdminClient()
+  const [byUser, byEmail] = await Promise.all([
+    admin.from("plan_purchases").select(cols).eq("user_id", user.id),
+    user.email
+      ? admin.from("plan_purchases").select(cols).eq("email", user.email.toLowerCase()).is("user_id", null)
+      : Promise.resolve({ data: [] as PaymentHistoryRow[] }),
+  ])
+  const rows = new Map<string, PaymentHistoryRow>()
+  for (const r of [...((byUser.data as PaymentHistoryRow[] | null) ?? []), ...((byEmail.data as PaymentHistoryRow[] | null) ?? [])]) {
+    rows.set(r.reference, r)
+  }
+  return [...rows.values()].sort((a, b) => Date.parse(b.paid_at) - Date.parse(a.paid_at)).slice(0, limit)
 }
