@@ -13,8 +13,9 @@ import {
   PRO_PRICE_PESEWAS,
   sponsorPackage,
 } from "@/lib/monetization"
-import { sendListingPaid } from "@/lib/sponsor-emails"
-import type { SponsorRow } from "@/lib/sponsor-store"
+import { sendListingPaid, sendListingRenewed, sendRenewalNeedsAttention } from "@/lib/sponsor-emails"
+import { renewalOffer, renewedEndsAt } from "@/lib/sponsor-renewal"
+import { getSponsor, type SponsorRow } from "@/lib/sponsor-store"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 /**
@@ -64,6 +65,8 @@ export interface PaystackTx {
     user_id?: string
     sponsor_id?: string
     package?: string
+    /** "renewal" on a payment from /advertise/renew. */
+    kind?: string
   } | null
 }
 
@@ -276,5 +279,80 @@ export async function markSponsorPaid(
   if (row) {
     await sendListingPaid(row).catch((e) => console.error("[sponsor] paid emails failed:", e))
   }
+  return "ok"
+}
+
+/**
+ * A renewal payment from /advertise/renew: SPONSOR_DAYS more on the same
+ * listing, live straight away (it was approved before). The payment is
+ * recorded in sponsor_payments and `applied` is claimed atomically, so the
+ * webhook and the browser return can both call this and it extends once.
+ */
+export async function markSponsorRenewed(
+  tx: PaystackTx,
+  reference: string,
+): Promise<"ok" | "not-a-renewal" | "error"> {
+  if (tx.status !== "success" || tx.metadata?.kind !== "renewal") return "not-a-renewal"
+  const sponsor = await getSponsor(tx.metadata?.sponsor_id ?? "")
+  const pkg = sponsorPackage(tx.metadata?.package ?? "")
+  if (!sponsor || !pkg || sponsor.package !== pkg.id || tx.currency !== PREMIUM_CURRENCY || (tx.amount ?? 0) < pkg.pricePesewas) {
+    return "not-a-renewal"
+  }
+
+  const db = createAdminClient()
+  const { error: insertError } = await db.from("sponsor_payments").upsert(
+    {
+      reference,
+      sponsor_id: sponsor.id,
+      kind: "renewal",
+      amount_pesewas: tx.amount,
+      paid_at: tx.paid_at ?? new Date().toISOString(),
+    },
+    { onConflict: "reference", ignoreDuplicates: true },
+  )
+  if (insertError) {
+    console.error("[sponsor renew] could not record payment:", insertError.message)
+    return "error"
+  }
+
+  // Paid, but the listing can't be extended any more (paused, rejected…
+  // since the link was opened): record it and let the admins sort it out.
+  if (!renewalOffer(sponsor).ok) {
+    await sendRenewalNeedsAttention(sponsor, reference).catch(() => {})
+    return "ok"
+  }
+
+  const { data: claimed, error: claimError } = await db
+    .from("sponsor_payments")
+    .update({ applied: true })
+    .eq("reference", reference)
+    .eq("applied", false)
+    .select("reference")
+  if (claimError) {
+    console.error("[sponsor renew] could not claim payment:", claimError.message)
+    return "error"
+  }
+  if (!claimed?.length) return "ok" // already applied by the other caller
+
+  const { data: saved, error } = await db
+    .from("sponsors")
+    .update({
+      status: "active",
+      ends_at: renewedEndsAt(sponsor.ends_at),
+      paid_at: tx.paid_at ?? new Date().toISOString(),
+      amount_pesewas: tx.amount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", sponsor.id)
+    .select()
+    .single()
+  if (error || !saved) {
+    console.error("[sponsor renew] could not extend:", error?.message)
+    // Give the claim back so a retry can apply it.
+    await db.from("sponsor_payments").update({ applied: false }).eq("reference", reference)
+    return "error"
+  }
+
+  await sendListingRenewed(saved as SponsorRow, reference).catch((e) => console.error("[sponsor renew] emails failed:", e))
   return "ok"
 }

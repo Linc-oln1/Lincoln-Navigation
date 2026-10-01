@@ -123,3 +123,10 @@ export async function listAllSponsorsWithStats(): Promise<
     ...(totals.get(s.id) ?? { total: zero(), last30: zero() }),
   }))
 }
+
+/** One sponsor by id, or null. */
+export async function getSponsor(id: string): Promise<SponsorRow | null> {
+  if (!ADMIN_ENABLED || !/^[0-9a-f-]{36}$/i.test(id)) return null
+  const { data } = await createAdminClient().from("sponsors").select("*").eq("id", id).maybeSingle()
+  return data ? ({ ...(data as SponsorRow), radius_km: Number((data as SponsorRow).radius_km) }) : null
+}

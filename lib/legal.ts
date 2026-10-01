@@ -28,7 +28,7 @@ export const LEGAL_UPDATED = {
   cookies: "1 October 2026",
   refunds: "1 October 2026",
   attributions: "27 September 2026",
-  advertising: "30 September 2026",
+  advertising: "1 October 2026",
   security: "27 September 2026",
 } as const
 

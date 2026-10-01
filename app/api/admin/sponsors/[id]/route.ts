@@ -13,6 +13,7 @@ import { getAdminUser } from "@/lib/admin-auth"
 import { EMAIL_ENABLED } from "@/lib/email"
 import { SPONSOR_DAYS } from "@/lib/monetization"
 import { sendListingApproved, sendListingExtended, sendListingRejected } from "@/lib/sponsor-emails"
+import { renewedEndsAt } from "@/lib/sponsor-renewal"
 import type { SponsorRow } from "@/lib/sponsor-store"
 import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 import { parseSponsorFields } from "../fields"
@@ -50,8 +51,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       break
     case "extend": {
       // From the current end date if it's still ahead, otherwise from today.
-      const from = Math.max(now, current.ends_at ? Date.parse(current.ends_at) : now)
-      update.ends_at = new Date(from + SPONSOR_DAYS * DAY_MS).toISOString()
+      update.ends_at = renewedEndsAt(current.ends_at, now)
       if (current.status === "ended") update.status = "active"
       break
     }

@@ -6,8 +6,9 @@
 //   paid      → the advertiser ("we're reviewing it") and every ADMIN_EMAILS
 //               address ("new listing to review"). From markSponsorPaid.
 //   approved / rejected / extended → the advertiser. From the admin route.
-//   endingSoon / ended → the advertiser; pendingDigest → admins. From the
-//               daily cron (/api/cron/sponsors).
+//   endingSoon / ended → the advertiser, with their private renew link;
+//               pendingDigest → admins. From the daily cron.
+//   renewed   → the advertiser and admins, after a renew-link payment.
 //
 // Each is sent once per event (sendOnce); keys include the end date so a
 // renewed listing gets fresh reminders.
@@ -15,6 +16,8 @@
 import { adminEmails } from "@/lib/admin-auth"
 import { emailLayout, escapeHtml, longDate, sendEmail, sendOnce, siteUrl } from "@/lib/email"
 import { ADVERTISE_CONTACT_EMAIL, formatSponsorPrice, SPONSOR_DAYS, sponsorPackage } from "@/lib/monetization"
+import { renewUrl } from "@/lib/sponsor-link"
+import { renewalOffer } from "@/lib/sponsor-renewal"
 import { sponsorCategoryLabel } from "@/lib/sponsored-places"
 import type { SponsorRow } from "@/lib/sponsor-store"
 
@@ -205,7 +208,23 @@ export function sendListingExtended(s: Sponsor) {
   })
 }
 
-const RENEW_NOTE = `Listings don't renew by themselves. To keep it running, pay again on the Advertise page, or reply to this email and we'll extend the same listing.`
+/**
+ * How to keep a listing going: the private renew link for the standard
+ * packages (pay, and it's extended straight away with no new review), or a
+ * reply for custom deals.
+ */
+function renewal(s: Sponsor) {
+  const offer = renewalOffer({ status: s.status === "ended" ? "ended" : "active", package: s.package })
+  return offer.ok
+    ? {
+        note: `Listings don't renew by themselves. Tap Renew to pay ${formatSponsorPrice(offer.pkg.pricePesewas)} for another ${SPONSOR_DAYS} days on the same listing — it stays live with no new review.`,
+        button: { label: "Renew my listing", href: renewUrl(s.id) },
+      }
+    : {
+        note: `Listings don't renew by themselves. Reply to this email and we'll extend it for you.`,
+        button: { label: "Email us to renew", href: `mailto:${ADVERTISE_CONTACT_EMAIL}?subject=${encodeURIComponent(`Renew ${s.name}`)}` },
+      }
+}
 
 export function sendListingEndingSoon(s: Sponsor, daysLeft: number) {
   const ends = s.ends_at ? longDate(new Date(s.ends_at)) : "soon"
@@ -214,9 +233,9 @@ export function sendListingEndingSoon(s: Sponsor, daysLeft: number) {
     subject: `Your listing for ${s.name} ends ${when}`,
     emoji: "⏳",
     heading: `Your listing ends ${when}`,
-    paragraphs: [`The sponsored listing for ${b(s.name)} comes off the map on ${b(ends)}.`, escapeHtml(RENEW_NOTE)],
-    text: [`The sponsored listing for ${s.name} comes off the map on ${ends}.`, RENEW_NOTE],
-    button: { label: "Renew my listing", href: `${siteUrl()}/advertise#buy` },
+    paragraphs: [`The sponsored listing for ${b(s.name)} comes off the map on ${b(ends)}.`, escapeHtml(renewal(s).note)],
+    text: [`The sponsored listing for ${s.name} comes off the map on ${ends}.`, renewal(s).note],
+    button: renewal(s).button,
     note: `Questions about advertising? Write to ${ADVERTISE_CONTACT_EMAIL}.`,
   })
 }
@@ -232,14 +251,55 @@ export function sendListingEnded(s: Sponsor, stats?: { impressions: number; clic
     paragraphs: [
       `The sponsored listing for ${b(s.name)} is no longer on the map.`,
       ...(numbers ? [numbers] : []),
-      escapeHtml(RENEW_NOTE),
+      escapeHtml(renewal(s).note),
     ],
     text: [
       `The sponsored listing for ${s.name} is no longer on the map.`,
       stats ? `Shown ${stats.impressions} times, opened ${stats.clicks} times, website taps ${stats.website_clicks}.` : "",
-      RENEW_NOTE,
+      renewal(s).note,
     ],
-    button: { label: "Renew my listing", href: `${siteUrl()}/advertise#buy` },
+    button: renewal(s).button,
+  })
+}
+
+/** A renewal went through: thank the advertiser, and let the admins know (nothing to do). */
+export async function sendListingRenewed(s: Sponsor, reference: string) {
+  const ends = s.ends_at ? longDate(new Date(s.ends_at)) : null
+  const paid = amount(s)
+  const advertiser = await toAdvertiser(s, `sponsor-renewed:${s.id}:${reference}`, {
+    subject: `${s.name}: your listing has been renewed`,
+    emoji: "🔁",
+    heading: "Your listing is renewed",
+    paragraphs: [
+      `Thanks! We got your ${paid ? b(paid) + " " : ""}payment. ${b(s.name)} stays on the map${ends ? ` until ${b(ends)}` : ""} — no new review needed.`,
+    ],
+    text: [`Thanks! ${s.name} stays on the map${ends ? ` until ${ends}` : ""}.`],
+    button: { label: "See it on the map", href: `${siteUrl()}/app` },
+    note: `We'll remind you again a few days before it ends.`,
+  })
+  const admins = await toAdmins(`sponsor-renewed-admin:${reference}`, {
+    subject: `${s.name} renewed their listing`,
+    emoji: "🔁",
+    heading: "A listing was renewed",
+    paragraphs: [
+      `${b(s.name)} paid ${paid ? b(paid) : "for a renewal"} from their renew link. It's live${ends ? ` until ${b(ends)}` : ""} — nothing for you to do.`,
+    ],
+    text: [`${s.name} paid ${paid ?? "for a renewal"}. Live${ends ? ` until ${ends}` : ""}; nothing to do.`],
+  })
+  return advertiser && admins
+}
+
+/** Someone paid to renew a listing that can't be extended any more (paused, rejected…). */
+export function sendRenewalNeedsAttention(s: Sponsor, reference: string) {
+  return toAdmins(`sponsor-renewal-attention:${reference}`, {
+    subject: `Renewal payment needs a look: ${s.name}`,
+    emoji: "⚠️",
+    heading: "Renewal payment needs a look",
+    paragraphs: [
+      `${b(s.name)} paid to renew (Paystack reference ${escapeHtml(reference)}), but the listing is <strong>${escapeHtml(s.status)}</strong>, so it wasn't extended.`,
+      `Extend it in /admin/sponsors, or refund the payment in the Paystack dashboard and let them know.`,
+    ],
+    text: [`${s.name} paid to renew (ref ${reference}) but the listing is ${s.status}; not extended. Extend it or refund it.`],
   })
 }
 

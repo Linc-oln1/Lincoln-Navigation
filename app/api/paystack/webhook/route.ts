@@ -7,7 +7,8 @@
 //   charge.success + plan tag     → plan_purchases row (restorable on any
 //                                   device; linked to the account if the
 //                                   buyer was signed in at checkout)
-//   charge.success + sponsor_id   → sponsor listing → pending_review
+//   charge.success + sponsor_id   → sponsor listing → pending_review, or on a
+//                                   renewal (kind "renewal") +SPONSOR_DAYS
 //   charge.success on our plan    → a monthly renewal: another plan_purchases
 //                                   row, linked to the same account
 //   subscription.*                → plan_subscriptions row (status, next
@@ -32,6 +33,7 @@ import {
   disableSubscription,
   isValidWebhookSignature,
   markSponsorPaid,
+  markSponsorRenewed,
   planForPaystackPlan,
   planPayment,
   type PaystackPlanRef,
@@ -108,7 +110,13 @@ async function onCharge(tx: PaystackTx | undefined) {
   const reference = tx?.reference
   if (!tx || !reference) return ok()
 
-  // Sponsored listing.
+  // Sponsored listing: a renewal from the emailed link, or a new one.
+  if (tx.metadata?.sponsor_id && tx.metadata.kind === "renewal") {
+    const result = await markSponsorRenewed(tx, reference)
+    if (result === "error") return retry()
+    if (result === "not-a-renewal") console.warn("[paystack webhook] renewal charge didn't match its listing:", reference)
+    return ok()
+  }
   if (tx.metadata?.sponsor_id) {
     const result = await markSponsorPaid(tx, reference)
     if (result === "error") return retry()

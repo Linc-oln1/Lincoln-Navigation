@@ -8,7 +8,8 @@
 // Requires env: PAYSTACK_SECRET_KEY, SUPABASE_SERVICE_ROLE_KEY
 
 import { NextResponse } from "next/server"
-import { fetchTransaction, markSponsorPaid } from "@/lib/paystack"
+import { fetchTransaction, markSponsorPaid, markSponsorRenewed } from "@/lib/paystack"
+import { renewPath } from "@/lib/sponsor-link"
 import { ADMIN_ENABLED } from "@/lib/supabase/admin"
 
 export async function GET(req: Request) {
@@ -22,6 +23,14 @@ export async function GET(req: Request) {
 
   const tx = await fetchTransaction(reference, secret)
   if (tx?.status !== "success") return back("error=payment-not-confirmed")
+
+  // A renewal from /advertise/renew goes back to that page.
+  if (tx.metadata?.kind === "renewal" && tx.metadata.sponsor_id) {
+    const page = (q: string) => NextResponse.redirect(`${origin}${renewPath(tx.metadata!.sponsor_id!)}&${q}`)
+    const renewed = await markSponsorRenewed(tx, reference)
+    if (renewed === "ok") return page("paid=1")
+    return page(renewed === "error" ? "error=payment-not-recorded" : "error=payment-not-a-listing")
+  }
 
   // The webhook may already have marked it paid; markSponsorPaid() is a
   // no-op then, so this still lands on "paid".

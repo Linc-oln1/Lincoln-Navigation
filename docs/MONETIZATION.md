@@ -76,6 +76,16 @@ without `RESEND_API_KEY`):
   5 days before the end, then marks expired listings `ended` and sends "has
   ended" with its numbers; plus a digest to admins while any listing waits for
   review. Set `CRON_SECRET` in Vercel so only Vercel can call it.
+
+**Self-serve renewal:** the "ends soon" / "ended" emails link to a private
+`/advertise/renew?l=<id>&t=<hmac>` page (`lib/sponsor-link.ts`; secret
+`SPONSOR_LINK_SECRET`, falls back to `PREMIUM_COOKIE_SECRET`). Paying there
+(`/api/sponsor/renew`, Paystack, metadata `kind: "renewal"`) adds
+`SPONSOR_DAYS` to the same listing straight away, no new review — applied once
+via `sponsor_payments` (`0009_sponsor_payments.sql`, `applied` claimed
+atomically) by `markSponsorRenewed`, from the webhook or the verify return.
+Advertiser and admins get a "renewed" email. Only `local` / `citywide`
+listings that are `active` or `ended`; custom deals get "email us to renew".
 - **Stats:** the panel counts a view per sponsor per page load, an
   open when the listing is tapped, and "Visit website" taps
   (`/api/sponsored/track`, capped per visitor per hour, live sponsors

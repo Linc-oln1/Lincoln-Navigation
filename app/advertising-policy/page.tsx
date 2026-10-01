@@ -37,7 +37,7 @@ export default function AdvertisingPolicyPage() {
         <h3>Buying a sponsored listing online</h3>
         <ul>
           <li>You can buy a sponsored listing on the <Link href="/advertise">Advertise</Link> page. The package, price and area it covers are shown before you pay, and you pay once through Paystack.</li>
-          <li>One payment covers one listing in one category for {SPONSOR_DAYS} days, counted from the day it goes live. It does <strong>not</strong> renew automatically; to keep it running, pay again or ask us to extend it.</li>
+          <li>One payment covers one listing in one category for {SPONSOR_DAYS} days, counted from the day it goes live. It does <strong>not</strong> renew automatically; to keep it running, pay again or ask us to extend it. Before a listing ends we email you a private renew link; paying through it adds {SPONSOR_DAYS} days to the same listing straight away, with no new review.</li>
           <li><strong>Every listing is reviewed before it goes live.</strong> Paying does not guarantee approval. We may ask you to change the name, promo line, link or location so it is accurate and follows this policy.</li>
           <li><strong>If we don&rsquo;t approve your listing, we refund the full amount</strong> through Paystack to the account or wallet you paid with.</li>
           <li>You are responsible for the details you give us. If the location you pick is wrong, tell us and we will correct it.</li>
