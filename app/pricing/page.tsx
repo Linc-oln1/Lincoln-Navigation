@@ -17,6 +17,7 @@ import {
   type PlanFeature,
 } from "@/lib/monetization"
 import { usePremium } from "@/hooks/use-premium"
+import { useSession } from "@/hooks/use-session"
 import { useLocalCurrency } from "@/hooks/use-local-currency"
 import { BASE_CURRENCY, PICKER_CURRENCIES, RATES_CREDIT_URL, currencyName, formatConverted } from "@/lib/currency"
 import { AgreeLine } from "@/components/site-links"
@@ -56,7 +57,7 @@ const PLANS: Plan[] = [
     badge: "Recommended",
     icon: Sparkles,
     pesewas: PREMIUM_PRICE_PESEWAS,
-    terms: "per month · paid 31 days at a time",
+    terms: "per month · renews monthly · cancel anytime",
     lead: "Everything in Free, plus",
     included: PREMIUM_FEATURES,
     upsell: { tier: "Pro", features: PRO_FEATURES },
@@ -67,7 +68,7 @@ const PLANS: Plan[] = [
     badge: "For businesses",
     icon: Briefcase,
     pesewas: PRO_PRICE_PESEWAS,
-    terms: "per month · paid 31 days at a time",
+    terms: "per month · renews monthly · cancel anytime",
     lead: "Everything in Premium, plus",
     included: PRO_FEATURES,
   },
@@ -90,16 +91,21 @@ const CALLOUTS: Record<PlanId, { target: CalloutTarget; side: "left" | "right"; 
   ],
   premium: [
     { target: "price", side: "left", title: "Transparent pricing", body: "In cedis, taxes included. What you see is what you pay." },
-    { target: "terms", side: "right", title: "No auto-renewal", body: "Pays for 31 days. Nothing charges again unless you buy again." },
-    { target: "cta", side: "left", title: "Clear next step", body: "Your email, then secure checkout with Paystack." },
+    { target: "terms", side: "right", title: "Cancel anytime", body: "Renews monthly by card. Cancel from your account; you keep it to the end of the month." },
+    { target: "cta", side: "left", title: "Clear next step", body: "Sign in, then pay securely by card with Paystack." },
     { target: "features", side: "right", title: "All live today", body: "Every feature listed works now — nothing is “coming soon”." },
   ],
   pro: [
     { target: "price", side: "left", title: "Transparent pricing", body: "In cedis, taxes included. What you see is what you pay." },
-    { target: "terms", side: "right", title: "No auto-renewal", body: "Pays for 31 days. Nothing charges again unless you buy again." },
+    { target: "terms", side: "right", title: "Cancel anytime", body: "Renews monthly by card. Cancel from your account; you keep it to the end of the month." },
     { target: "cta", side: "left", title: "Bigger team?", body: "Talk to us about a team plan below the button." },
     { target: "features", side: "right", title: "All live today", body: "Fleet, truck routing, runs and analytics work now." },
   ],
+}
+
+/** Sign in, then come back to this plan's tab. */
+function signInHref(plan: PlanId) {
+  return `/login?next=${encodeURIComponent(`/pricing?plan=${plan}`)}`
 }
 
 /** What Paystack actually charges, e.g. "GHS 90.00". */
@@ -131,14 +137,14 @@ export default function PricingPage() {
 
 function PricingContent() {
   const params = useSearchParams()
-  const { isPremium, isPro, expiresAt } = usePremium()
+  const { isPremium, isPro, expiresAt, renews } = usePremium()
+  const { user, loading: sessionLoading } = useSession()
   // ?plan=free|pro picks the tab; coming back from a Pro payment opens Pro.
   const [planId, setPlanId] = useState<PlanId>(() => {
     const p = params.get("plan")
     if (p === "free" || p === "pro") return p
     return params.get("welcome") === "pro" ? "pro" : "premium"
   })
-  const [emails, setEmails] = useState<Record<"premium" | "pro", string>>({ premium: "", pro: "" })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -174,8 +180,12 @@ function PricingContent() {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: emails[plan.id], plan: plan.id }),
+        body: JSON.stringify({ plan: plan.id }),
       })
+      if (res.status === 401) {
+        window.location.href = signInHref(plan.id)
+        return
+      }
       const data = (await res.json()) as { url?: string; error?: string }
       if (!res.ok || !data.url) throw new Error(data.error || "Could not start checkout.")
       window.location.href = data.url
@@ -200,8 +210,8 @@ function PricingContent() {
             <span className="block font-light text-white/90 sm:inline">One simple price.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/60 sm:text-lg">
-            The map, search and directions are free forever. Pay only for the extras you want — 31
-            days at a time.
+            The map, search and directions are free forever. Pay only for the extras you want —
+            monthly, cancel anytime.
           </p>
         </header>
 
@@ -211,7 +221,7 @@ function PricingContent() {
           {paymentError && (
             <Notice tone="bad">
               {paymentError === "payment-expired" ? (
-                <>That payment is more than 31 days old, so the plan it bought has already run out. Buy again below to renew.</>
+                <>That payment is more than a month old, so the period it paid for has already ended. Subscribe again below.</>
               ) : paymentError === "payment-not-a-plan" ? (
                 <>
                   That payment wasn&rsquo;t for a Premium or Pro plan, so nothing was unlocked. If you were charged for a
@@ -228,7 +238,12 @@ function PricingContent() {
           {isPremium && !welcome && !welcomePro && (
             <Notice tone="good">
               Your {isPro ? "Pro" : "Premium"} plan is active
-              {expiresAt ? ` until ${new Date(expiresAt).toLocaleDateString()}` : ""}.
+              {renews
+                ? " and renews monthly. Manage it on your account page"
+                : expiresAt
+                  ? ` until ${new Date(expiresAt).toLocaleDateString()}`
+                  : ""}
+              .
             </Notice>
           )}
         </div>
@@ -289,8 +304,8 @@ function PricingContent() {
               refs={refs}
               active={plan.id === "free" ? false : plan.id === "pro" ? isPro : isPremium}
               activeLabel={plan.id === "premium" && isPro ? "Included in your Pro plan" : "Active — you’re all set"}
-              email={plan.id === "free" ? "" : emails[plan.id]}
-              onEmail={(v) => plan.id !== "free" && setEmails((m) => ({ ...m, [plan.id]: v }))}
+              accountEmail={user?.email ?? null}
+              sessionLoading={sessionLoading}
               busy={busy}
               error={error}
               onSubmit={checkout}
@@ -472,8 +487,8 @@ function PlanCard({
   refs,
   active,
   activeLabel,
-  email,
-  onEmail,
+  accountEmail,
+  sessionLoading,
   busy,
   error,
   onSubmit,
@@ -483,8 +498,9 @@ function PlanCard({
   refs: CardRefs
   active: boolean
   activeLabel: string
-  email: string
-  onEmail: (v: string) => void
+  /** Signed-in user's email (the plan is billed to it); null = signed out. */
+  accountEmail: string | null
+  sessionLoading: boolean
   busy: boolean
   error: string | null
   onSubmit: (e: React.FormEvent) => void
@@ -557,29 +573,34 @@ function PlanCard({
               </p>
             ) : PREMIUM_ENABLED ? (
               <form onSubmit={onSubmit} className="space-y-3">
-                <label htmlFor="plan-email" className="sr-only">
-                  Email for your receipt
-                </label>
-                <input
-                  id="plan-email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => onEmail(e.target.value)}
-                  placeholder={plan.id === "pro" ? "you@company.com" : "you@example.com"}
-                  className="w-full rounded-full border border-white/15 bg-white/[0.06] px-5 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-[#a78bfa]"
-                />
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-[#12091f] shadow-[0_0_0_3px_rgba(139,92,246,0.55)] transition hover:bg-white/90 disabled:opacity-60"
-                >
-                  {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {busy ? "Starting checkout…" : `Get ${plan.name}`}
-                </button>
+                {accountEmail ? (
+                  <p className="text-center text-xs text-white/55">
+                    Billed to <span className="font-semibold text-white/80">{accountEmail}</span>
+                  </p>
+                ) : null}
+                {accountEmail || sessionLoading ? (
+                  <button
+                    type="submit"
+                    // Not gated on the session check: if it turns out they're
+                    // signed out, checkout answers 401 and we send them to sign in.
+                    disabled={busy}
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-[#12091f] shadow-[0_0_0_3px_rgba(139,92,246,0.55)] transition hover:bg-white/90 disabled:opacity-60"
+                  >
+                    {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {busy ? "Starting checkout…" : `Subscribe to ${plan.name}`}
+                  </button>
+                ) : (
+                  <Link
+                    href={signInHref(plan.id)}
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-[#12091f] shadow-[0_0_0_3px_rgba(139,92,246,0.55)] transition hover:bg-white/90"
+                  >
+                    Sign in to subscribe <ArrowRight className="h-4 w-4" />
+                  </Link>
+                )}
                 {error && <p className="text-center text-xs text-red-300">{error}</p>}
-                <p className="text-center text-[11px] text-white/45">
-                  Secure payment via Paystack · no auto-renewal
+                <p className="text-center text-[11px] leading-snug text-white/55">
+                  Card payment via Paystack. You&rsquo;re charged {ghsLabel(plan.pesewas)} now and every month
+                  until you cancel — cancel anytime on your account page.
                 </p>
                 <AgreeLine className="text-center text-white/40" purchase />
               </form>

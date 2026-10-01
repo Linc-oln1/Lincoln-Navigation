@@ -105,3 +105,189 @@ export async function findEntitlement(user: { id: string; email?: string | null 
   }
   return winner
 }
+
+// ---------------------------------------------------------------------------
+// Subscriptions (0008_plan_subscriptions.sql). Kept in step with Paystack by
+// the webhook; used by /account to show renewal and to cancel / change card.
+
+export type SubscriptionStatus = "active" | "non-renewing" | "attention" | "completed" | "cancelled" | string
+
+export interface SubscriptionRow {
+  subscription_code: string
+  email_token: string | null
+  customer_code: string | null
+  plan: PaidPlan
+  email: string
+  user_id: string | null
+  status: SubscriptionStatus
+  next_payment_at: string | null
+  card_brand: string | null
+  card_last4: string | null
+  updated_at: string
+}
+
+const SUB_COLUMNS =
+  "subscription_code, email_token, customer_code, plan, email, user_id, status, next_payment_at, card_brand, card_last4, updated_at"
+
+/** Still charging (or about to retry after a failed charge). */
+export const RENEWING: SubscriptionStatus[] = ["active", "attention"]
+
+/** The account a Paystack email has paid from before, if any. */
+async function userIdForEmail(email: string): Promise<string | null> {
+  const admin = createAdminClient()
+  const lower = email.toLowerCase()
+  const sub = await admin
+    .from("plan_subscriptions")
+    .select("user_id")
+    .eq("email", lower)
+    .not("user_id", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (sub.data?.user_id) return sub.data.user_id as string
+  const paid = await admin
+    .from("plan_purchases")
+    .select("user_id")
+    .eq("email", lower)
+    .not("user_id", "is", null)
+    .order("paid_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (paid.data?.user_id as string | undefined) ?? null
+}
+
+/** The account linked to earlier payments from this email (renewals carry no metadata). */
+export async function accountForEmail(email: string): Promise<string | null> {
+  if (!ADMIN_ENABLED) return null
+  try {
+    return await userIdForEmail(email)
+  } catch {
+    return null
+  }
+}
+
+/** Create or refresh a subscription from a Paystack subscription event. */
+export async function upsertSubscription(sub: {
+  code: string
+  emailToken?: string | null
+  customerCode?: string | null
+  plan: PaidPlan
+  email: string
+  status: string
+  nextPaymentAt?: string | null
+  cardBrand?: string | null
+  cardLast4?: string | null
+}): Promise<boolean> {
+  if (!ADMIN_ENABLED) return true
+  try {
+    const userId = await userIdForEmail(sub.email)
+    const { error } = await createAdminClient()
+      .from("plan_subscriptions")
+      .upsert(
+        {
+          subscription_code: sub.code,
+          plan: sub.plan,
+          email: sub.email.toLowerCase(),
+          status: sub.status,
+          ...(sub.emailToken ? { email_token: sub.emailToken } : {}),
+          ...(sub.customerCode ? { customer_code: sub.customerCode } : {}),
+          ...(sub.nextPaymentAt !== undefined ? { next_payment_at: sub.nextPaymentAt } : {}),
+          ...(sub.cardBrand ? { card_brand: sub.cardBrand } : {}),
+          ...(sub.cardLast4 ? { card_last4: sub.cardLast4 } : {}),
+          ...(userId ? { user_id: userId } : {}),
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "subscription_code" },
+      )
+    if (error) {
+      console.error("[plans] could not save subscription:", error.message)
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error("[plans] could not save subscription:", error)
+    return false
+  }
+}
+
+/** Update a known subscription (invoice events, cancel). No row = nothing to do. */
+export async function updateSubscription(
+  code: string,
+  fields: { status?: string; next_payment_at?: string | null },
+): Promise<boolean> {
+  if (!ADMIN_ENABLED) return true
+  try {
+    const { error } = await createAdminClient()
+      .from("plan_subscriptions")
+      .update({ ...fields, updated_at: new Date().toISOString() })
+      .eq("subscription_code", code)
+    if (error) {
+      console.error("[plans] could not update subscription:", error.message)
+      return false
+    }
+    return true
+  } catch (error) {
+    console.error("[plans] could not update subscription:", error)
+    return false
+  }
+}
+
+/** Tie a buyer's unlinked subscriptions to their account (first charge carries user_id). */
+export async function linkSubscriptions(email: string, userId: string): Promise<void> {
+  if (!ADMIN_ENABLED) return
+  try {
+    await createAdminClient()
+      .from("plan_subscriptions")
+      .update({ user_id: userId })
+      .eq("email", email.toLowerCase())
+      .is("user_id", null)
+  } catch {}
+}
+
+/** Every subscription for this account or its sign-in email, newest first. */
+export async function listSubscriptions(user: { id: string; email?: string | null }): Promise<SubscriptionRow[]> {
+  if (!ADMIN_ENABLED) return []
+  const admin = createAdminClient()
+  const rows: SubscriptionRow[] = []
+  const byUser = await admin.from("plan_subscriptions").select(SUB_COLUMNS).eq("user_id", user.id)
+  rows.push(...((byUser.data as SubscriptionRow[] | null) ?? []))
+  if (user.email) {
+    const byEmail = await admin
+      .from("plan_subscriptions")
+      .select(SUB_COLUMNS)
+      .eq("email", user.email.toLowerCase())
+      .is("user_id", null)
+    const unlinked = (byEmail.data as SubscriptionRow[] | null) ?? []
+    if (unlinked.length > 0) {
+      await admin
+        .from("plan_subscriptions")
+        .update({ user_id: user.id })
+        .in("subscription_code", unlinked.map((r) => r.subscription_code))
+      rows.push(...unlinked)
+    }
+  }
+  return rows.sort((a, b) => Date.parse(b.updated_at) - Date.parse(a.updated_at))
+}
+
+/**
+ * The subscription to show on /account: one that is still renewing (Pro
+ * first), otherwise the most recent one.
+ */
+export async function currentSubscription(user: { id: string; email?: string | null }): Promise<SubscriptionRow | null> {
+  const rows = await listSubscriptions(user)
+  const renewing = rows.filter((r) => RENEWING.includes(r.status))
+  renewing.sort((a, b) => (b.plan === "pro" ? 1 : 0) - (a.plan === "pro" ? 1 : 0))
+  return renewing[0] ?? rows[0] ?? null
+}
+
+/** Still-renewing subscriptions on this email, other than `exceptCode`. */
+export async function otherRenewingSubscriptions(email: string, exceptCode: string): Promise<SubscriptionRow[]> {
+  if (!ADMIN_ENABLED) return []
+  const { data } = await createAdminClient()
+    .from("plan_subscriptions")
+    .select(SUB_COLUMNS)
+    .eq("email", email.toLowerCase())
+    .in("status", RENEWING)
+    .neq("subscription_code", exceptCode)
+  return (data as SubscriptionRow[] | null) ?? []
+}

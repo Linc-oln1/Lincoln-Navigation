@@ -8,6 +8,11 @@
 //                                   device; linked to the account if the
 //                                   buyer was signed in at checkout)
 //   charge.success + sponsor_id   → sponsor listing → pending_review
+//   charge.success on our plan    → a monthly renewal: another plan_purchases
+//                                   row, linked to the same account
+//   subscription.*                → plan_subscriptions row (status, next
+//                                   payment date, card) for /account
+//   invoice.*                     → subscription status / next payment date
 //   anything else                 → 200, ignored
 //
 // It records payments only; the browser still gets its cookie from verify or
@@ -21,8 +26,40 @@
 //               SUPABASE_SERVICE_ROLE_KEY
 
 import { NextResponse } from "next/server"
-import { isValidWebhookSignature, markSponsorPaid, planPayment, type PaystackTx } from "@/lib/paystack"
-import { recordPurchase } from "@/lib/plan-store"
+import {
+  disableSubscription,
+  isValidWebhookSignature,
+  markSponsorPaid,
+  planForPaystackPlan,
+  planPayment,
+  type PaystackPlanRef,
+  txPlan,
+  type PaystackTx,
+} from "@/lib/paystack"
+import {
+  accountForEmail,
+  linkSubscriptions,
+  otherRenewingSubscriptions,
+  recordPurchase,
+  updateSubscription,
+  upsertSubscription,
+} from "@/lib/plan-store"
+
+/** The fields we use from subscription.* events. */
+interface PaystackSubscription {
+  subscription_code?: string
+  email_token?: string
+  status?: string
+  next_payment_date?: string | null
+  plan?: PaystackPlanRef | null
+  customer?: { email?: string; customer_code?: string }
+  authorization?: { brand?: string; card_type?: string; last4?: string }
+}
+
+/** The fields we use from invoice.* events. */
+interface PaystackInvoice {
+  subscription?: { subscription_code?: string; status?: string; next_payment_date?: string | null }
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -40,16 +77,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid signature." }, { status: 401 })
   }
 
-  let event: { event?: string; data?: PaystackTx }
+  let event: { event?: string; data?: unknown }
   try {
     event = JSON.parse(raw)
   } catch {
     return NextResponse.json({ error: "Bad JSON." }, { status: 400 })
   }
 
-  const tx = event.data
+  const type = event.event ?? ""
+  if (type === "charge.success") return onCharge(event.data as PaystackTx | undefined)
+  if (type.startsWith("subscription.")) return onSubscription(type, event.data as PaystackSubscription | undefined, secret)
+  if (type.startsWith("invoice.")) return onInvoice(type, event.data as PaystackInvoice | undefined)
+  return ok()
+}
+
+async function onCharge(tx: PaystackTx | undefined) {
   const reference = tx?.reference
-  if (event.event !== "charge.success" || !tx || !reference) return ok()
+  if (!tx || !reference) return ok()
 
   // Sponsored listing.
   if (tx.metadata?.sponsor_id) {
@@ -59,16 +103,21 @@ export async function POST(req: Request) {
     return ok()
   }
 
-  // Premium / Pro plan.
+  // Premium / Pro: the first payment, or a monthly renewal.
   const payment = planPayment(tx)
   if (!payment.ok) {
-    // Not ours (another product on the account) or already past its 31 days.
-    if (tx.metadata?.plan) console.warn("[paystack webhook] plan charge not accepted:", reference, payment.reason)
+    // Not ours (another product on the account) or already past its period.
+    if (tx.metadata?.plan || txPlan(tx)) {
+      console.warn("[paystack webhook] plan charge not accepted:", reference, payment.reason)
+    }
     return ok()
   }
 
+  // The first charge says who bought it; renewals carry no metadata, so they
+  // follow the account earlier payments from this email are linked to.
   const metaUser = tx.metadata?.user_id
-  const userId = metaUser && UUID.test(metaUser) ? metaUser : null
+  const fromCheckout = metaUser && UUID.test(metaUser) ? metaUser : null
+  const userId = fromCheckout ?? (await accountForEmail(payment.email))
   const purchase = {
     reference,
     plan: payment.plan,
@@ -80,5 +129,56 @@ export async function POST(req: Request) {
   // An account deleted since checkout would fail the user link; keep the
   // payment anyway — it can still be restored by email.
   if (!saved && userId) saved = await recordPurchase({ ...purchase, userId: null })
+  // subscription.create may have arrived first, before we knew the account.
+  if (saved && fromCheckout) await linkSubscriptions(payment.email, fromCheckout)
   return saved ? ok() : retry()
+}
+
+async function onSubscription(type: string, sub: PaystackSubscription | undefined, secret: string) {
+  const code = sub?.subscription_code
+  const email = sub?.customer?.email
+  const plan = planForPaystackPlan(sub?.plan)
+  // Only our Premium / Pro plans; subscription.expiring_cards has a list instead.
+  if (!sub || !code || !email || !plan) return ok()
+
+  const saved = await upsertSubscription({
+    code,
+    plan,
+    email,
+    status: sub.status ?? "active",
+    emailToken: sub.email_token,
+    customerCode: sub.customer?.customer_code,
+    nextPaymentAt: sub.next_payment_date ?? null,
+    cardBrand: sub.authorization?.brand ?? sub.authorization?.card_type,
+    cardLast4: sub.authorization?.last4,
+  })
+  if (!saved) return retry()
+
+  // Moving up to Pro: stop the Premium subscription so they aren't charged
+  // for both. Pro includes Premium, and what Premium already paid for stays.
+  if (type === "subscription.create" && plan === "pro") {
+    for (const other of await otherRenewingSubscriptions(email, code)) {
+      if (other.plan !== "premium" || !other.email_token) continue
+      if (await disableSubscription(other.subscription_code, other.email_token, secret)) {
+        await updateSubscription(other.subscription_code, { status: "cancelled" })
+      } else {
+        console.error("[paystack webhook] couldn't stop Premium after Pro upgrade:", other.subscription_code)
+      }
+    }
+  }
+  return ok()
+}
+
+async function onInvoice(type: string, invoice: PaystackInvoice | undefined) {
+  const sub = invoice?.subscription
+  const code = sub?.subscription_code
+  if (!code) return ok()
+  const fields: { status?: string; next_payment_at?: string | null } = {}
+  // A failed renewal isn't retried until the next payment date, so the plan
+  // ends with the period already paid for unless they update their card.
+  if (type === "invoice.payment_failed") fields.status = "attention"
+  else if (sub.status) fields.status = sub.status
+  if (sub.next_payment_date !== undefined) fields.next_payment_at = sub.next_payment_date
+  if (Object.keys(fields).length === 0) return ok()
+  return (await updateSubscription(code, fields)) ? ok() : retry()
 }

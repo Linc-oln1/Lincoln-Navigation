@@ -38,7 +38,7 @@ export default function PrivacyPage() {
           <li>You can use the map, search and directions without an account.</li>
           <li>Your location is used on your device; it reaches our servers only to answer a specific request, and is not stored against you unless you save it.</li>
           <li>Hazard reports are anonymous. We never link a report to who sent it.</li>
-          <li>We never see your card details. Paystack handles payments.</li>
+          <li>We never see your full card details. Paystack handles payments; for a subscription we keep only the card type and last four digits, to show you which card renews it.</li>
           <li>We do not sell your personal data.</li>
           <li>You can ask to see, correct or delete your data at any time by emailing {mail}.</li>
         </ul>
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
                 <td>To identify a landmark (consent)</td>
               </tr>
               <tr>
-                <td>Billing email, Paystack transaction reference, plan, amount, date</td>
+                <td>Billing email, Paystack transaction reference, plan, amount, date; for subscriptions also the Paystack subscription code, status, next payment date, and card type and last four digits</td>
                 <td>When you buy Premium or Pro</td>
                 <td>To grant the plan, answer billing questions and meet tax and accounting law (contract; legal obligation)</td>
               </tr>

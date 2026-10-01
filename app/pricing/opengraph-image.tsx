@@ -4,7 +4,7 @@ import { OG_SIZE, ogFonts } from "@/lib/og/shared"
 
 // Mirrors /pricing: near-black, violet glow, the Premium card. The price
 // comes from the same setting as the page, so it's right as of each build.
-export const alt = "Lincoln Navigation pricing — the map is free; Premium and Pro, 31 days at a time"
+export const alt = "Lincoln Navigation pricing — the map is free; Premium and Pro, monthly"
 export const size = OG_SIZE
 export const contentType = "image/png"
 
@@ -31,7 +31,7 @@ export default async function Image() {
             <div style={{ fontSize: 68, fontWeight: 700, lineHeight: 1.02 }}>Every road.</div>
             <div style={{ fontSize: 68, fontWeight: 400, lineHeight: 1.08, color: "rgba(255,255,255,0.9)" }}>One simple price.</div>
             <div style={{ fontSize: 26, color: "rgba(255,255,255,0.6)", marginTop: 24, lineHeight: 1.4, maxWidth: 560 }}>
-              The map is free forever. Extras are paid 31 days at a time, with no auto-renewal.
+              The map is free forever. Extras are monthly, and you can cancel anytime.
             </div>
           </div>
           <div style={{ fontSize: 22, fontWeight: 700, color: "#c4b5fd" }}>lincolnnavigation.com/pricing</div>
@@ -67,7 +67,7 @@ export default async function Image() {
                 <div style={{ fontSize: 26, fontWeight: 700, color: "rgba(255,255,255,0.7)" }}>{PREMIUM_CURRENCY}</div>
                 <div style={{ fontSize: 96, fontWeight: 700, lineHeight: 1 }}>{whole}</div>
               </div>
-              <div style={{ fontSize: 18, color: "rgba(255,255,255,0.75)", marginTop: 10 }}>per month · paid 31 days at a time</div>
+              <div style={{ fontSize: 18, color: "rgba(255,255,255,0.75)", marginTop: 10 }}>per month · cancel anytime</div>
               <div
                 style={{
                   display: "flex",

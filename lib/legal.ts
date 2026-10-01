@@ -23,10 +23,10 @@ export const SECURITY_EMAIL = process.env.NEXT_PUBLIC_SECURITY_EMAIL?.trim() || 
 
 /** Bump the matching date whenever a document changes in substance. */
 export const LEGAL_UPDATED = {
-  privacy: "27 September 2026",
-  terms: "27 September 2026",
-  cookies: "27 September 2026",
-  refunds: "30 September 2026",
+  privacy: "1 October 2026",
+  terms: "1 October 2026",
+  cookies: "1 October 2026",
+  refunds: "1 October 2026",
   attributions: "27 September 2026",
   advertising: "30 September 2026",
   security: "27 September 2026",

@@ -69,12 +69,13 @@ export default function TermsPage() {
         <h2>4. Paid plans (Premium and Pro)</h2>
         <ul>
           <li><strong>Price.</strong> Current prices and features are shown on the <Link href="/pricing">pricing page</Link> in Ghana cedis (GHS), including any taxes that apply. The price you see at checkout is the price you pay.</li>
-          <li><strong>Term.</strong> Each payment unlocks the plan for 31 days from the date of payment.</li>
-          <li><strong>No automatic renewal.</strong> We do not store your card or charge you again. When a plan lapses it simply ends; to continue, you pay again.</li>
-          <li><strong>Payment.</strong> Payments are processed by Paystack under its own terms. We never see your card details.</li>
-          <li><strong>Per-device access.</strong> A plan is linked to the billing email you enter. You can restore it on another device from your account page using that email.</li>
+          <li><strong>Monthly subscription.</strong> Premium and Pro are monthly subscriptions paid by card. Your first payment starts the plan. Paystack then charges the same card the same amount each month, on about the same date, until you cancel. Each payment covers the month until the next one. Paystack emails you a receipt for every charge.</li>
+          <li><strong>Cancelling.</strong> You can cancel at any time from your <Link href="/account">account page</Link> or from the link in Paystack&rsquo;s emails. Cancelling stops all future charges. Your plan stays active until the end of the month you have already paid for, then ends.</li>
+          <li><strong>Failed payments.</strong> If a monthly charge fails (for example, an expired card), your plan ends when the month already paid for runs out. You can update your card from your account page to keep it.</li>
+          <li><strong>Payment.</strong> Payments are processed by Paystack under its own terms. Only cards can renew automatically. We never see your full card number; we keep only the card type and last four digits so we can show you which card is used.</li>
+          <li><strong>Account.</strong> You need an account to subscribe. A plan is billed to your account&rsquo;s email and follows you to any device you sign in on.</li>
           <li><strong>Refunds.</strong> See our <Link href="/refunds">Refund Policy</Link>. Nothing in these terms limits refund rights you have under consumer protection law.</li>
-          <li><strong>Changes.</strong> We may change prices or features for future purchases. A change never affects a plan you have already paid for. If we introduce automatic renewal, we will ask for your clear agreement before charging you.</li>
+          <li><strong>Changes.</strong> We may change prices or features for new subscriptions. An existing subscription keeps its price; if we ever need to change it, we will email you at least 30 days before the new price applies, and you can cancel before then. A change never affects a month you have already paid for.</li>
         </ul>
       </section>
 

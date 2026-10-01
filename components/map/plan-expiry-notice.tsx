@@ -10,18 +10,18 @@ const WARN_DAYS = 5
 const DISMISS_KEY = "ln_expiry_dismissed"
 
 /**
- * Plans are paid 31 days at a time and don't renew by themselves, so a plan
- * that quietly ran out would look like features breaking. In the last few
- * days, say so once a day with a link to renew.
+ * A plan that quietly ran out would look like features breaking, so in its
+ * last few days say so once a day with a link to renew. Not for a monthly
+ * subscription that's still renewing — that one carries on by itself.
  */
 export function PlanExpiryNotice() {
-  const { isPremium, isPro, expiresAt } = usePremium()
+  const { isPremium, isPro, expiresAt, renews } = usePremium()
   const { t } = useI18n()
   const [hidden, setHidden] = useState(true)
 
   const msLeft = expiresAt ? new Date(expiresAt).getTime() - Date.now() : null
   const daysLeft = msLeft === null ? null : Math.ceil(msLeft / 86_400_000)
-  const due = isPremium && daysLeft !== null && daysLeft <= WARN_DAYS
+  const due = isPremium && !renews && daysLeft !== null && daysLeft <= WARN_DAYS
 
   useEffect(() => {
     if (!due) return

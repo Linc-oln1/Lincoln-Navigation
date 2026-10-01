@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server"
 import { mintPremiumCookie, PREMIUM_COOKIE_NAME } from "@/lib/premium-cookie"
 import { getSessionUser } from "@/lib/supabase/server"
-import { findEntitlement } from "@/lib/plan-store"
+import { currentSubscription, findEntitlement, RENEWING } from "@/lib/plan-store"
 import { clientIp } from "@/lib/hazard-identity"
 import { bump, peek } from "@/lib/rate-limit"
 
-/* Restore a paid plan on this device (signed-in users only).
+/* Restore a paid plan on this device (signed-in users only). Also how a
+   monthly renewal reaches the browser: PlanRestorer calls this as the
+   cookie nears its end, and gets the newer payment back.
    Body: { reference?: string } — optional payment reference from the receipt,
    for people who paid with a different email than they sign in with. */
 
@@ -35,11 +37,13 @@ export async function POST(req: Request) {
   }
 
   const expiresAt = Math.floor(Date.parse(purchase.expires_at) / 1000)
+  const sub = await currentSubscription(user).catch(() => null)
   const { value, maxAge } = mintPremiumCookie({
     email: purchase.email,
     reference: purchase.reference,
     plan: purchase.plan,
     expiresAt,
+    renews: Boolean(sub && RENEWING.includes(sub.status) && sub.plan === purchase.plan),
   })
 
   const origin = new URL(req.url).origin

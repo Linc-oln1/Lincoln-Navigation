@@ -23,9 +23,9 @@ export default function RefundsPage() {
       intro={
         <>
         <p>
-          Premium and Pro are one-off payments for 31 days of access. They do
-          not renew automatically, so there is nothing to cancel. Here is
-          when you can get your money back.
+          Premium and Pro are monthly subscriptions paid by card. You can
+          cancel at any time on your account page, which stops all future
+          charges. Here is when you can get your money back.
         </p>
         <p>
           This page covers Premium and Pro. Refunds for sponsored listings
@@ -39,7 +39,7 @@ export default function RefundsPage() {
         <h2>1. You will get a full refund if</h2>
         <ul>
           <li><strong>You were charged twice</strong> for the same purchase, or charged but your plan never activated and we cannot fix it.</li>
-          <li><strong>You change your mind</strong> within {CHANGE_OF_MIND_HOURS} hours of paying. This applies once per customer.</li>
+          <li><strong>You change your mind</strong> within {CHANGE_OF_MIND_HOURS} hours of paying, including a monthly renewal you forgot to cancel. This applies once per customer.</li>
           <li><strong>A paid feature does not work as described</strong> and we cannot fix it within a reasonable time, if you tell us within {FAULT_DAYS} days of paying.</li>
           <li><strong>We close your account or remove a paid feature</strong> without fault on your part; you get the unused part of your plan back.</li>
         </ul>
@@ -49,7 +49,7 @@ export default function RefundsPage() {
         <h2>2. When refunds are not given</h2>
         <ul>
           <li>After the windows above, for a plan that worked as described.</li>
-          <li>For the unused days of a plan you simply stopped using. Plans end on their own after 31 days.</li>
+          <li>For the rest of a month you have already paid for when you cancel. Cancelling stops the next charge; your plan stays active until that month ends.</li>
           <li>If your account was suspended for breaking our <Link href="/terms">Terms</Link>.</li>
           <li>For bookings made on partner sites (Booking.com, Viator, GetYourGuide, Eventbrite and others). Those are between you and the partner; ask them directly.</li>
         </ul>

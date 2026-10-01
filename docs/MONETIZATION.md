@@ -136,12 +136,37 @@ never came back gets their plan through **Restore** on /account.
 `https://www.lincolnnavigation.com/api/paystack/webhook` (live mode; set the
 test-mode URL too if you test with `sk_test_`).
 
-### Known limitations
+### Monthly subscriptions (card only)
 
-- **One-off charge, not a true subscription.** The current flow
-  charges once and grants ~31 days. For real recurring billing, use
-  Paystack **Plans + Subscriptions**; the webhook would then also handle
-  `subscription.create` / `invoice.payment_failed` / `subscription.disable`.
+Premium and Pro are Paystack **Subscriptions** (since 1 Oct 2026; owner chose
+card-only auto-renew — Paystack can't renew Mobile Money, so MoMo-only buyers
+can't subscribe). Signed-in only; billed to the account email.
+
+- **Plans:** `getPlanCode()` in `lib/paystack.ts` finds or creates the Paystack
+  plans "Lincoln Navigation Premium (monthly)" / "… Pro (monthly)" at the
+  current price. Pin them with `PAYSTACK_PLAN_PREMIUM` / `PAYSTACK_PLAN_PRO`
+  if you'd rather create them in the dashboard. A price change creates a new
+  plan, so existing subscribers keep their price.
+- **Checkout** (`/api/billing/checkout`) initializes a transaction with
+  `plan` + `channels: ["card"]`; refuses a second renewing subscription of the
+  same or lower plan (Premium → Pro is allowed; the webhook then cancels the
+  Premium one).
+- **Entitlement is still payment-based:** each charge (first and every
+  renewal) is a `plan_purchases` row covering `PLAN_DAYS` (32) from when it was
+  paid. Cancelling never revokes anything — the paid month runs out.
+- **Webhook** also handles `subscription.*` (upsert `plan_subscriptions`:
+  status, next payment date, card brand/last4, `email_token`) and `invoice.*`
+  (`invoice.payment_failed` → `attention`). Renewal charges carry no metadata;
+  they are linked to the account earlier payments from that email belong to.
+- **Cookie:** `ln_premium` has `renews: true` while the subscription renews.
+  `PlanRestorer` calls `/api/billing/restore` when such a cookie is within 3
+  days of its end (every 6h) to pick up the renewal; the map's expiry notice
+  stays quiet for renewing plans.
+- **/account** (`components/site/account-plan.tsx`, `/api/billing/subscription`):
+  "Renews {date} · Visa ending 4081", **Update card** (Paystack-hosted manage
+  link) and **Cancel auto-renew** (`/subscription/disable`).
+- **Migration:** `supabase/migrations/0008_plan_subscriptions.sql`.
+- Paystack doesn't retry a failed renewal until the next payment date.
 
 ### Plans on /pricing
 
@@ -149,7 +174,7 @@ Three cards, defined in `lib/monetization.ts` (`FREE_FEATURES`,
 `PREMIUM_FEATURES`, `PRO_FEATURES`). Anything on a plan that isn't built yet
 carries `soon: true` and shows a "Coming soon" tag — flip it off when the
 feature ships. **Premium** is GHS 90/month (`NEXT_PUBLIC_PREMIUM_PRICE_PESEWAS`,
-default 9000; Paystack still sells 31 days at a time, no auto-renewal).
+default 9000; renews monthly by card, see above).
 **Pro** is GHS 225/month (`NEXT_PUBLIC_PRO_PRICE_PESEWAS`) but has no checkout:
 its button goes to `/business#talk-to-us` until the Pro tools exist.
 

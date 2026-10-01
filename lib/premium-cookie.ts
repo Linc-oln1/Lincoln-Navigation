@@ -26,6 +26,8 @@ interface PremiumPayload {
   ref: string
   /** Which plan was bought. Absent on cookies minted before Pro existed = "premium". */
   plan?: "premium" | "pro"
+  /** On a subscription that renews by itself (so don't warn it's ending). */
+  renews?: boolean
 }
 
 export type PaidPlan = "premium" | "pro"
@@ -53,6 +55,7 @@ export function mintPremiumCookie(input: {
   plan?: PaidPlan
   /** Unix seconds the plan should end. Overrides `days` (used to honour the payment date). */
   expiresAt?: number
+  renews?: boolean
 }): { value: string; maxAge: number } {
   const now = Math.floor(Date.now() / 1000)
   const exp = input.expiresAt ?? now + (input.days ?? 31) * 24 * 60 * 60
@@ -63,6 +66,7 @@ export function mintPremiumCookie(input: {
     exp,
     ref: input.reference,
     plan: input.plan ?? "premium",
+    ...(input.renews ? { renews: true } : {}),
   }
   const encoded = b64url(Buffer.from(JSON.stringify(payload)))
   return { value: `${encoded}.${sign(encoded)}`, maxAge }

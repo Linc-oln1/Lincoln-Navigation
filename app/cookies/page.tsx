@@ -12,7 +12,7 @@ type Row = { name: string; purpose: string; kept: string }
 
 const COOKIES: Row[] = [
   { name: "sb-…-auth-token", purpose: "Keeps you signed in (set by our login provider, Supabase). Only if you sign in.", kept: "Until you sign out, refreshed while you use the app" },
-  { name: "ln_premium", purpose: "Signed proof that you have an active Premium or Pro plan. Only if you buy one.", kept: "Until the plan ends (31 days)" },
+  { name: "ln_premium", purpose: "Signed proof that you have an active Premium or Pro plan. Only if you buy one.", kept: "Until the end of the month you paid for; refreshed when your plan renews" },
 ]
 
 const STORAGE: Row[] = [

@@ -22,6 +22,7 @@ export function usePremium() {
     active: false,
     expiresAt: null,
     plan: null,
+    renews: false,
   })
 
   const refresh = useCallback(() => setEntitlement(readEntitlement()), [])
@@ -54,6 +55,8 @@ export function usePremium() {
     /** Active Pro plan (a superset of Premium). */
     isPro,
     expiresAt: entitlement.expiresAt,
+    /** The plan renews by itself each month (a card subscription). */
+    renews: entitlement.active && entitlement.renews,
     /** Gate a named capability: `can("voiceNavigation")`. */
     can,
     /** Numeric limits for the current tier (savedPlaces, tripHistory). */

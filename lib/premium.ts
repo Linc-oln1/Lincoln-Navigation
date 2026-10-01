@@ -24,9 +24,11 @@ export interface Entitlement {
   expiresAt: string | null
   /** "pro" includes everything in Premium. UI only — servers verify the signature. */
   plan: "premium" | "pro" | null
+  /** A monthly subscription that renews by itself, so the end date isn't the end. */
+  renews: boolean
 }
 
-const INACTIVE: Entitlement = { active: false, expiresAt: null, plan: null }
+const INACTIVE: Entitlement = { active: false, expiresAt: null, plan: null, renews: false }
 
 /** Parse + expiry-check the ln_premium cookie payload. Browser only. */
 export function readEntitlement(): Entitlement {
@@ -43,7 +45,7 @@ export function readEntitlement(): Entitlement {
     const payloadPart = decodeURIComponent(raw).split(".")[0]
     const json = JSON.parse(
       atob(payloadPart.replace(/-/g, "+").replace(/_/g, "/")),
-    ) as { exp?: number; plan?: string }
+    ) as { exp?: number; plan?: string; renews?: boolean }
 
     if (!json.exp) return INACTIVE
     const expiresAt = new Date(json.exp * 1000)
@@ -51,6 +53,7 @@ export function readEntitlement(): Entitlement {
       active: expiresAt.getTime() > Date.now(),
       expiresAt: expiresAt.toISOString(),
       plan: json.plan === "pro" ? "pro" : "premium",
+      renews: json.renews === true,
     }
   } catch {
     return INACTIVE
