@@ -11,7 +11,7 @@ import { SITE_BASE } from "@/lib/site-base"
 export const metadata = pageMeta({
   title: "Road Trips in Ghana — Distances, Travel Times & Directions",
   description:
-    "Accra to Kumasi, Cape Coast, Takoradi and Tema, Kumasi to Tamale: road distances, driving times, the towns on the way and how to go by bus or trotro.",
+    "Accra to Kumasi, Cape Coast, Takoradi, Ho and Aflao, Kumasi to Tamale and Sunyani, Tamale to Bolgatanga: road distances, driving times, the towns on the way and how to go by bus or trotro.",
   path: "/routes",
 })
 

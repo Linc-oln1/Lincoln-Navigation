@@ -169,6 +169,110 @@ export const ROUTE_GUIDES: RouteGuide[] = [
     ],
     places: ["labadi", "black-star"],
   },
+  {
+    id: "accra-to-ho",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Ho", lat: 6.6008, lng: 0.4713 },
+    roadKm: 159,
+    driveTime: "3–3½ hours",
+    mainRoad: "Tema–Akosombo road and N2",
+    via: ["Tema", "Atimpoku (Adomi Bridge)", "Juapong"],
+    summary:
+      "About 160 km from Accra to Ho, the Volta Region capital, crossing the Volta at the Adomi Bridge — usually 3 to 3½ hours.",
+    driving: [
+      "The trip starts east on the motorway towards Tema, then turns north on the road towards Akosombo through the plains of the Shai-Osudoku district.",
+      "At Atimpoku the road crosses the Volta River on the Adomi Bridge, just downstream of the Akosombo Dam, and enters the Volta Region. From there it runs through Juapong, a textile town, and on into the hills around Ho.",
+      "The busiest part is leaving Accra and getting past Tema. After that the road is quieter, with some climbs and bends as you approach Ho.",
+    ],
+    publicTransport: [
+      "Intercity buses and minibuses run between Accra and Ho throughout the day from lorry stations in central Accra and in Tema.",
+      "From Ho, local transport continues north to Hohoe and the Wli waterfalls, and east towards the Togo border.",
+    ],
+    tips: [
+      "Leave early to get past Tema before the morning traffic.",
+      "Atimpoku is the usual stop for food — the roadside sellers are known for grilled tilapia from the Volta.",
+      "Akosombo and the dam are a short detour from Atimpoku if you have time.",
+    ],
+    places: ["akosombo", "wli"],
+  },
+  {
+    id: "kumasi-to-sunyani",
+    from: { name: "Kumasi", lat: 6.696, lng: -1.623 },
+    to: { name: "Sunyani", lat: 7.3399, lng: -2.3266 },
+    roadKm: 122,
+    driveTime: "2–3 hours",
+    mainRoad: "N6 (Kumasi–Sunyani road)",
+    via: ["Abuakwa", "Bechem"],
+    summary:
+      "About 120 km north-west on the N6 from Kumasi to Sunyani, the Bono Region capital — usually 2 to 3 hours.",
+    driving: [
+      "The road leaves Kumasi westwards through Abuakwa, then turns north-west through farming country — cocoa, plantain and cassava — in the Ashanti and Ahafo regions.",
+      "Bechem, in the Ahafo Region, is the main town on the way. From there the road continues into the Bono Region and reaches Sunyani, its capital.",
+      "Getting out of Kumasi through the western suburbs is usually the slowest part of the trip.",
+    ],
+    publicTransport: [
+      "Intercity buses and minibuses for Sunyani leave from Kumasi's main lorry stations, such as Kejetia, throughout the day.",
+      "Many buses from Accra to Sunyani also run through Kumasi.",
+    ],
+    tips: [
+      "Avoid leaving Kumasi at rush hour — the western exit can be slow.",
+      "Bechem is a convenient halfway stop.",
+      "Check the live map for the route from Sunyani on to Techiman and the north.",
+    ],
+    places: [],
+  },
+  {
+    id: "tamale-to-bolgatanga",
+    from: { name: "Tamale", lat: 9.4034, lng: -0.8424 },
+    to: { name: "Bolgatanga", lat: 10.7856, lng: -0.8513 },
+    roadKm: 162,
+    driveTime: "2½–3 hours",
+    mainRoad: "N10 (Tamale–Bolgatanga road)",
+    via: ["Savelugu", "Pong-Tamale", "Nasia", "Walewale"],
+    summary:
+      "About 160 km north on the N10 from Tamale to Bolgatanga, the Upper East Region capital — usually 2½ to 3 hours.",
+    driving: [
+      "The N10 heads straight north out of Tamale through Savelugu and Pong-Tamale, across open savanna dotted with shea trees and farming villages.",
+      "It passes Nasia and Walewale in the North East Region, then enters the Upper East Region for the last stretch into Bolgatanga.",
+      "The road is mostly flat and straight with light traffic, so the main hazards are speed, livestock and cyclists on the shoulder.",
+    ],
+    publicTransport: [
+      "Minibuses and coaches run between Tamale and Bolgatanga throughout the day, and many buses from Kumasi and Accra to Bolgatanga pass through Tamale.",
+      "From Bolgatanga, local transport continues north to Paga and the Burkina Faso border.",
+    ],
+    tips: [
+      "Carry water — it gets very hot in the afternoon, especially in the dry season.",
+      "Walewale is the main stop on the way.",
+      "Bolgatanga is known for its woven straw baskets, and Paga's crocodile ponds are a short drive further north.",
+    ],
+    places: ["paga", "larabanga"],
+  },
+  {
+    id: "accra-to-aflao",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Aflao", lat: 6.107, lng: 1.19 },
+    roadKm: 194,
+    driveTime: "3–4 hours",
+    mainRoad: "N1 (Accra–Aflao road)",
+    via: ["Tema", "Dawhenya", "Sogakope", "Akatsi", "Denu"],
+    summary:
+      "About 190 km east on the N1 from Accra to Aflao, on the Togo border — usually 3 to 4 hours.",
+    driving: [
+      "The trip leaves Accra on the motorway to Tema, then follows the N1 east past Dawhenya and the junctions for Prampram and Ada.",
+      "At Sogakope the road crosses the Volta River and enters the Volta Region, then runs through Akatsi and Denu to Aflao, the border town facing Lomé, the capital of Togo.",
+      "Traffic around Tema and the queue of trucks near the border are the usual delays.",
+    ],
+    publicTransport: [
+      "Intercity buses and minibuses for Aflao leave from central Accra throughout the day.",
+      "If you are crossing into Togo, have your travel documents ready and check the current entry requirements before you go.",
+    ],
+    tips: [
+      "Leave early to clear Tema before the morning rush.",
+      "Sogakope, by the Volta bridge, is a good place to stop.",
+      "Ada and the Volta estuary are a short detour south from the N1.",
+    ],
+    places: [],
+  },
 ]
 
 export const findRoute = (id: string) => ROUTE_GUIDES.find((r) => r.id === id)
