@@ -4,7 +4,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Unbounded } from "next/font/google"
+import localFont from "next/font/local"
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -24,7 +24,15 @@ import { BillingChart, type DayTotal } from "@/components/admin/billing-chart"
 import { PaymentsList } from "@/components/admin/payments-list"
 import { cn } from "@/lib/utils"
 
-const display = Unbounded({ subsets: ["latin"], weight: ["500", "600"] })
+// Self-hosted (app/fonts, SIL OFL — see Unbounded-OFL.txt): fetching it from
+// Google Fonts at build time made Vercel builds fail.
+const display = localFont({
+  src: [
+    { path: "../../app/fonts/unbounded-latin-500-normal.woff2", weight: "500", style: "normal" },
+    { path: "../../app/fonts/unbounded-latin-600-normal.woff2", weight: "600", style: "normal" },
+  ],
+  display: "swap",
+})
 
 
 const DAY_MS = 86_400_000
