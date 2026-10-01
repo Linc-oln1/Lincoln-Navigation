@@ -8,6 +8,7 @@
 //      EMAIL_FROM       optional, default "Lincoln Navigation <billing@lincolnnavigation.com>"
 
 import { CONTACT_EMAIL } from "@/lib/legal"
+import { bump } from "@/lib/rate-limit"
 
 export const EMAIL_ENABLED = Boolean(process.env.RESEND_API_KEY?.trim())
 
@@ -37,6 +38,32 @@ export async function sendEmail(msg: { to: string; subject: string; html: string
     console.error("[email] could not send:", error)
     return false
   }
+}
+
+const ONCE_WINDOW_S = 45 * 86_400
+
+/**
+ * Send at most once per `key` (Redis claim, 45 days): webhooks can arrive
+ * twice and crons re-run. If sending fails the claim is released and false
+ * comes back, so a retry can try again. True when email is off.
+ */
+export async function sendOnce(key: string, send: () => Promise<boolean>): Promise<boolean> {
+  if (!EMAIL_ENABLED) return true
+  const claimKey = `email:once:${key}`
+  if ((await bump(claimKey, ONCE_WINDOW_S)) > 1) return true
+  if (await send()) return true
+  await bump(claimKey, ONCE_WINDOW_S, -1)
+  return false
+}
+
+/** The live site's origin, for links and images in emails. */
+export function siteUrl() {
+  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.lincolnnavigation.com"
+}
+
+/** "4 November 2026", in Ghana time. */
+export function longDate(d: Date) {
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Accra" })
 }
 
 export function escapeHtml(s: string) {

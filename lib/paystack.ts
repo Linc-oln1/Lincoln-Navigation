@@ -13,6 +13,8 @@ import {
   PRO_PRICE_PESEWAS,
   sponsorPackage,
 } from "@/lib/monetization"
+import { sendListingPaid } from "@/lib/sponsor-emails"
+import type { SponsorRow } from "@/lib/sponsor-store"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 /**
@@ -236,7 +238,8 @@ export async function subscriptionManageLink(code: string, secret: string): Prom
  * Mark a sponsored listing paid (status → pending_review) if the transaction
  * covers its package. Only a listing still waiting for this exact payment
  * moves on, so a repeat (browser return + webhook, or a Paystack retry) is a
- * harmless no-op and can't reset one that's already live or ended.
+ * harmless no-op and can't reset one that's already live or ended. The
+ * first time it's marked paid, the advertiser and admins are emailed.
  * Needs the service-role client (ADMIN_ENABLED).
  */
 export async function markSponsorPaid(
@@ -250,7 +253,7 @@ export async function markSponsorPaid(
     return "not-a-listing"
   }
 
-  const { error } = await createAdminClient()
+  const { data, error } = await createAdminClient()
     .from("sponsors")
     .update({
       status: "pending_review",
@@ -261,9 +264,17 @@ export async function markSponsorPaid(
     .eq("id", sponsorId)
     .eq("paystack_reference", reference)
     .eq("status", "awaiting_payment")
+    .select()
   if (error) {
     console.error("[sponsor] could not mark paid:", error.message)
     return "error"
+  }
+  // Only the call that actually moved it to pending_review sends the emails
+  // (the webhook and the browser return both land here). If they fail, the
+  // daily cron's "waiting for review" digest still tells the admins.
+  const row = (data as SponsorRow[] | null)?.[0]
+  if (row) {
+    await sendListingPaid(row).catch((e) => console.error("[sponsor] paid emails failed:", e))
   }
   return "ok"
 }

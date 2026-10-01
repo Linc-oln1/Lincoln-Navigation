@@ -120,19 +120,24 @@ function SponsorCard({
   const [busy, setBusy] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
 
   async function patch(body: Record<string, unknown>, label: string) {
     setBusy(label)
     setError(null)
+    setNotice(null)
     const res = await fetch(`/api/admin/sponsors/${s.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     })
-    const data = (await res.json().catch(() => null)) as { error?: string } | null
+    const data = (await res.json().catch(() => null)) as { error?: string; emailed?: boolean | null } | null
     if (!res.ok) setError(data?.error || "Update failed.")
     else {
       setEditing(false)
+      // approve / reject / extend email the advertiser (null = no email for this action, or email is off).
+      if (data?.emailed === true) setNotice(`Done — ${s.contact_email} has been emailed.`)
+      else if (data?.emailed === false) setNotice(`Done, but the email to ${s.contact_email} didn't send — let them know yourself.`)
       await onChanged()
     }
     setBusy(null)
@@ -143,7 +148,7 @@ function SponsorCard({
     s.status === "pending_review"
       ? [
           { label: `Approve & start ${SPONSOR_DAYS} days`, action: "approve", primary: true },
-          { label: "Reject", action: "reject", confirm: "Reject this paid listing? The advertising policy promises a full refund — issue it in the Paystack dashboard." },
+          { label: "Reject", action: "reject", confirm: "Reject this paid listing? The advertiser is emailed that a full refund is on the way — issue it in the Paystack dashboard." },
         ]
       : s.status === "active" && !expired
         ? [
@@ -241,6 +246,7 @@ function SponsorCard({
         </div>
       )}
       {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+      {notice && <p className="mt-2 text-sm text-muted-foreground">{notice}</p>}
     </article>
   )
 }

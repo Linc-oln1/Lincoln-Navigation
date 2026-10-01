@@ -13,6 +13,11 @@ const ADMIN_EMAILS = new Set(
     .filter(Boolean),
 )
 
+/** Every admin address (for notifications such as a new paid listing). */
+export function adminEmails(): string[] {
+  return [...ADMIN_EMAILS]
+}
+
 /** The signed-in admin, or null for everyone else. */
 export async function getAdminUser() {
   const user = await getSessionUser()

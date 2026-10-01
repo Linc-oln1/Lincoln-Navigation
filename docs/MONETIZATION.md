@@ -64,6 +64,18 @@ the "Explore Nearby" panel, labelled **Sponsored**.
   extend/renew by 30 days, pause, end, reject, edit, and add a sponsor
   who paid by MoMo/cash. Rejecting a paid listing does **not** refund
   it — do that in the Paystack dashboard.
+
+**Emails** (`lib/sponsor-emails.ts`, same layout as the billing emails, off
+without `RESEND_API_KEY`):
+- paid → the advertiser ("we're reviewing it") and every `ADMIN_EMAILS`
+  address ("new listing to review"), from `markSponsorPaid`;
+- approve / reject / extend in /admin/sponsors → the advertiser (reject says a
+  full refund is on the way — you still issue it in Paystack). The admin card
+  says whether the email went out;
+- daily cron `/api/cron/sponsors` (`vercel.json`, 08:00 UTC): "ends in N days"
+  5 days before the end, then marks expired listings `ended` and sends "has
+  ended" with its numbers; plus a digest to admins while any listing waits for
+  review. Set `CRON_SECRET` in Vercel so only Vercel can call it.
 - **Stats:** the panel counts a view per sponsor per page load, an
   open when the listing is tapped, and "Visit website" taps
   (`/api/sponsored/track`, capped per visitor per hour, live sponsors

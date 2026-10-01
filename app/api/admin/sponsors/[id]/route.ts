@@ -4,10 +4,16 @@
 //   approve  — paid listing goes live now for SPONSOR_DAYS
 //   extend   — adds SPONSOR_DAYS to the end date (a renewal payment)
 //   pause / resume / end / reject — change status
+//
+// approve, reject and extend also email the advertiser (lib/sponsor-emails);
+// the response says whether that email went out.
 
 import { NextResponse } from "next/server"
 import { getAdminUser } from "@/lib/admin-auth"
+import { EMAIL_ENABLED } from "@/lib/email"
 import { SPONSOR_DAYS } from "@/lib/monetization"
+import { sendListingApproved, sendListingExtended, sendListingRejected } from "@/lib/sponsor-emails"
+import type { SponsorRow } from "@/lib/sponsor-store"
 import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 import { parseSponsorFields } from "../fields"
 
@@ -65,10 +71,21 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       return NextResponse.json({ error: "Unknown action." }, { status: 400 })
   }
 
-  const { error } = await db.from("sponsors").update(update).eq("id", id)
+  const { data: saved, error } = await db.from("sponsors").update(update).eq("id", id).select().single()
   if (error) {
     console.error("[admin sponsors] update failed:", error.message)
     return NextResponse.json({ error: "Couldn't update the sponsor." }, { status: 500 })
   }
-  return NextResponse.json({ ok: true })
+
+  // Tell the advertiser. Never undoes the change if the email fails.
+  const send =
+    action === "approve" ? sendListingApproved : action === "reject" ? sendListingRejected : action === "extend" ? sendListingExtended : null
+  let emailed: boolean | null = null
+  if (send && EMAIL_ENABLED) {
+    emailed = await send(saved as SponsorRow).catch((e) => {
+      console.error("[admin sponsors] email failed:", e)
+      return false
+    })
+  }
+  return NextResponse.json({ ok: true, emailed })
 }

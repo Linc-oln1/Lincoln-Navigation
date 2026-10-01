@@ -9,26 +9,15 @@
 //   cardExpiring   — subscription.expiring_cards (start of each month).
 //
 // Both point to /account, where "Update card" opens Paystack's page. Each is
-// sent at most once per event (Redis key for 45 days), since Paystack may
-// deliver the same webhook more than once.
+// sent at most once per event (sendOnce), since Paystack may deliver the same
+// webhook more than once.
 
-import { bump } from "@/lib/rate-limit"
-import { EMAIL_ENABLED, emailLayout, escapeHtml, sendEmail } from "@/lib/email"
+import { emailLayout, escapeHtml, longDate, sendEmail, sendOnce, siteUrl } from "@/lib/email"
 import { paidUntil, RENEWING, type SubscriptionRow } from "@/lib/plan-store"
 import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 
-const ONCE_WINDOW_S = 45 * 86_400
-
-function siteUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://www.lincolnnavigation.com"
-}
-
 function planName(sub: SubscriptionRow) {
   return sub.plan === "pro" ? "Pro" : "Premium"
-}
-
-function longDate(d: Date) {
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Accra" })
 }
 
 /** The account holder's first name for "Hi …!", if their profile has one. */
@@ -46,19 +35,6 @@ async function firstName(sub: SubscriptionRow): Promise<string | null> {
 
 function reason(sub: SubscriptionRow) {
   return `You're getting this because you have a ${planName(sub)} subscription with LincolnNavigation.`
-}
-
-/**
- * Send once per `key`: the first caller claims it. If sending fails the claim
- * is released and false comes back, so a Paystack retry can try again.
- */
-async function sendOnce(key: string, send: () => Promise<boolean>): Promise<boolean> {
-  if (!EMAIL_ENABLED) return true
-  const claimKey = `email:once:${key}`
-  if ((await bump(claimKey, ONCE_WINDOW_S)) > 1) return true
-  if (await send()) return true
-  await bump(claimKey, ONCE_WINDOW_S, -1)
-  return false
 }
 
 /** A renewal charge failed. `eventKey` identifies this attempt (invoice code). */
