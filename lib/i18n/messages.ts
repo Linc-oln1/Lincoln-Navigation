@@ -29,6 +29,7 @@ const baseEn = {
   "nav.explore": "Explore",
   "nav.features": "Features",
   "nav.places": "Places",
+  "nav.routes": "Routes",
 
   "footer.product": "Product",
   "footer.company": "Company",

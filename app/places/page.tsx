@@ -76,7 +76,8 @@ export default function PlacesPage() {
 
         <p className="mt-10 text-sm opacity-70">
           Want to plan a route right now?{" "}
-          <Link href="/features" className="font-semibold underline underline-offset-2">Explore the destinations</Link> or{" "}
+          <Link href="/features" className="font-semibold underline underline-offset-2">Explore the destinations</Link>, see{" "}
+          <Link href="/routes" className="font-semibold underline underline-offset-2">road trips in Ghana</Link> or{" "}
           <Link href="/app" className="font-semibold underline underline-offset-2">open the live map</Link>.
         </p>
       </section>
