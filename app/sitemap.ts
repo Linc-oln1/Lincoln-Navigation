@@ -13,6 +13,7 @@ const PAGES: { path: string; priority: number; changeFrequency: MetadataRoute.Si
   ...GHANA_DESTINATIONS.map((d) => ({ path: `/places/${d.id}`, priority: 0.7, changeFrequency: "monthly" as const })),
   { path: "/routes", priority: 0.8, changeFrequency: "monthly" },
   ...ROUTE_GUIDES.map((r) => ({ path: `/routes/${r.id}`, priority: 0.7, changeFrequency: "monthly" as const })),
+  { path: "/trotro", priority: 0.7, changeFrequency: "monthly" },
   { path: "/pricing", priority: 0.8, changeFrequency: "monthly" },
   { path: "/business", priority: 0.7, changeFrequency: "monthly" },
   { path: "/about", priority: 0.6, changeFrequency: "monthly" },

@@ -66,7 +66,8 @@ export default function RoutesPage() {
         </ul>
 
         <p className="mt-10 text-sm opacity-70">
-          Going sightseeing?{" "}
+          New to trotros?{" "}
+          <Link href="/trotro" className="font-semibold underline underline-offset-2">Read the trotro guide</Link>. Going sightseeing?{" "}
           <Link href="/places" className="font-semibold underline underline-offset-2">See places to visit in Ghana</Link> or{" "}
           <Link href="/app" className="font-semibold underline underline-offset-2">open the live map</Link>.
         </p>

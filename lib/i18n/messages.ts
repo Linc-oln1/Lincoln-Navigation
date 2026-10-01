@@ -30,6 +30,7 @@ const baseEn = {
   "nav.features": "Features",
   "nav.places": "Places",
   "nav.routes": "Routes",
+  "nav.trotro": "Trotro guide",
 
   "footer.product": "Product",
   "footer.company": "Company",

@@ -129,7 +129,11 @@ export default async function RoutePage({ params }: Props) {
                 <p key={p.slice(0, 32)} className="mt-3 leading-relaxed opacity-85">{p}</p>
               ))}
               <p className="mt-3 leading-relaxed opacity-85">
-                Fares change often, so check at the station before you travel. For live directions — by car, bus,
+                New to trotros? Read{" "}
+                <Link href="/trotro" className="font-semibold text-[#c25a1c] underline underline-offset-2">
+                  how to ride a trotro
+                </Link>
+                . Fares change often, so check at the station before you travel. For live directions — by car, bus,
                 motorbike, bicycle or on foot — open{" "}
                 <Link href={routeDirectionsHref(r)} className="font-semibold text-[#c25a1c] underline underline-offset-2">
                   {r.to.name} on the Lincoln Navigation map
