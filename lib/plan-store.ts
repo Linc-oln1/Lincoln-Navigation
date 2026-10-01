@@ -315,3 +315,36 @@ export async function paidUntil(email: string): Promise<Date | null> {
     .maybeSingle()
   return data?.expires_at ? new Date(data.expires_at as string) : null
 }
+
+/**
+ * End of a pay-once purchase: ONCE_DAYS from when it was paid, or — if the
+ * customer paid early — from the end of the same plan they already had, so
+ * no days are lost. Excludes this payment itself, so the webhook and the
+ * browser return compute the same date.
+ */
+export async function onceExpiresAt(input: {
+  email: string
+  plan: PaidPlan
+  reference: string
+  paidAtMs: number
+  days: number
+}): Promise<number> {
+  const fromPaid = Math.floor(input.paidAtMs / 1000) + input.days * 86_400
+  if (!ADMIN_ENABLED) return fromPaid
+  try {
+    const { data } = await createAdminClient()
+      .from("plan_purchases")
+      .select("expires_at")
+      .eq("email", input.email.toLowerCase())
+      .eq("plan", input.plan)
+      .neq("reference", input.reference)
+      .gt("expires_at", new Date(input.paidAtMs).toISOString())
+      .order("expires_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (!data?.expires_at) return fromPaid
+    return Math.floor(Date.parse(data.expires_at as string) / 1000) + input.days * 86_400
+  } catch {
+    return fromPaid
+  }
+}

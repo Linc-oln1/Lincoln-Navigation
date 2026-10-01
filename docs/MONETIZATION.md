@@ -164,6 +164,16 @@ never came back gets their plan through **Restore** on /account.
 `https://www.lincolnnavigation.com/api/paystack/webhook` (live mode; set the
 test-mode URL too if you test with `sk_test_`).
 
+### Pay once (Mobile Money, bank or card)
+
+Next to the monthly card subscription, /pricing has a **Pay once** switch:
+one payment for `ONCE_DAYS` (31), any channel on the Paystack account, no
+renewal (checkout `billing: "once"`, metadata `premium_once` / `pro_once`).
+Paying again while it's still running stacks: `onceExpiresAt()` starts the
+new days when the current same-plan purchase ends. Someone on an active
+pay-once plan sees "Add 31 days" instead of the active badge. A renewing
+subscription of the same or higher plan still blocks a second purchase.
+
 ### Monthly subscriptions (card only)
 
 Premium and Pro are Paystack **Subscriptions** (since 1 Oct 2026; owner chose

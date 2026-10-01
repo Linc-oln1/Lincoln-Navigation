@@ -16,8 +16,8 @@ import {
   verifyPremiumCookie,
 } from "@/lib/premium-cookie"
 import { getSessionUser } from "@/lib/supabase/server"
-import { recordPurchase } from "@/lib/plan-store"
-import { fetchTransaction, planPayment } from "@/lib/paystack"
+import { onceExpiresAt, recordPurchase } from "@/lib/plan-store"
+import { fetchTransaction, ONCE_DAYS, planPayment } from "@/lib/paystack"
 
 export async function GET(req: Request) {
   const url = new URL(req.url)
@@ -39,7 +39,11 @@ export async function GET(req: Request) {
   // the buyer never makes it back here; both go through planPayment().
   const payment = planPayment(tx)
   if (!payment.ok) return fail(payment.reason)
-  const { plan, email, paidAtMs, expiresAtSec: expiresAt, renews } = payment
+  const { plan, email, paidAtMs, renews } = payment
+  // Pay-once bought early: the new days start when the current plan ends.
+  const expiresAt = payment.once
+    ? await onceExpiresAt({ email, plan, reference, paidAtMs, days: ONCE_DAYS })
+    : payment.expiresAtSec
 
   // Remember the payment (and the account, if they're signed in) so the plan
   // can be restored on another device. Best effort: never blocks the unlock.

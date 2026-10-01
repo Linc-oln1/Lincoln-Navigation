@@ -31,7 +31,7 @@ export default async function Image() {
             <div style={{ fontSize: 68, fontWeight: 700, lineHeight: 1.02 }}>Every road.</div>
             <div style={{ fontSize: 68, fontWeight: 400, lineHeight: 1.08, color: "rgba(255,255,255,0.9)" }}>One simple price.</div>
             <div style={{ fontSize: 26, color: "rgba(255,255,255,0.6)", marginTop: 24, lineHeight: 1.4, maxWidth: 560 }}>
-              The map is free forever. Extras are monthly, and you can cancel anytime.
+              The map is free forever. Extras are monthly by card, or pay once with Mobile Money.
             </div>
           </div>
           <div style={{ fontSize: 22, fontWeight: 700, color: "#c4b5fd" }}>lincolnnavigation.com/pricing</div>

@@ -23,9 +23,10 @@ export default function RefundsPage() {
       intro={
         <>
         <p>
-          Premium and Pro are monthly subscriptions paid by card. You can
-          cancel at any time on your account page, which stops all future
-          charges. Here is when you can get your money back.
+          Premium and Pro can be a monthly card subscription, which you can
+          cancel at any time on your account page, or a one-off payment for
+          31 days that doesn&rsquo;t renew. Here is when you can get your
+          money back.
         </p>
         <p>
           This page covers Premium and Pro. Refunds for sponsored listings
@@ -50,6 +51,7 @@ export default function RefundsPage() {
         <ul>
           <li>After the windows above, for a plan that worked as described.</li>
           <li>For the rest of a month you have already paid for when you cancel. Cancelling stops the next charge; your plan stays active until that month ends.</li>
+          <li>For the unused days of a one-off 31-day payment you simply stopped using.</li>
           <li>If your account was suspended for breaking our <Link href="/terms">Terms</Link>.</li>
           <li>For bookings made on partner sites (Booking.com, Viator, GetYourGuide, Eventbrite and others). Those are between you and the partner; ask them directly.</li>
         </ul>

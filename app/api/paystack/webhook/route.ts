@@ -34,6 +34,7 @@ import {
   isValidWebhookSignature,
   markSponsorPaid,
   markSponsorRenewed,
+  ONCE_DAYS,
   planForPaystackPlan,
   planPayment,
   type PaystackPlanRef,
@@ -43,6 +44,7 @@ import {
 import { sendCardExpiring, sendRenewalFailed } from "@/lib/billing-emails"
 import {
   accountForEmail,
+  onceExpiresAt,
   getSubscription,
   linkSubscriptions,
   otherRenewingSubscriptions,
@@ -144,7 +146,10 @@ async function onCharge(tx: PaystackTx | undefined) {
     plan: payment.plan,
     email: payment.email,
     paidAtMs: payment.paidAtMs,
-    expiresAtSec: payment.expiresAtSec,
+    // Pay-once bought early: the new days start when the current plan ends.
+    expiresAtSec: payment.once
+      ? await onceExpiresAt({ email: payment.email, plan: payment.plan, reference, paidAtMs: payment.paidAtMs, days: ONCE_DAYS })
+      : payment.expiresAtSec,
   }
   let saved = await recordPurchase({ ...purchase, userId })
   // An account deleted since checkout would fail the user link; keep the

@@ -1,10 +1,13 @@
 // app/api/billing/checkout/route.ts
 //
-// Starts a monthly Premium / Pro subscription: a Paystack transaction on our
-// Paystack plan (lib/paystack getPlanCode), card only — Paystack can only
-// renew cards. Paystack then charges the same card every month until it's
-// cancelled; the webhook records each charge. Returns the hosted-checkout
-// URL; on completion Paystack sends the buyer to /api/billing/verify.
+// Starts a Premium / Pro purchase. Body: { plan, billing: "monthly" | "once" }.
+//   monthly — a subscription on our Paystack plan (lib/paystack getPlanCode),
+//             card only: Paystack can only renew cards. It charges the same
+//             card every month until cancelled; the webhook records each one.
+//   once    — one payment for ONCE_DAYS by any channel on the account
+//             (Mobile Money, bank, card). Nothing renews.
+// Returns the hosted-checkout URL; Paystack then sends the buyer to
+// /api/billing/verify.
 //
 // Signed-in only, billed to the account's email, so renewals and the
 // cancel / change-card controls on /account follow the account.
@@ -18,7 +21,7 @@ import {
   PREMIUM_PRICE_PESEWAS,
   PRO_PRICE_PESEWAS,
 } from "@/lib/monetization"
-import { getPlanCode } from "@/lib/paystack"
+import { getPlanCode, PLAN_TAGS } from "@/lib/paystack"
 import { currentSubscription, RENEWING } from "@/lib/plan-store"
 import { getSessionUser } from "@/lib/supabase/server"
 
@@ -44,11 +47,13 @@ export async function POST(req: Request) {
   }
 
   let plan: "premium" | "pro" = "premium"
+  let once = false
   try {
-    const body = (await req.json()) as { plan?: string }
+    const body = (await req.json()) as { plan?: string; billing?: string }
     if (body.plan === "pro") plan = "pro"
+    once = body.billing === "once"
   } catch {
-    /* default to premium */
+    /* default to a monthly premium subscription */
   }
 
   // Don't start a second subscription that would charge alongside one that's
@@ -62,8 +67,8 @@ export async function POST(req: Request) {
     )
   }
 
-  const planCode = await getPlanCode(plan, secret)
-  if (!planCode) {
+  const planCode = once ? null : await getPlanCode(plan, secret)
+  if (!once && !planCode) {
     return NextResponse.json({ error: "Could not start checkout. Try again in a minute." }, { status: 502 })
   }
 
@@ -79,14 +84,14 @@ export async function POST(req: Request) {
     },
     body: JSON.stringify({
       email,
-      // Paystack charges the plan's amount; this is the same number.
+      // On a subscription Paystack charges the plan's amount — the same number.
       amount: plan === "pro" ? PRO_PRICE_PESEWAS : PREMIUM_PRICE_PESEWAS,
       currency: PREMIUM_CURRENCY,
-      plan: planCode,
-      channels: ["card"],
+      // Monthly: our Paystack plan, cards only. Once: every channel on the account.
+      ...(planCode ? { plan: planCode, channels: ["card"] } : {}),
       callback_url: `${origin}/api/billing/verify`,
       metadata: {
-        plan: plan === "pro" ? "pro_monthly" : "premium_monthly",
+        plan: PLAN_TAGS[plan][once ? "once" : "monthly"],
         product: "LincolnNavigation.com",
         // Lets the webhook link the payment even if the buyer never comes
         // back through /api/billing/verify.

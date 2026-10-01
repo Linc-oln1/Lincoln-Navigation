@@ -4,7 +4,7 @@ import { pageMeta } from "@/lib/page-meta"
 export const metadata = pageMeta({
   title: "Pricing — Lincoln Navigation",
   description:
-    "The map, search and directions are free forever. Premium and Pro add voice navigation, Live View, fleet tools and more — monthly by card, cancel anytime.",
+    "The map, search and directions are free forever. Premium and Pro add voice navigation, Live View, fleet tools and more — monthly by card, or pay once with Mobile Money.",
   path: "/pricing",
   // Generated (app/pricing/opengraph-image.tsx) so it shows the current price.
   image: {

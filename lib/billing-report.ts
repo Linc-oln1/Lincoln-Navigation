@@ -14,7 +14,16 @@ import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 
 const DAY_MS = 86_400_000
 
-export type PaymentKind = "Premium" | "Pro" | "Premium renewal" | "Pro renewal" | "Sponsored listing" | "Listing renewal" | "Other"
+export type PaymentKind =
+  | "Premium"
+  | "Pro"
+  | "Premium renewal"
+  | "Pro renewal"
+  | "Premium · 31 days"
+  | "Pro · 31 days"
+  | "Sponsored listing"
+  | "Listing renewal"
+  | "Other"
 
 export interface Payment {
   reference: string
@@ -67,6 +76,8 @@ function metadataOf(tx: RawTx): NonNullable<PaystackTx["metadata"]> {
 
 function classify(tx: RawTx, meta: NonNullable<PaystackTx["metadata"]>): PaymentKind {
   if (meta.sponsor_id) return meta.kind === "renewal" ? "Listing renewal" : "Sponsored listing"
+  if (meta.plan === "pro_once") return "Pro · 31 days"
+  if (meta.plan === "premium_once") return "Premium · 31 days"
   if (meta.plan === "pro_monthly") return "Pro"
   if (meta.plan === "premium_monthly") return "Premium"
   // Monthly renewals carry no checkout metadata, only our Paystack plan.

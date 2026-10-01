@@ -25,6 +25,15 @@ import { createAdminClient } from "@/lib/supabase/admin"
  */
 export const PLAN_DAYS = 32
 
+/** A pay-once plan (Mobile Money, bank or card; nothing renews) lasts this long. */
+export const ONCE_DAYS = 31
+
+/** Checkout tags: monthly card subscription, or one payment for ONCE_DAYS. */
+export const PLAN_TAGS = {
+  premium: { monthly: "premium_monthly", once: "premium_once" },
+  pro: { monthly: "pro_monthly", once: "pro_once" },
+} as const
+
 const PLAN_NAMES: Record<PaidPlan, string> = {
   premium: "Lincoln Navigation Premium (monthly)",
   pro: "Lincoln Navigation Pro (monthly)",
@@ -95,11 +104,21 @@ export function isValidWebhookSignature(rawBody: string, signature: string | nul
 }
 
 export type PlanPayment =
-  | { ok: true; plan: PaidPlan; email: string; paidAtMs: number; expiresAtSec: number; renews: boolean }
+  | {
+      ok: true
+      plan: PaidPlan
+      email: string
+      paidAtMs: number
+      expiresAtSec: number
+      renews: boolean
+      /** Pay-once: ONCE_DAYS, and an early payment should start when the current one ends (onceExpiresAt). */
+      once: boolean
+    }
   | { ok: false; reason: "payment-not-confirmed" | "payment-not-a-plan" | "payment-expired" }
 
 /**
- * What plan a transaction pays for — the plan tag we set at checkout (or, on
+ * What plan a transaction pays for — the plan tag we set at checkout
+ * (monthly or pay-once; on
  * a renewal, our Paystack plan) AND an amount that covers that plan's price,
  * in our currency. Any other successful transaction on the account (a test
  * charge, another product) is not a plan.
@@ -112,18 +131,21 @@ export function planPayment(tx: PaystackTx): PlanPayment {
   const tag = tx.metadata?.plan
   const ref = txPlan(tx)
   const subPlan = planForPaystackPlan(ref)
+  const once = tag === PLAN_TAGS.pro.once || tag === PLAN_TAGS.premium.once
   let plan: PaidPlan | null = null
   if (tx.currency === PREMIUM_CURRENCY) {
-    if ((tag === "pro_monthly" || subPlan === "pro") && paid >= PRO_PRICE_PESEWAS) plan = "pro"
-    else if ((tag === "premium_monthly" || subPlan === "premium") && paid >= PREMIUM_PRICE_PESEWAS) plan = "premium"
+    const proTag = tag === PLAN_TAGS.pro.monthly || tag === PLAN_TAGS.pro.once
+    const premiumTag = tag === PLAN_TAGS.premium.monthly || tag === PLAN_TAGS.premium.once
+    if ((proTag || subPlan === "pro") && paid >= PRO_PRICE_PESEWAS) plan = "pro"
+    else if ((premiumTag || subPlan === "premium") && paid >= PREMIUM_PRICE_PESEWAS) plan = "premium"
   }
   if (!plan) return { ok: false, reason: "payment-not-a-plan" }
 
-  // A payment buys PLAN_DAYS from when it was paid, not from when it is
+  // A payment buys its days from when it was paid, not from when it is
   // checked — otherwise the same reference could be re-verified every month.
   const paidAtMs = tx.paid_at ? Date.parse(tx.paid_at) : NaN
   if (!Number.isFinite(paidAtMs)) return { ok: false, reason: "payment-not-confirmed" }
-  const expiresAtSec = Math.floor(paidAtMs / 1000) + PLAN_DAYS * 24 * 60 * 60
+  const expiresAtSec = Math.floor(paidAtMs / 1000) + (once ? ONCE_DAYS : PLAN_DAYS) * 24 * 60 * 60
   if (expiresAtSec <= Math.floor(Date.now() / 1000)) return { ok: false, reason: "payment-expired" }
 
   return {
@@ -132,7 +154,8 @@ export function planPayment(tx: PaystackTx): PlanPayment {
     email: tx.customer?.email || "unknown",
     paidAtMs,
     expiresAtSec,
-    renews: Boolean(ref?.plan_code),
+    renews: !once && Boolean(ref?.plan_code),
+    once,
   }
 }
 

@@ -57,7 +57,7 @@ const PLANS: Plan[] = [
     badge: "Recommended",
     icon: Sparkles,
     pesewas: PREMIUM_PRICE_PESEWAS,
-    terms: "per month · renews monthly · cancel anytime",
+    terms: "per month · auto-renew by card, or pay once",
     lead: "Everything in Free, plus",
     included: PREMIUM_FEATURES,
     upsell: { tier: "Pro", features: PRO_FEATURES },
@@ -68,7 +68,7 @@ const PLANS: Plan[] = [
     badge: "For businesses",
     icon: Briefcase,
     pesewas: PRO_PRICE_PESEWAS,
-    terms: "per month · renews monthly · cancel anytime",
+    terms: "per month · auto-renew by card, or pay once",
     lead: "Everything in Premium, plus",
     included: PRO_FEATURES,
   },
@@ -91,17 +91,24 @@ const CALLOUTS: Record<PlanId, { target: CalloutTarget; side: "left" | "right"; 
   ],
   premium: [
     { target: "price", side: "left", title: "Transparent pricing", body: "In cedis, taxes included. What you see is what you pay." },
-    { target: "terms", side: "right", title: "Cancel anytime", body: "Renews monthly by card. Cancel from your account; you keep it to the end of the month." },
-    { target: "cta", side: "left", title: "Clear next step", body: "Sign in, then pay securely by card with Paystack." },
+    { target: "terms", side: "right", title: "Your choice", body: "Auto-renew by card and cancel anytime — or pay once with Mobile Money, bank or card for 31 days." },
+    { target: "cta", side: "left", title: "Clear next step", body: "Sign in, pick monthly or pay once, then pay securely with Paystack." },
     { target: "features", side: "right", title: "All live today", body: "Every feature listed works now — nothing is “coming soon”." },
   ],
   pro: [
     { target: "price", side: "left", title: "Transparent pricing", body: "In cedis, taxes included. What you see is what you pay." },
-    { target: "terms", side: "right", title: "Cancel anytime", body: "Renews monthly by card. Cancel from your account; you keep it to the end of the month." },
+    { target: "terms", side: "right", title: "Your choice", body: "Auto-renew by card and cancel anytime — or pay once with Mobile Money, bank or card for 31 days." },
     { target: "cta", side: "left", title: "Bigger team?", body: "Talk to us about a team plan below the button." },
     { target: "features", side: "right", title: "All live today", body: "Fleet, truck routing, runs and analytics work now." },
   ],
 }
+
+type Billing = "monthly" | "once"
+const ONCE_DAYS_LABEL = "31 days"
+const BILLING_OPTIONS: { id: Billing; label: string; sub: string }[] = [
+  { id: "monthly", label: "Monthly", sub: "Card · auto-renews" },
+  { id: "once", label: "Pay once", sub: "MoMo, bank or card" },
+]
 
 /** Sign in, then come back to this plan's tab. */
 function signInHref(plan: PlanId) {
@@ -146,6 +153,7 @@ function PricingContent() {
     return params.get("welcome") === "pro" ? "pro" : "premium"
   })
   const [busy, setBusy] = useState(false)
+  const [billing, setBilling] = useState<Billing>("monthly")
   const [error, setError] = useState<string | null>(null)
 
   const welcomeParam = params.get("welcome")
@@ -171,16 +179,22 @@ function PricingContent() {
     setError(null)
   }
 
+  // A pay-once plan that's still running can be topped up (31 more days,
+  // starting when it ends). A renewing subscription can't be bought twice.
+  const activeHere = plan.id === "pro" ? isPro : plan.id === "premium" ? isPremium && !isPro : false
+  const topUp = activeHere && !renews
+
   async function checkout(e: React.FormEvent) {
     e.preventDefault()
     if (plan.id === "free") return
+    const mode: Billing = topUp ? "once" : billing
     setBusy(true)
     setError(null)
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: plan.id }),
+        body: JSON.stringify({ plan: plan.id, billing: mode }),
       })
       if (res.status === 401) {
         window.location.href = signInHref(plan.id)
@@ -211,7 +225,7 @@ function PricingContent() {
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-white/60 sm:text-lg">
             The map, search and directions are free forever. Pay only for the extras you want —
-            monthly, cancel anytime.
+            monthly by card, or once with Mobile Money.
           </p>
         </header>
 
@@ -304,6 +318,10 @@ function PricingContent() {
               refs={refs}
               active={plan.id === "free" ? false : plan.id === "pro" ? isPro : isPremium}
               activeLabel={plan.id === "premium" && isPro ? "Included in your Pro plan" : "Active — you’re all set"}
+              topUp={topUp}
+              activeUntil={expiresAt ? new Date(expiresAt).toLocaleDateString() : null}
+              billing={billing}
+              onBilling={setBilling}
               accountEmail={user?.email ?? null}
               sessionLoading={sessionLoading}
               busy={busy}
@@ -487,6 +505,10 @@ function PlanCard({
   refs,
   active,
   activeLabel,
+  topUp,
+  activeUntil,
+  billing,
+  onBilling,
   accountEmail,
   sessionLoading,
   busy,
@@ -498,6 +520,11 @@ function PlanCard({
   refs: CardRefs
   active: boolean
   activeLabel: string
+  /** Active on a pay-once plan: offer "add 31 days" instead of the active badge. */
+  topUp: boolean
+  activeUntil: string | null
+  billing: Billing
+  onBilling: (b: Billing) => void
   /** Signed-in user's email (the plan is billed to it); null = signed out. */
   accountEmail: string | null
   sessionLoading: boolean
@@ -567,12 +594,38 @@ function PlanCard({
               >
                 Open the map <ArrowRight className="h-4 w-4" />
               </Link>
-            ) : active ? (
+            ) : active && !topUp ? (
               <p className="rounded-full border border-[#a78bfa]/50 bg-[#8b5cf6]/15 px-5 py-3.5 text-center text-sm font-semibold text-[#ddd6fe]">
                 {activeLabel}
               </p>
             ) : PREMIUM_ENABLED ? (
               <form onSubmit={onSubmit} className="space-y-3">
+                {topUp ? (
+                  <p className="rounded-full border border-[#a78bfa]/50 bg-[#8b5cf6]/15 px-5 py-2.5 text-center text-xs font-semibold text-[#ddd6fe]">
+                    Active{activeUntil ? ` until ${activeUntil}` : ""} — top up below
+                  </p>
+                ) : (
+                  <div role="radiogroup" aria-label="How to pay" className="grid grid-cols-2 gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
+                    {BILLING_OPTIONS.map((o) => (
+                      <button
+                        key={o.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={billing === o.id}
+                        onClick={() => onBilling(o.id)}
+                        className={cn(
+                          "rounded-full px-3 py-2 text-xs font-semibold leading-tight transition-colors",
+                          billing === o.id ? "bg-white text-[#12091f]" : "text-white/65 hover:text-white",
+                        )}
+                      >
+                        {o.label}
+                        <span className={cn("block text-[10px] font-medium", billing === o.id ? "text-[#12091f]/60" : "text-white/45")}>
+                          {o.sub}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {accountEmail ? (
                   <p className="text-center text-xs text-white/55">
                     Billed to <span className="font-semibold text-white/80">{accountEmail}</span>
@@ -587,20 +640,35 @@ function PlanCard({
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-[#12091f] shadow-[0_0_0_3px_rgba(139,92,246,0.55)] transition hover:bg-white/90 disabled:opacity-60"
                   >
                     {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-                    {busy ? "Starting checkout…" : `Subscribe to ${plan.name}`}
+                    {busy
+                      ? "Starting checkout…"
+                      : topUp
+                        ? `Add ${ONCE_DAYS_LABEL} — ${ghsLabel(plan.pesewas)}`
+                        : billing === "once"
+                          ? `Pay ${ghsLabel(plan.pesewas)} for ${ONCE_DAYS_LABEL}`
+                          : `Subscribe to ${plan.name}`}
                   </button>
                 ) : (
                   <Link
                     href={signInHref(plan.id)}
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-[#12091f] shadow-[0_0_0_3px_rgba(139,92,246,0.55)] transition hover:bg-white/90"
                   >
-                    Sign in to subscribe <ArrowRight className="h-4 w-4" />
+                    Sign in to continue <ArrowRight className="h-4 w-4" />
                   </Link>
                 )}
                 {error && <p className="text-center text-xs text-red-300">{error}</p>}
                 <p className="text-center text-[11px] leading-snug text-white/55">
-                  Card payment via Paystack. You&rsquo;re charged {ghsLabel(plan.pesewas)} now and every month
-                  until you cancel — cancel anytime on your account page.
+                  {topUp || billing === "once" ? (
+                    <>
+                      Mobile Money, bank or card via Paystack. One payment of {ghsLabel(plan.pesewas)} for {ONCE_DAYS_LABEL}
+                      {topUp ? ", added after your current days run out" : ""} — nothing renews.
+                    </>
+                  ) : (
+                    <>
+                      Card payment via Paystack. You&rsquo;re charged {ghsLabel(plan.pesewas)} now and every month until you
+                      cancel — cancel anytime on your account page.
+                    </>
+                  )}
                 </p>
                 <AgreeLine className="text-center text-white/40" purchase />
               </form>

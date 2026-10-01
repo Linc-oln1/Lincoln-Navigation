@@ -23,9 +23,9 @@ function KindIcon({ kind }: { kind: PaymentKind }) {
       ? RefreshCw
       : kind === "Sponsored listing"
         ? Store
-        : kind === "Pro"
+        : kind.startsWith("Pro")
           ? Crown
-          : kind === "Premium"
+          : kind.startsWith("Premium")
             ? Sparkles
             : Wallet
   return (
