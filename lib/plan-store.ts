@@ -291,3 +291,27 @@ export async function otherRenewingSubscriptions(email: string, exceptCode: stri
     .neq("subscription_code", exceptCode)
   return (data as SubscriptionRow[] | null) ?? []
 }
+
+/** One subscription by its Paystack code. */
+export async function getSubscription(code: string): Promise<SubscriptionRow | null> {
+  if (!ADMIN_ENABLED) return null
+  const { data } = await createAdminClient()
+    .from("plan_subscriptions")
+    .select(SUB_COLUMNS)
+    .eq("subscription_code", code)
+    .maybeSingle()
+  return (data as SubscriptionRow | null) ?? null
+}
+
+/** When the latest payment from this email stops covering a plan. */
+export async function paidUntil(email: string): Promise<Date | null> {
+  if (!ADMIN_ENABLED) return null
+  const { data } = await createAdminClient()
+    .from("plan_purchases")
+    .select("expires_at")
+    .eq("email", email.toLowerCase())
+    .order("expires_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return data?.expires_at ? new Date(data.expires_at as string) : null
+}

@@ -12,7 +12,9 @@
 //                                   row, linked to the same account
 //   subscription.*                → plan_subscriptions row (status, next
 //                                   payment date, card) for /account
-//   invoice.*                     → subscription status / next payment date
+//   invoice.*                     → subscription status / next payment date;
+//                                   payment_failed also emails the customer
+//   subscription.expiring_cards   → emails customers whose card runs out
 //   anything else                 → 200, ignored
 //
 // It records payments only; the browser still gets its cookie from verify or
@@ -36,8 +38,10 @@ import {
   txPlan,
   type PaystackTx,
 } from "@/lib/paystack"
+import { sendCardExpiring, sendRenewalFailed } from "@/lib/billing-emails"
 import {
   accountForEmail,
+  getSubscription,
   linkSubscriptions,
   otherRenewingSubscriptions,
   recordPurchase,
@@ -58,7 +62,15 @@ interface PaystackSubscription {
 
 /** The fields we use from invoice.* events. */
 interface PaystackInvoice {
+  invoice_code?: string
   subscription?: { subscription_code?: string; status?: string; next_payment_date?: string | null }
+}
+
+/** One entry of subscription.expiring_cards (sent at the start of each month). */
+interface ExpiringCard {
+  expiry_date?: string
+  description?: string
+  subscription?: { subscription_code?: string }
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -86,6 +98,7 @@ export async function POST(req: Request) {
 
   const type = event.event ?? ""
   if (type === "charge.success") return onCharge(event.data as PaystackTx | undefined)
+  if (type === "subscription.expiring_cards") return onExpiringCards(event.data)
   if (type.startsWith("subscription.")) return onSubscription(type, event.data as PaystackSubscription | undefined, secret)
   if (type.startsWith("invoice.")) return onInvoice(type, event.data as PaystackInvoice | undefined)
   return ok()
@@ -179,6 +192,27 @@ async function onInvoice(type: string, invoice: PaystackInvoice | undefined) {
   if (type === "invoice.payment_failed") fields.status = "attention"
   else if (sub.status) fields.status = sub.status
   if (sub.next_payment_date !== undefined) fields.next_payment_at = sub.next_payment_date
-  if (Object.keys(fields).length === 0) return ok()
-  return (await updateSubscription(code, fields)) ? ok() : retry()
+  if (Object.keys(fields).length > 0 && !(await updateSubscription(code, fields))) return retry()
+
+  if (type === "invoice.payment_failed") {
+    const row = await getSubscription(code).catch(() => null)
+    // Each failed attempt is its own invoice, so it gets its own email.
+    const attempt = invoice?.invoice_code || sub.next_payment_date || new Date().toISOString().slice(0, 10)
+    if (row && !(await sendRenewalFailed(row, attempt))) return retry()
+  }
+  return ok()
+}
+
+async function onExpiringCards(data: unknown) {
+  if (!Array.isArray(data)) return ok()
+  let failed = false
+  for (const card of data as ExpiringCard[]) {
+    const code = card.subscription?.subscription_code
+    if (!code || !card.expiry_date) continue
+    // Only our subscriptions (the row exists) that are still renewing.
+    const row = await getSubscription(code).catch(() => null)
+    if (row && !(await sendCardExpiring(row, card.expiry_date, card.description))) failed = true
+  }
+  // Already-sent emails are skipped on the retry.
+  return failed ? retry() : ok()
 }

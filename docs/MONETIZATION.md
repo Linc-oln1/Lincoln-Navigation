@@ -167,6 +167,13 @@ can't subscribe). Signed-in only; billed to the account email.
   link) and **Cancel auto-renew** (`/subscription/disable`).
 - **Migration:** `supabase/migrations/0008_plan_subscriptions.sql`.
 - Paystack doesn't retry a failed renewal until the next payment date.
+- **Billing emails** (`lib/billing-emails.ts`, sent by the webhook through
+  Resend's API, `lib/email.ts`): "Your renewal didn't go through" on
+  `invoice.payment_failed`, and "Your card expires soon" on
+  `subscription.expiring_cards`. Both link to /account → Update card. Each
+  goes once per event (Redis key, 45 days). Off until `RESEND_API_KEY` is set
+  in Vercel (a Resend API key with sending access; from
+  `billing@lincolnnavigation.com`, replies to info@).
 
 ### Plans on /pricing
 
