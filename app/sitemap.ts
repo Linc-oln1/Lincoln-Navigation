@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next"
 import { SITE_BASE } from "@/lib/site-base"
+import { GHANA_DESTINATIONS } from "@/lib/ghana-destinations"
 
 // The public pages only. The map itself is listed (it is the product); account,
 // sign-in, driver links and the API are not.
@@ -7,6 +8,8 @@ const PAGES: { path: string; priority: number; changeFrequency: MetadataRoute.Si
   { path: "/", priority: 1, changeFrequency: "weekly" },
   { path: "/app", priority: 0.9, changeFrequency: "weekly" },
   { path: "/features", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/places", priority: 0.8, changeFrequency: "monthly" },
+  ...GHANA_DESTINATIONS.map((d) => ({ path: `/places/${d.id}`, priority: 0.7, changeFrequency: "monthly" as const })),
   { path: "/pricing", priority: 0.8, changeFrequency: "monthly" },
   { path: "/business", priority: 0.7, changeFrequency: "monthly" },
   { path: "/about", priority: 0.6, changeFrequency: "monthly" },

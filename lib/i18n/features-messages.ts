@@ -79,6 +79,7 @@ export const FEATURES_EN = {
   "ft.blurb.labadi": "Accra's liveliest beach, best at sunset.",
   "ft.blurb.nkrumah": "Where independence was declared in 1957, and Nkrumah now rests.",
   "ft.blurb.black-star": "Independence Square and its Black Star Gate, on the Accra seafront.",
+  "ft.guide": "Visitor guide",
 } as const
 
 type Table = Partial<Record<string, string>>
@@ -160,6 +161,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "Nkran mpoano a nnipa dɔɔso sene biara, ɛyɛ fɛ paa sɛ owia rekɔtɔ a.",
     "ft.blurb.nkrumah": "Ɛha na wɔbɔɔ ahofadie dawuro wɔ 1957, na Nkrumah da ha.",
     "ft.blurb.black-star": "Ahofadie Adwabɔ ne Nsoromma Tuntum Ɛpono, wɔ Nkran mpoano.",
+    "ft.guide": "Akwantufoɔ akwankyerɛ",
   },
   fr: {
     "ft.tagline": "Explorer · Itinéraire · Arriver",
@@ -237,6 +239,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "La plage la plus animée d'Accra, à son meilleur au coucher du soleil.",
     "ft.blurb.nkrumah": "Là où l'indépendance fut proclamée en 1957, et où repose Nkrumah.",
     "ft.blurb.black-star": "La place de l'Indépendance et sa porte de l'Étoile noire, sur le front de mer d'Accra.",
+    "ft.guide": "Guide du visiteur",
   },
   es: {
     "ft.tagline": "Explora · Ruta · Llega",
@@ -314,6 +317,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "La playa más animada de Acra, mejor al atardecer.",
     "ft.blurb.nkrumah": "Donde se declaró la independencia en 1957 y donde hoy descansa Nkrumah.",
     "ft.blurb.black-star": "La plaza de la Independencia y su Puerta de la Estrella Negra, frente al mar de Acra.",
+    "ft.guide": "Guía del visitante",
   },
   ar: {
     "ft.tagline": "استكشف · خطّط · صِل",
@@ -391,6 +395,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "أكثر شواطئ أكرا حيوية، وأجمل ما يكون عند الغروب.",
     "ft.blurb.nkrumah": "هنا أُعلن الاستقلال عام 1957، وهنا يرقد نكروما.",
     "ft.blurb.black-star": "ساحة الاستقلال وبوابة النجمة السوداء على واجهة أكرا البحرية.",
+    "ft.guide": "دليل الزائر",
   },
   pt: {
     "ft.tagline": "Explore · Rota · Chegue",
@@ -468,6 +473,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "A praia mais animada de Acra, ainda melhor ao pôr do sol.",
     "ft.blurb.nkrumah": "Onde a independência foi declarada em 1957 e onde Nkrumah hoje repousa.",
     "ft.blurb.black-star": "A Praça da Independência e seu Portão da Estrela Negra, à beira-mar em Acra.",
+    "ft.guide": "Guia do visitante",
   },
   de: {
     "ft.tagline": "Entdecken · Route · Ankommen",
@@ -545,6 +551,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "Accras lebhaftester Strand, am schönsten bei Sonnenuntergang.",
     "ft.blurb.nkrumah": "Hier wurde 1957 die Unabhängigkeit ausgerufen, hier ruht heute Nkrumah.",
     "ft.blurb.black-star": "Der Unabhängigkeitsplatz mit dem Black-Star-Tor an Accras Uferpromenade.",
+    "ft.guide": "Reiseführer",
   },
   it: {
     "ft.tagline": "Esplora · Percorso · Arriva",
@@ -622,6 +629,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "La spiaggia più vivace di Accra, al meglio al tramonto.",
     "ft.blurb.nkrumah": "Dove nel 1957 fu proclamata l'indipendenza e dove oggi riposa Nkrumah.",
     "ft.blurb.black-star": "Piazza dell'Indipendenza e la sua Porta della Stella Nera, sul lungomare di Accra.",
+    "ft.guide": "Guida per i visitatori",
   },
   zh: {
     "ft.tagline": "探索 · 路线 · 抵达",
@@ -699,6 +707,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "阿克拉最热闹的海滩，日落时分最美。",
     "ft.blurb.nkrumah": "1957 年在此宣布独立，恩克鲁玛也长眠于此。",
     "ft.blurb.black-star": "阿克拉海滨的独立广场及其黑星门。",
+    "ft.guide": "游客指南",
   },
   hi: {
     "ft.tagline": "खोजें · रास्ता · पहुँचें",
@@ -776,6 +785,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "अक्रा का सबसे जीवंत समुद्र तट, सूर्यास्त के समय सबसे सुंदर।",
     "ft.blurb.nkrumah": "जहाँ 1957 में आज़ादी की घोषणा हुई, और जहाँ अब न्क्रूमा विश्राम करते हैं।",
     "ft.blurb.black-star": "अक्रा के समुद्र तट पर इंडिपेंडेंस स्क्वायर और उसका ब्लैक स्टार गेट।",
+    "ft.guide": "यात्री गाइड",
   },
   ru: {
     "ft.tagline": "Исследуй · Маршрут · Прибытие",
@@ -853,6 +863,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "Самый оживлённый пляж Аккры, особенно хорош на закате.",
     "ft.blurb.nkrumah": "Здесь в 1957 году провозгласили независимость, здесь покоится Нкрума.",
     "ft.blurb.black-star": "Площадь Независимости и ворота Чёрной звезды на набережной Аккры.",
+    "ft.guide": "Путеводитель",
   },
   sw: {
     "ft.tagline": "Gundua · Njia · Fika",
@@ -930,6 +941,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "Ufukwe wenye shamrashamra zaidi Accra, ni mzuri zaidi wakati wa machweo.",
     "ft.blurb.nkrumah": "Mahali uhuru ulipotangazwa mwaka 1957, na anapozikwa Nkrumah.",
     "ft.blurb.black-star": "Uwanja wa Uhuru na Lango lake la Nyota Nyeusi, kando ya bahari Accra.",
+    "ft.guide": "Mwongozo wa wageni",
   },
   ha: {
     "ft.tagline": "Bincika · Hanya · Isa",
@@ -1007,6 +1019,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "Bakin teku mafi armashi a Accra, ya fi kyau lokacin faɗuwar rana.",
     "ft.blurb.nkrumah": "Inda aka ayyana 'yancin kai a 1957, kuma inda Nkrumah yake kwance.",
     "ft.blurb.black-star": "Dandalin 'Yanci da Ƙofar Tauraruwar Baƙi, a bakin tekun Accra.",
+    "ft.guide": "Jagorar baƙi",
   },
   yo: {
     "ft.tagline": "Ṣàwárí · Ọ̀nà · Dé",
@@ -1084,6 +1097,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "Etíkun tó larinrin jù ní Accra, tó dára jù nígbà ìwọ̀ oòrùn.",
     "ft.blurb.nkrumah": "Ibi tí a ti kéde òmìnira ní 1957, tí Nkrumah sì sinmi sí.",
     "ft.blurb.black-star": "Gbàgede Òmìnira àti Ẹnu-ọ̀nà Ìràwọ̀ Dúdú, létí òkun Accra.",
+    "ft.guide": "Ìtọ́sọ́nà àlejò",
   },
   ko: {
     "ft.tagline": "탐색 · 경로 · 도착",
@@ -1161,6 +1175,7 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "아크라에서 가장 활기찬 해변, 해 질 녘이 가장 아름답습니다.",
     "ft.blurb.nkrumah": "1957년 독립이 선포된 곳이자 은크루마가 잠든 곳.",
     "ft.blurb.black-star": "아크라 해변의 독립 광장과 블랙 스타 게이트.",
+    "ft.guide": "방문 가이드",
   },
   ht: {
     "ft.tagline": "Eksplore · Wout · Rive",
@@ -1238,5 +1253,6 @@ export const FEATURES_TR: Record<string, Table> = {
     "ft.blurb.labadi": "Plaj ki pi anime nan Akra, pi bèl lè solèy ap kouche.",
     "ft.blurb.nkrumah": "Kote yo te deklare endepandans an 1957, e kote Nkrumah repoze.",
     "ft.blurb.black-star": "Plas Endepandans ak Pòtay Zetwal Nwa li, bò lanmè Akra.",
+    "ft.guide": "Gid vizitè",
   },
 }

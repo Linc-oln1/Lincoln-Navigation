@@ -266,6 +266,11 @@ export function FeaturesExperience({ displayFont }: { displayFont: string }) {
             </div>
 
             {selected && to === selected.name && <DestinationConditions destination={selected} />}
+            {selected && to === selected.name && (
+              <Link href={`/places/${selected.id}`} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold underline-offset-2 hover:underline" style={{ color: ACCENT }}>
+                {t("ft.guide")}: {selected.name} <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
 
             <button
               type="submit"

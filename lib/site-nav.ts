@@ -23,6 +23,7 @@ export const FOOTER_GROUPS: { titleKey: MessageKey; links: NavLink[] }[] = [
     links: [
       { labelKey: "nav.liveMap", href: "/app" },
       { labelKey: "nav.features", href: "/features" },
+      { labelKey: "nav.places", href: "/places" },
       { labelKey: "nav.pricing", href: "/pricing" },
     ],
   },
