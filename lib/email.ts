@@ -44,60 +44,96 @@ export function escapeHtml(s: string) {
 }
 
 /**
- * The house email layout (same look as supabase/templates/*): wordmark, a
- * cream card with an eyebrow, heading, paragraphs (trusted HTML), one
- * button, and the standard footer.
+ * The app's email layout: a white rounded card on a soft blue background —
+ * logo, a big illustration (an emoji, which every mail app draws as a
+ * picture), a large bold centred heading, "Hi {name}!", centred text, one
+ * button and a sign-off — then a dark footer bar with the logo and links.
+ * Images are absolute URLs on the live site (public/email/*).
  */
 export function emailLayout(o: {
   preheader: string
-  eyebrow: string
+  /** Big picture above the heading, e.g. "💳". */
+  emoji: string
+  /** Some emoji are drawn small (💳 is short and wide); default 84. */
+  emojiSize?: number
   heading: string
+  /** First name, if known. */
+  name?: string | null
+  /** Trusted HTML, one entry per paragraph. */
   paragraphs: string[]
   button: { label: string; href: string }
+  /** Small print under the sign-off (trusted HTML). */
   note?: string
+  /** Why they got this email, shown under the footer. */
+  reason: string
   siteUrl: string
 }) {
-  const p = (html: string, color = "#3d4b58", margin = "0 0 16px 0", size = 16) =>
-    `<p style="margin:${margin};font-family:Helvetica,Arial,sans-serif;font-size:${size}px;line-height:1.6;color:${color};">${html}</p>`
+  const font = "'Poppins',Helvetica,Arial,sans-serif"
+  const p = (html: string) =>
+    `<p style="margin:0 0 14px 0;font-family:${font};font-size:16px;line-height:1.65;color:#2b3440;">${html}</p>`
+  const footLink = (label: string, path: string) =>
+    `<a href="${o.siteUrl}${path}" style="color:#ffffff;text-decoration:none;font-family:${font};font-size:13px;font-weight:600;">${label}</a>`
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 <title>${escapeHtml(o.heading)}</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f1efe7;">
+<body style="margin:0;padding:0;background-color:#d9e6f5;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(o.preheader)}</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f1efe7;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#d9e6f5;">
   <tr>
-    <td align="center" style="padding:32px 16px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+    <td align="center" style="padding:28px 14px 32px 14px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+        <!-- Card -->
         <tr>
-          <td style="padding:0 8px 20px 8px;font-family:Georgia,'Times New Roman',serif;font-size:20px;color:#14263a;">
-            <span style="display:inline-block;width:10px;height:10px;border-radius:5px;background-color:#4caf6e;margin-right:8px;vertical-align:middle;"></span>LincolnNavigation
-          </td>
-        </tr>
-        <tr>
-          <td style="background-color:#fdfcf7;border:1px solid #e6e2d6;border-radius:24px;padding:40px 36px;">
-            <p style="margin:0 0 12px 0;font-family:Helvetica,Arial,sans-serif;font-size:12px;font-weight:bold;letter-spacing:3px;text-transform:uppercase;color:#5b6875;">${escapeHtml(o.eyebrow)}</p>
-            <h1 style="margin:0 0 20px 0;font-family:Georgia,'Times New Roman',serif;font-size:32px;line-height:1.15;font-weight:normal;color:#14263a;">${escapeHtml(o.heading)}</h1>
-            ${o.paragraphs.map((html) => p(html)).join("\n            ")}
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:12px;">
+          <td align="center" style="background-color:#ffffff;border-radius:18px;padding:32px 32px 40px 32px;">
+            <a href="${o.siteUrl}" style="text-decoration:none;">
+              <img src="${o.siteUrl}/email/logo.png" width="208" height="117" alt="Lincoln Navigation" style="display:block;border:0;width:208px;height:117px;">
+            </a>
+            <div style="margin:20px auto 4px auto;font-size:${o.emojiSize ?? 84}px;line-height:1;mso-line-height-rule:exactly;">${o.emoji}</div>
+            <h1 style="margin:24px 0 28px 0;font-family:${font};font-size:34px;line-height:1.2;font-weight:700;color:#1f2933;">${escapeHtml(o.heading)}</h1>
+            <p style="margin:0 0 12px 0;font-family:${font};font-size:21px;line-height:1.4;font-weight:700;color:#1f2933;">Hi ${o.name ? escapeHtml(o.name) : "there"}!</p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:440px;">
+              <tr><td align="center">
+            ${o.paragraphs.map(p).join("\n            ")}
+              </td></tr>
+            </table>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:20px auto 0 auto;">
               <tr>
-                <td align="center" bgcolor="#1d4466" style="border-radius:16px;">
-                  <a href="${o.button.href}" style="display:block;padding:17px 24px;font-family:Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:16px;">${escapeHtml(o.button.label)} &rarr;</a>
+                <td align="center" bgcolor="#1d4466" style="border-radius:8px;">
+                  <a href="${o.button.href}" style="display:inline-block;padding:15px 30px;font-family:${font};font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;">${escapeHtml(o.button.label)}</a>
                 </td>
               </tr>
             </table>
-            ${o.note ? p(o.note, "#5b6875", "28px 0 0 0", 14) : ""}
+            <p style="margin:32px 0 0 0;font-family:${font};font-size:14px;line-height:1.6;color:#8a939c;">Thanks,<br>The LincolnNavigation Team</p>
+            ${o.note ? `<p style="margin:20px auto 0 auto;max-width:440px;font-family:${font};font-size:13px;line-height:1.6;color:#8a939c;">${o.note}</p>` : ""}
+          </td>
+        </tr>
+        <tr><td style="height:10px;line-height:10px;font-size:0;">&nbsp;</td></tr>
+        <!-- Footer bar -->
+        <tr>
+          <td style="background-color:#171a1f;border-radius:18px;padding:18px 28px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td align="left" valign="middle">
+                  <a href="${o.siteUrl}" style="text-decoration:none;"><img src="${o.siteUrl}/email/logo-dark.png" width="112" height="63" alt="Lincoln Navigation" style="display:block;border:0;width:112px;height:63px;border-radius:6px;"></a>
+                </td>
+                <td align="right" valign="middle" style="font-family:${font};font-size:13px;color:#5f6b78;">
+                  ${footLink("Map", "/app")}&nbsp;&nbsp;&middot;&nbsp;&nbsp;${footLink("Account", "/account")}&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="mailto:${CONTACT_EMAIL}" style="color:#ffffff;text-decoration:none;font-family:${font};font-size:13px;font-weight:600;">Help</a>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
         <tr>
-          <td style="padding:24px 8px 0 8px;font-family:Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#7a8590;">
-            Find your way. Feel the journey.<br>
-            LincolnNavigation &middot; Ghana maps &amp; navigation &middot; <a href="${o.siteUrl}" style="color:#1d4466;text-decoration:underline;">lincolnnavigation.com</a><br>
-            Questions? Just reply to this email or write to <a href="mailto:${CONTACT_EMAIL}" style="color:#1d4466;text-decoration:underline;">${CONTACT_EMAIL}</a>.
+          <td align="center" style="padding:18px 16px 0 16px;font-family:${font};font-size:12px;line-height:1.6;color:#6b7c90;">
+            ${escapeHtml(o.reason)}<br>
+            Questions? Just reply to this email.
           </td>
         </tr>
       </table>

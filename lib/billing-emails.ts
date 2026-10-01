@@ -15,6 +15,7 @@
 import { bump } from "@/lib/rate-limit"
 import { EMAIL_ENABLED, emailLayout, escapeHtml, sendEmail } from "@/lib/email"
 import { paidUntil, RENEWING, type SubscriptionRow } from "@/lib/plan-store"
+import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 
 const ONCE_WINDOW_S = 45 * 86_400
 
@@ -28,6 +29,23 @@ function planName(sub: SubscriptionRow) {
 
 function longDate(d: Date) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Africa/Accra" })
+}
+
+/** The account holder's first name for "Hi …!", if their profile has one. */
+async function firstName(sub: SubscriptionRow): Promise<string | null> {
+  if (!sub.user_id || !ADMIN_ENABLED) return null
+  try {
+    const { data } = await createAdminClient().auth.admin.getUserById(sub.user_id)
+    const meta = data.user?.user_metadata as { full_name?: string; name?: string } | undefined
+    const full = (meta?.full_name || meta?.name || "").trim()
+    return full ? full.split(/\s+/)[0].slice(0, 40) : null
+  } catch {
+    return null
+  }
+}
+
+function reason(sub: SubscriptionRow) {
+  return `You're getting this because you have a ${planName(sub)} subscription with LincolnNavigation.`
 }
 
 /**
@@ -51,25 +69,25 @@ export async function sendRenewalFailed(sub: SubscriptionRow, eventKey: string):
   const card = sub.card_last4 ? `the card ending ${sub.card_last4}` : "your card"
   const accountUrl = `${siteUrl()}/account`
 
-  const lead = stillOn
-    ? `Your plan stays on until <strong>${escapeHtml(longDate(until!))}</strong>. Update your card before then to keep it without a break.`
-    : `Update your card to keep using ${plan}.`
-
-  return sendOnce(`renewal-failed:${sub.subscription_code}:${eventKey}`, () =>
+  return sendOnce(`renewal-failed:${sub.subscription_code}:${eventKey}`, async () =>
     sendEmail({
       to: sub.email,
       subject: `Your ${plan} renewal didn't go through`,
       html: emailLayout({
         preheader: `We couldn't charge ${card} for your ${plan} plan.`,
-        eyebrow: "Billing",
-        heading: `Your ${plan} renewal didn't go through`,
+        emoji: "💳",
+        emojiSize: 112,
+        heading: "Your renewal didn't go through",
+        name: await firstName(sub),
         paragraphs: [
-          `We tried to renew your Lincoln Navigation ${plan} plan, but the payment on ${escapeHtml(card)} was declined. This often happens when a card has expired, has run out of funds, or the bank blocked an online payment.`,
-          lead,
-          `We won't try the old card again until your next payment date, so nothing else happens unless you act.`,
+          `We tried to renew your ${plan} plan, but the payment on ${escapeHtml(card)} was declined.`,
+          stillOn
+            ? `Your plan stays on until <strong>${escapeHtml(longDate(until!))}</strong>. Update your card before then to keep it without a break.`
+            : `Update your card to keep using ${plan}.`,
         ],
         button: { label: "Update my card", href: accountUrl },
-        note: `On your account page, choose <strong>Update card</strong> under Plan. Paystack handles the card details; we never see them. If you'd rather stop, choose <strong>Cancel auto-renew</strong> instead.`,
+        note: `This often happens when a card has expired, run out of funds, or the bank blocked an online payment. We won't try the old card again until your next payment date. Rather stop? Choose <strong>Cancel auto-renew</strong> on your account page.`,
+        reason: reason(sub),
         siteUrl: siteUrl(),
       }),
       text: [
@@ -80,7 +98,8 @@ export async function sendRenewalFailed(sub: SubscriptionRow, eventKey: string):
         ``,
         `Update your card: ${accountUrl} (Plan → Update card)`,
         ``,
-        `Questions? Reply to this email.`,
+        `Thanks,`,
+        `The LincolnNavigation Team`,
       ].join("\n"),
     }),
   )
@@ -95,36 +114,41 @@ export async function sendCardExpiring(sub: SubscriptionRow, expiry: string, des
   const card = described
     ? described.charAt(0).toUpperCase() + described.slice(1)
     : sub.card_last4
-      ? `card ending ${sub.card_last4}`
-      : "your card"
+      ? `Card ending ${sub.card_last4}`
+      : "Your card"
   const next = sub.next_payment_at ? new Date(sub.next_payment_at) : null
   const accountUrl = `${siteUrl()}/account`
 
-  return sendOnce(`card-expiring:${sub.subscription_code}:${expiry}`, () =>
+  return sendOnce(`card-expiring:${sub.subscription_code}:${expiry}`, async () =>
     sendEmail({
       to: sub.email,
       subject: `The card for your ${plan} plan expires soon`,
       html: emailLayout({
         preheader: `Update your card so your ${plan} plan keeps renewing.`,
-        eyebrow: "Billing",
+        emoji: "⏳",
         heading: "Your card expires soon",
+        name: await firstName(sub),
         paragraphs: [
-          `The ${escapeHtml(card)} that pays for your Lincoln Navigation ${plan} plan expires <strong>${escapeHtml(expiry)}</strong>.`,
+          `The card that pays for your ${plan} plan (${escapeHtml(card)}) expires <strong>${escapeHtml(expiry)}</strong>.`,
           next
-            ? `Your next payment is due on <strong>${escapeHtml(longDate(next))}</strong>. Add your new card before then so the renewal goes through.`
+            ? `Your next payment is on <strong>${escapeHtml(longDate(next))}</strong>. Add your new card before then so it goes through.`
             : `Add your new card so your next renewal goes through.`,
         ],
         button: { label: "Update my card", href: accountUrl },
-        note: `On your account page, choose <strong>Update card</strong> under Plan. Paystack handles the card details; we never see them.`,
+        note: `Paystack handles your card details; we never see them.`,
+        reason: reason(sub),
         siteUrl: siteUrl(),
       }),
       text: [
         `Your card expires soon`,
         ``,
-        `The ${card} that pays for your Lincoln Navigation ${plan} plan expires ${expiry}.`,
-        next ? `Your next payment is due on ${longDate(next)}. Add your new card before then.` : `Add your new card so your next renewal goes through.`,
+        `The card that pays for your Lincoln Navigation ${plan} plan (${card}) expires ${expiry}.`,
+        next ? `Your next payment is on ${longDate(next)}. Add your new card before then.` : `Add your new card so your next renewal goes through.`,
         ``,
         `Update your card: ${accountUrl} (Plan → Update card)`,
+        ``,
+        `Thanks,`,
+        `The LincolnNavigation Team`,
       ].join("\n"),
     }),
   )
