@@ -1,8 +1,13 @@
 # Supabase auth email templates
 
-Branded to match the /login and /signup pages. Supabase hosts these, so they
-don't deploy with the site: paste each one into Supabase → Authentication →
-Emails → Templates. Regenerate them by editing and re-pasting the HTML.
+Same look as the app's billing emails (lib/email.ts): white rounded card on
+soft blue, logo, a big illustration, bold centred heading, "Hi {name}!", one
+button, a sign-off and a dark footer bar. **Generated** — edit the copy in
+`build.mjs`, run `node supabase/templates/build.mjs`, then paste each changed
+file into Supabase → Authentication → Emails → Templates (Supabase hosts them,
+so they don't deploy with the site). Logos load from
+`https://www.lincolnnavigation.com/email/*.png` (public/email), so those must
+stay deployed.
 
 | Supabase template | Subject | File |
 |---|---|---|
