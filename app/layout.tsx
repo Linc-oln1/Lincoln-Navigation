@@ -48,6 +48,8 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Lincoln Navigation',
   },
+  // Google Search Console ownership (URL-prefix property).
+  verification: { google: 'ErtA-QLZpiUryg-VLcEEfDmPVBwhyvQeM8dpMN5cmKw' },
   // AdSense's "meta tag" site verification.
   ...(ADS_ENABLED ? { other: { 'google-adsense-account': ADSENSE_CLIENT } } : {}),
 }
