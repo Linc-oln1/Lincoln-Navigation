@@ -1,6 +1,8 @@
-// app/api/cron/sponsors/route.ts
+// app/api/cron/daily/route.ts
 //
-// Daily (vercel.json, 08:00 UTC = 08:00 in Accra). For sponsored listings:
+// Daily (vercel.json, 08:00 UTC = 08:00 in Accra).
+// Plans: "your Premium / Pro ends soon" for plans that won't renew by
+// themselves (lib/plan-reminders). Sponsored listings:
 //   - paid and waiting for review  → a digest to every ADMIN_EMAILS address
 //   - live, ending within 5 days    → "your listing ends in N days"
 //   - live but past its end date    → status "ended" + "your listing has ended"
@@ -17,6 +19,7 @@ import {
   sendListingEnded,
   sendPendingDigest,
 } from "@/lib/sponsor-emails"
+import { runPlanReminders } from "@/lib/plan-reminders"
 import { listAllSponsorsWithStats } from "@/lib/sponsor-store"
 import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 
@@ -63,5 +66,6 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json(result)
+  const plans = await runPlanReminders(now)
+  return NextResponse.json({ sponsors: result, plans })
 }

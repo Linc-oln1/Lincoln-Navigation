@@ -7,10 +7,12 @@
 //                    the next payment date, so the plan ends with the period
 //                    already paid for unless they update their card.
 //   cardExpiring   — subscription.expiring_cards (start of each month).
+//   planEnding     — from the daily cron: a plan that won't renew by itself
+//                    (pay-once, or a cancelled subscription) ends in a few days.
 //
-// Both point to /account, where "Update card" opens Paystack's page. Each is
-// sent at most once per event (sendOnce), since Paystack may deliver the same
-// webhook more than once.
+// The first two point to /account, where "Update card" opens Paystack's page;
+// planEnding points to /pricing to pay again. Each is sent at most once per
+// event (sendOnce), since webhooks can repeat and the cron runs daily.
 
 import { emailLayout, escapeHtml, longDate, sendEmail, sendOnce, siteUrl } from "@/lib/email"
 import { paidUntil, RENEWING, type SubscriptionRow } from "@/lib/plan-store"
@@ -21,7 +23,7 @@ function planName(sub: SubscriptionRow) {
 }
 
 /** The account holder's first name for "Hi …!", if their profile has one. */
-async function firstName(sub: SubscriptionRow): Promise<string | null> {
+async function firstName(sub: { user_id: string | null }): Promise<string | null> {
   if (!sub.user_id || !ADMIN_ENABLED) return null
   try {
     const { data } = await createAdminClient().auth.admin.getUserById(sub.user_id)
@@ -122,6 +124,56 @@ export async function sendCardExpiring(sub: SubscriptionRow, expiry: string, des
         next ? `Your next payment is on ${longDate(next)}. Add your new card before then.` : `Add your new card so your next renewal goes through.`,
         ``,
         `Update your card: ${accountUrl} (Plan → Update card)`,
+        ``,
+        `Thanks,`,
+        `The LincolnNavigation Team`,
+      ].join("\n"),
+    }),
+  )
+}
+
+/**
+ * A plan that won't renew by itself ends soon. `endsAt` is when the latest
+ * payment from this email stops covering it.
+ */
+export async function sendPlanEnding(p: {
+  email: string
+  plan: "premium" | "pro"
+  user_id: string | null
+  expires_at: string
+}): Promise<boolean> {
+  const plan = p.plan === "pro" ? "Pro" : "Premium"
+  const ends = longDate(new Date(p.expires_at))
+  const url = `${siteUrl()}/pricing${p.plan === "pro" ? "?plan=pro" : ""}`
+  const perks =
+    p.plan === "pro"
+      ? "your fleet tools, truck routing, route planner and everything in Premium"
+      : "voice navigation, Live View, offline maps and no ads"
+
+  return sendOnce(`plan-ending:${p.email.toLowerCase()}:${p.expires_at}`, async () =>
+    sendEmail({
+      to: p.email,
+      subject: `Your ${plan} plan ends on ${ends}`,
+      html: emailLayout({
+        preheader: `Pay again to keep ${perks}.`,
+        emoji: "⏳",
+        heading: `Your ${plan} ends soon`,
+        name: await firstName(p),
+        paragraphs: [
+          `Your Lincoln Navigation ${plan} plan ends on <strong>${escapeHtml(ends)}</strong>. It doesn't renew by itself.`,
+          `To keep ${escapeHtml(perks)}, pay for another 31 days with Mobile Money, bank or card. Paying early is fine — the new days start when these run out.`,
+        ],
+        button: { label: `Keep ${plan}`, href: url },
+        note: `Tired of remembering? Choose <strong>Monthly</strong> on the pricing page and your card renews it automatically. You can cancel any time.`,
+        reason: `You're getting this because you have a ${plan} plan on LincolnNavigation.`,
+        siteUrl: siteUrl(),
+      }),
+      text: [
+        `Your ${plan} ends soon`,
+        ``,
+        `Your Lincoln Navigation ${plan} plan ends on ${ends}. It doesn't renew by itself.`,
+        `Pay for another 31 days with Mobile Money, bank or card: ${url}`,
+        `Paying early is fine — the new days start when these run out.`,
         ``,
         `Thanks,`,
         `The LincolnNavigation Team`,

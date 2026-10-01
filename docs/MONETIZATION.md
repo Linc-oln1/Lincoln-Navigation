@@ -72,7 +72,7 @@ without `RESEND_API_KEY`):
 - approve / reject / extend in /admin/sponsors → the advertiser (reject says a
   full refund is on the way — you still issue it in Paystack). The admin card
   says whether the email went out;
-- daily cron `/api/cron/sponsors` (`vercel.json`, 08:00 UTC): "ends in N days"
+- daily cron `/api/cron/daily` (`vercel.json`, 08:00 UTC): "ends in N days"
   5 days before the end, then marks expired listings `ended` and sends "has
   ended" with its numbers; plus a digest to admins while any listing waits for
   review. Set `CRON_SECRET` in Vercel so only Vercel can call it.
@@ -173,6 +173,11 @@ Paying again while it's still running stacks: `onceExpiresAt()` starts the
 new days when the current same-plan purchase ends. Someone on an active
 pay-once plan sees "Add 31 days" instead of the active badge. A renewing
 subscription of the same or higher plan still blocks a second purchase.
+
+**Plan-ending reminder:** the daily cron (`/api/cron/daily`) emails anyone
+whose plan ends within 3 days and won't renew by itself — pay-once customers
+and cancelled subscribers (`lib/plan-reminders.ts`, `sendPlanEnding`). One
+email per plan end; renewing subscriptions are skipped.
 
 ### Monthly subscriptions (card only)
 
