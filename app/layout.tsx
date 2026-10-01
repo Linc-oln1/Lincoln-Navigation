@@ -7,6 +7,7 @@ import { AdSenseScript } from '@/components/ads/adsense-script'
 import { Toaster } from '@/components/ui/toaster'
 import { LanguageProvider } from '@/components/i18n/language-provider'
 import { SITE_BASE } from '@/lib/site-base'
+import { ADS_ENABLED, ADSENSE_CLIENT } from '@/lib/monetization'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -50,6 +51,8 @@ export const metadata: Metadata = {
     statusBarStyle: 'black-translucent',
     title: 'Lincoln Navigation',
   },
+  // AdSense's "meta tag" site verification.
+  ...(ADS_ENABLED ? { other: { 'google-adsense-account': ADSENSE_CLIENT } } : {}),
 }
 
 export const viewport: Viewport = {
@@ -63,6 +66,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="bg-background">
+      <head>
+        <AdSenseScript />
+      </head>
       {/*
         suppressHydrationWarning on <body> only: browser extensions
         like Grammarly inject attributes (data-new-gr-c-s-check-loaded,
@@ -80,7 +86,6 @@ export default function RootLayout({
         <Toaster />
         <RegisterServiceWorker />
         <PlanRestorer />
-        <AdSenseScript />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
