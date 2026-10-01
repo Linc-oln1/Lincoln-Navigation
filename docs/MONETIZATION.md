@@ -157,6 +157,10 @@ the `x-paystack-signature` header (HMAC-SHA512 of the raw body with
 Verify routes and the webhook share `lib/paystack.ts` (`planPayment`,
 `markSponsorPaid`), and every write is idempotent, so either can run first.
 It returns 500 only when our database write fails, so Paystack retries.
+When that happens every `ADMIN_EMAILS` address gets one "⚠️ Payment not
+recorded" email (reference, customer, amount, reason), and a "✅ Recovered"
+one if a later Paystack retry works (`lib/ops-alerts.ts`). Handler crashes are
+caught and treated the same way.
 The webhook records payments; it doesn't set the browser cookie — a buyer who
 never came back gets their plan through **Restore** on /account.
 
