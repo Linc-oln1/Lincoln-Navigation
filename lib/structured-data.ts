@@ -1,27 +1,37 @@
 // lib/structured-data.ts
 //
 // schema.org JSON-LD for search engines: who runs the site (Organization),
-// the site itself (WebSite) and the product (WebApplication, free to use).
+// who founded it (Person), the site itself (WebSite) and the product
+// (WebApplication, free to use).
 // Rendered on the homepage by <JsonLd>. Facts only — no ratings or reviews
 // we don't have.
 
 import { SITE_BASE } from "@/lib/site-base"
 import { CONTACT_EMAIL } from "@/lib/legal"
+import { COMPANY_LEGAL_NAME, FOUNDER_ID, FOUNDING_PLACE, FOUNDING_YEAR, founderPerson } from "@/lib/founder"
 
 const ORG_ID = `${SITE_BASE}/#organization`
+
+/** Who runs the site, and who founded it. Also used on the /about pages. */
+export const ORGANIZATION = {
+  "@type": "Organization",
+  "@id": ORG_ID,
+  name: "Lincoln Navigation",
+  legalName: COMPANY_LEGAL_NAME,
+  url: SITE_BASE,
+  logo: `${SITE_BASE}/logo/lincoln-navigation-logo.webp`,
+  email: CONTACT_EMAIL,
+  foundingDate: FOUNDING_YEAR,
+  foundingLocation: { "@type": "Place", name: FOUNDING_PLACE },
+  founder: { "@id": FOUNDER_ID },
+  areaServed: { "@type": "Country", name: "Ghana" },
+}
 
 export const HOME_STRUCTURED_DATA = {
   "@context": "https://schema.org",
   "@graph": [
-    {
-      "@type": "Organization",
-      "@id": ORG_ID,
-      name: "Lincoln Navigation",
-      url: SITE_BASE,
-      logo: `${SITE_BASE}/logo/lincoln-navigation-logo.webp`,
-      email: CONTACT_EMAIL,
-      areaServed: { "@type": "Country", name: "Ghana" },
-    },
+    ORGANIZATION,
+    founderPerson(),
     {
       "@type": "WebSite",
       "@id": `${SITE_BASE}/#website`,

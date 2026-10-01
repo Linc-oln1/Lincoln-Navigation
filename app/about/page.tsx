@@ -3,6 +3,9 @@ import { Compass, Route, MapPin, WifiOff } from "lucide-react"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { pageMeta } from "@/lib/page-meta"
+import { JsonLd } from "@/components/seo/json-ld"
+import { FOUNDER, founderPerson } from "@/lib/founder"
+import { ORGANIZATION } from "@/lib/structured-data"
 
 export const metadata = pageMeta({
   title: "About — Lincoln Navigation",
@@ -37,6 +40,7 @@ const PILLARS = [
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[#0d0d0d] text-neutral-300">
+      <JsonLd data={{ "@context": "https://schema.org", "@graph": [ORGANIZATION, founderPerson()] }} />
       <SiteHeader variant="gold" />
       {/* ---- hero: the emblem art ----
            Background art lives at /public/lincoln-navigation-hero.webp
@@ -106,6 +110,36 @@ export default function AboutPage() {
             </div>
           ))}
         </div>
+
+        {/* ---- founder ---- */}
+        <section className="mt-12">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.28em] text-[#c9a06e]">Founder</h2>
+          <Link
+            href={FOUNDER.path}
+            className="group mt-4 flex items-center gap-5 rounded-2xl border border-[#c9a06e]/15 bg-[#161310] p-4 transition hover:border-[#c9a06e]/40"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={FOUNDER.photoSquare}
+              alt={FOUNDER.name}
+              width={88}
+              height={88}
+              className="h-20 w-20 flex-shrink-0 rounded-xl object-cover sm:h-[88px] sm:w-[88px]"
+            />
+            <div className="min-w-0">
+              <p className="text-base font-semibold text-neutral-100">
+                {FOUNDER.name} <span className="font-normal text-[#d9b98c]">({FOUNDER.knownAs})</span>
+              </p>
+              <p className="text-sm text-[#c9a06e]">{FOUNDER.title}</p>
+              <p className="mt-1 hidden text-sm text-neutral-400 sm:block">
+                Building world-class location technology from Africa, starting with Ghana.
+              </p>
+              <span className="mt-1.5 inline-block text-sm font-semibold text-[#d9b98c] group-hover:underline">
+                Read the profile →
+              </span>
+            </div>
+          </Link>
+        </section>
 
         {/* ---- CTA ---- */}
         <div className="mt-12 flex flex-wrap items-center gap-3">
