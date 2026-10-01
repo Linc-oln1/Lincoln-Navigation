@@ -77,6 +77,12 @@ without `RESEND_API_KEY`):
   ended" with its numbers; plus a digest to admins while any listing waits for
   review. Set `CRON_SECRET` in Vercel so only Vercel can call it.
 
+**/admin/billing** (admins only): paying subscribers, monthly recurring (today's
+prices), money collected this month, failed renewals (with an "Email them"
+link), every subscription, and the last 31 days of payments straight from
+Paystack (`lib/billing-report.ts`). Dark glass dashboard design
+(`components/admin/billing-dashboard.tsx`, chart in `billing-chart.tsx`).
+
 **Self-serve renewal:** the "ends soon" / "ended" emails link to a private
 `/advertise/renew?l=<id>&t=<hmac>` page (`lib/sponsor-link.ts`; secret
 `SPONSOR_LINK_SECRET`, falls back to `PREMIUM_COOKIE_SECRET`). Paying there

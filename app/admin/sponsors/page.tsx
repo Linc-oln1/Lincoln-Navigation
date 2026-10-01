@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getAdminUser } from "@/lib/admin-auth"
 import { SiteHeader } from "@/components/site/site-header"
@@ -15,7 +16,12 @@ export default async function AdminSponsorsPage() {
     <main className="flex min-h-screen flex-col bg-background text-foreground">
       <SiteHeader />
       <div className="mx-auto w-full max-w-4xl flex-1 px-6 py-14">
-        <h1 className="m-0 mt-8 text-3xl font-extrabold tracking-tight">Sponsored places</h1>
+        <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
+          <h1 className="m-0 text-3xl font-extrabold tracking-tight">Sponsored places</h1>
+          <Link href="/admin/billing" className="text-sm font-semibold text-primary hover:underline">
+            Billing →
+          </Link>
+        </div>
         <p className="mt-2 mb-8 text-sm text-muted-foreground">
           Approve paid listings, extend renewals, and see what each sponsor got.
         </p>
