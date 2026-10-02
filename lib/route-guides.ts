@@ -273,6 +273,110 @@ export const ROUTE_GUIDES: RouteGuide[] = [
     ],
     places: [],
   },
+  {
+    id: "accra-to-tamale",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Tamale", lat: 9.4034, lng: -0.8424 },
+    roadKm: 622,
+    driveTime: "9–11 hours",
+    mainRoad: "N6 to Kumasi, then N10",
+    via: ["Nsawam", "Suhum", "Nkawkaw", "Konongo", "Kumasi", "Offinso", "Techiman", "Kintampo", "Buipe"],
+    summary:
+      "About 620 km from Accra to Tamale — the N6 to Kumasi, then the N10 north through Techiman and Kintampo. Usually 9 to 11 hours.",
+    driving: [
+      "The first 250 km is the Accra–Kumasi trip: the N6 north-west through Nsawam, Suhum and Nkawkaw, then Konongo and Ejisu into Kumasi. Getting out of Accra and through Kumasi are the slowest parts of the whole journey.",
+      "From Kumasi the N10 runs north through Offinso to Techiman, then on to Kintampo, where the forest gives way to open savanna. The road crosses the Volta near Buipe and again at Yapei before the last straight run into Tamale.",
+      "It is a long day's drive. Most drivers split it at Kumasi or Techiman, and the northern half has long gaps between towns, so plan fuel and rest stops before you set off.",
+    ],
+    publicTransport: [
+      "Intercity coaches — including STC, VIP and VVIP — run between Accra and Tamale every day, and many travel overnight. Book ahead, especially before holidays and festivals in the north.",
+      "You can also go in two legs: a coach to Kumasi, then a bus or minibus from Kumasi to Tamale.",
+    ],
+    tips: [
+      "Leave Accra before 5 a.m. or take an overnight coach to avoid both the Accra and Kumasi traffic.",
+      "Fill up in Kumasi, Techiman or Kintampo — fuel stations are further apart north of Kintampo.",
+      "Tamale is the gateway to Mole National Park and the old mosque at Larabanga, about 3 hours west.",
+    ],
+    places: ["mole", "larabanga"],
+  },
+  {
+    id: "accra-to-koforidua",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Koforidua", lat: 6.094, lng: -0.2591 },
+    roadKm: 89,
+    driveTime: "1½–2½ hours",
+    mainRoad: "N6 to Suhum, then R41",
+    via: ["Achimota", "Amasaman", "Nsawam", "Suhum", "Nankese"],
+    summary:
+      "About 90 km from Accra to Koforidua, the Eastern Region capital — the N6 to Suhum, then east into town. Usually 1½ to 2½ hours.",
+    driving: [
+      "The usual route leaves Accra on the N6 through Achimota, Amasaman and Nsawam — the same road as the trip to Kumasi — and turns off at Suhum towards Nankese and Koforidua.",
+      "Traffic between Ofankor and Nsawam decides how long the trip takes: off-peak it is well under two hours, at rush hour it can be much longer.",
+      "There is also a slower, more scenic way over the Akuapem hills through Aburi and Mamfe, which avoids the N6 entirely and is cooler and greener.",
+    ],
+    publicTransport: [
+      "Trotros and minibuses for Koforidua leave from Accra's main lorry stations, including Kwame Nkrumah Circle, and leave when full.",
+      "Koforidua is a regional capital, so transport on to Nkawkaw, Akim Oda and the other Eastern Region towns is easy to find from its stations.",
+    ],
+    tips: [
+      "Leave Accra before 6 a.m. or after the morning rush to get through Ofankor and Nsawam quickly.",
+      "Koforidua's bead market, held on Thursdays, is one of the best-known in Ghana.",
+      "Coming back, the Aburi road is a nice change and passes the Aburi Botanical Gardens.",
+    ],
+    places: ["aburi"],
+  },
+  {
+    id: "accra-to-akosombo",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Akosombo", lat: 6.297, lng: 0.051 },
+    roadKm: 105,
+    driveTime: "2–3 hours",
+    mainRoad: "Tema Motorway, then N2",
+    via: ["Tema", "Afienya", "Asutsuare Junction", "Kpong", "Atimpoku"],
+    summary:
+      "About 105 km from Accra to Akosombo and the Volta Lake — the motorway towards Tema, then the N2 north through Kpong. Usually 2 to 3 hours.",
+    driving: [
+      "The quickest route takes the Accra–Tema Motorway east, then turns north on the N2 past Afienya and Asutsuare Junction towards Kpong.",
+      "After Kpong the road follows the Volta River to Atimpoku, where the Adomi Bridge crosses into the Volta Region; Akosombo town and the dam are just upstream.",
+      "Traffic on the motorway and around Tema is the main delay. North of Afienya the road is quieter, but watch for trucks and speed checks.",
+    ],
+    publicTransport: [
+      "Trotros and minibuses for Akosombo and Atimpoku leave from Accra's lorry stations for the Volta Region, and leave when full.",
+      "From Atimpoku, shared taxis run the short way up to Akosombo town and the dam area.",
+    ],
+    tips: [
+      "Leave early to clear the motorway and Tema before the morning rush.",
+      "Atimpoku, by the Adomi Bridge, is known for its roadside fried fish and shrimp.",
+      "Boat trips on the Volta Lake leave from the Akosombo area — book ahead at weekends.",
+    ],
+    places: ["akosombo"],
+  },
+  {
+    id: "kumasi-to-cape-coast",
+    from: { name: "Kumasi", lat: 6.696, lng: -1.623 },
+    to: { name: "Cape Coast", lat: 5.105, lng: -1.2466 },
+    roadKm: 213,
+    driveTime: "3½–4½ hours",
+    mainRoad: "N8 (Kumasi–Cape Coast road)",
+    via: ["Bekwai", "Fomena", "Assin Praso", "Assin Fosu", "Yamoransa"],
+    summary:
+      "About 210 km south on the N8 from Kumasi to Cape Coast, through Assin Fosu — usually 3½ to 4½ hours.",
+    driving: [
+      "The N8 leaves Kumasi southwards past Bekwai and through the Adansi area at Fomena, then crosses the Pra River at Assin Praso into the Central Region.",
+      "It continues through Assin Fosu, the largest town on the way, and meets the coastal N1 at Yamoransa, a few kilometres from Cape Coast.",
+      "Most of the road runs through forest and farmland with long single-lane stretches, so expect slow trucks and plan overtaking carefully.",
+    ],
+    publicTransport: [
+      "Intercity coaches and minibuses run between Kumasi and Cape Coast throughout the day.",
+      "For Elmina or Takoradi, change at Cape Coast or stay on a bus that continues west along the coast.",
+    ],
+    tips: [
+      "Assin Fosu is the usual stop for fuel, food and toilets.",
+      "Kakum National Park is about 30 km inland from Cape Coast — go in the morning for the canopy walkway.",
+      "If you are going on to Elmina, it is only about 15 km west of Cape Coast.",
+    ],
+    places: ["cape-coast", "elmina", "kakum"],
+  },
 ]
 
 export const findRoute = (id: string) => ROUTE_GUIDES.find((r) => r.id === id)
