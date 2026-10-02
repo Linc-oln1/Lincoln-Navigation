@@ -12,6 +12,7 @@
 import { useEffect, useRef } from "react"
 import { AD_SLOTS, ADS_ENABLED, ADSENSE_CLIENT, type AdSlotName } from "@/lib/monetization"
 import { usePremium } from "@/hooks/use-premium"
+import { ensureAdSenseScript } from "@/components/ads/adsense-script"
 import { cn } from "@/lib/utils"
 
 declare global {
@@ -35,6 +36,7 @@ export function AdSlot({ name, className, label = "Advertisement" }: AdSlotProps
 
   useEffect(() => {
     if (!ADS_ENABLED || !slotId || isPremium || pushed.current) return
+    ensureAdSenseScript()
     try {
       ;(window.adsbygoogle = window.adsbygoogle || []).push({})
       pushed.current = true
