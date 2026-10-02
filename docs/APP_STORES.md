@@ -76,8 +76,18 @@ accounts.
 7. Promote Internal → Production. Review is usually a few days.
 
 To release a new shell version, bump `appVersionCode` (and
-`appVersionName`) in `twa-manifest.json`, then `bubblewrap update && bubblewrap build`.
+`appVersion`) in `twa-manifest.json`, then `bubblewrap update && bubblewrap build`.
 Website changes need no new release.
+
+Local toolchain notes (this Mac, set up 2026-10-02): Bubblewrap CLI in
+`~/.bubblewrap/cli`, JDK 17 in `~/.bubblewrap/jdk`, Android SDK in
+`~/.bubblewrap/android_sdk` (cmdline-tools under `cmdline-tools/latest`, with a
+`bin` symlink at the root so Bubblewrap's path check passes; a `source.properties`
+at the SDK root makes Gradle treat the whole SDK as one legacy package and fail
+with "Failed to find target android-36"). The generated `build.gradle` was bumped
+to AGP 8.13.0 / Gradle 8.13 — re-apply that after any `bubblewrap update`.
+Upload key SHA-256:
+`45:96:05:49:44:E7:9E:B1:9F:47:44:6E:61:E1:93:01:41:FA:25:2A:24:28:FD:4D:8B:E2:33:7D:8D:E7:68:0D`
 
 ## 3. App Store
 
