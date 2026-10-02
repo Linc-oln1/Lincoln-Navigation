@@ -45,8 +45,13 @@ function MapLoading({ className }: { className: string }) {
   )
 }
 
+// MapLibre is the biggest download on this page. Request it as soon as this
+// module runs rather than when React first renders <MapView>.
+const loadMapView = () => import("@/components/map/map-view")
+if (typeof window !== "undefined") void loadMapView()
+
 const MapView = dynamic(
-  () => import("@/components/map/map-view").then((mod) => mod.MapView),
+  () => loadMapView().then((mod) => mod.MapView),
   {
     ssr: false,
     loading: () => <MapLoading className="h-full w-full" />,

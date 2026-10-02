@@ -13,6 +13,7 @@ import { LocationMarker } from "./location-marker"
 import { NavigationCamera } from "./navigation-camera"
 import { HazardLayer } from "./hazard-layer"
 import type { BBox, Hazard } from "@/lib/hazards"
+import { VECTOR_STYLE_URL } from "@/lib/map-style"
 
 /* =========================================================
    ROOT CAUSE OF THE BLANK MAP (found via direct WebGL/console
@@ -151,9 +152,6 @@ interface MapViewProps {
    TILE SOURCES
 ========================================================= */
 
-const VECTOR_STYLE_URL =
-  process.env.NEXT_PUBLIC_MAP_STYLE ||
-  "https://tiles.openfreemap.org/styles/liberty"
 
 // PREVIOUSLY: dark mode used CARTO's "dark_all" raster tiles
 // (basemaps.cartocdn.com). CARTO retired free/keyless access to

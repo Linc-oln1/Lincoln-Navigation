@@ -15,7 +15,7 @@ import {
   isLangCode,
   type LangCode,
 } from "@/lib/i18n/languages"
-import { translate, type MessageKey } from "@/lib/i18n/messages"
+import { loadLanguage, translate, type MessageKey } from "@/lib/i18n/messages"
 
 interface I18n {
   lang: LangCode
@@ -48,13 +48,22 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   // switch to the saved / detected language after mount.
   const [lang, setLangState] = useState<LangCode>(DEFAULT_LANG)
 
+  // Switch only once the language's strings have arrived (English is
+  // built in; the rest load on demand). If that fails we stay on English.
+  const switchTo = useCallback((next: LangCode) => {
+    loadLanguage(next).then(
+      () => setLangState(next),
+      () => {},
+    )
+  }, [])
+
   useEffect(() => {
     let saved: string | null = null
     try {
       saved = localStorage.getItem(LANG_STORAGE_KEY)
     } catch {}
-    setLangState(isLangCode(saved) ? saved : detectLang())
-  }, [])
+    switchTo(isLangCode(saved) ? saved : detectLang())
+  }, [switchTo])
 
   useEffect(() => {
     const meta = LANGUAGES.find((l) => l.code === lang)
@@ -63,11 +72,11 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, [lang])
 
   const setLang = useCallback((next: LangCode) => {
-    setLangState(next)
+    switchTo(next)
     try {
       localStorage.setItem(LANG_STORAGE_KEY, next)
     } catch {}
-  }, [])
+  }, [switchTo])
 
   const value = useMemo<I18n>(
     () => ({ lang, setLang, t: (key, params) => translate(lang, key, params) }),
