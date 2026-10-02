@@ -117,6 +117,12 @@ export default function TermsPage() {
           We may edit, hide or remove any content at our discretion,
           especially if it looks false, abusive or dangerous.
         </p>
+        <p>
+          If a hazard note is offensive or inappropriate, tap{" "}
+          <strong>Report note</strong> on it. A note reported by several
+          people is removed automatically and reviewed by us; you can also
+          email us about any content.
+        </p>
       </section>
 
       <section>

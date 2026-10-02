@@ -40,6 +40,10 @@ export interface Hazard {
   kind: HazardKind
   location: { lat: number; lng: number }
   note?: string
+  /** Times the note was reported as objectionable. */
+  noteReports?: number
+  /** True once enough reports took the note down. */
+  noteHidden?: boolean
   source: HazardSource
   /** ISO timestamp. */
   createdAt: string
@@ -259,6 +263,23 @@ export async function voteHazard(
 
   if (!res.ok || !data?.hazard) {
     throw new Error(data?.error || "Could not record that.")
+  }
+
+  return { hazard: data.hazard, counted: data.counted !== false }
+}
+
+/** Flags a hazard's note as offensive or inappropriate. */
+export async function reportHazardNote(
+  id: string
+): Promise<{ hazard: Hazard; counted: boolean }> {
+  const res = await fetch(`/api/hazards/${encodeURIComponent(id)}/report-note`, {
+    method: "POST",
+  })
+
+  const data = await res.json().catch(() => null)
+
+  if (!res.ok || !data?.hazard) {
+    throw new Error(data?.error || "Could not send that report.")
   }
 
   return { hazard: data.hazard, counted: data.counted !== false }

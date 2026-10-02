@@ -41,6 +41,14 @@ export interface VoteResult {
   counted: boolean
 }
 
+export interface NoteReportResult {
+  hazard: Hazard
+  /** false when this reporter had already reported this note. */
+  counted: boolean
+  /** The note text, when this report was the one that hid it. */
+  removedNote?: string
+}
+
 export interface HazardStore {
   listActive(bbox: BBox): Promise<Hazard[]>
   get(id: string): Promise<Hazard | null>
@@ -50,6 +58,12 @@ export interface HazardStore {
     vote: "confirm" | "clear",
     voterHash: string
   ): Promise<VoteResult | null>
+  /**
+   * Flags the hazard's free-text note as objectionable. One report per
+   * reporter; at NOTE_REPORT_LIMIT the note is removed from the public
+   * hazard. Null when the hazard is gone or has no note.
+   */
+  reportNote(id: string, reporterHash: string): Promise<NoteReportResult | null>
   /** Reports created by this reporter within the last `windowMs`. */
   countRecentByReporter(reporterHash: string, windowMs: number): Promise<number>
 }
@@ -59,6 +73,9 @@ export interface HazardStore {
 ========================================================= */
 
 const MAX_NOTE_LENGTH = 200
+// Reports from different people that take a note down (Google Play's
+// user-generated-content policy wants a way to flag and remove notes).
+export const NOTE_REPORT_LIMIT = 3
 const CLEAR_MARGIN = 3 // (clears − confirms) that flips a hazard to "cleared"
 // How long a reporter's rate-limit history is retained. Must comfortably
 // exceed the largest window countRecentByReporter is ever asked about.
@@ -121,6 +138,18 @@ function applyVote(hazard: Hazard, vote: "confirm" | "clear"): Hazard {
   return next
 }
 
+/** Counts one note report; at the limit the note text comes off the hazard. */
+function applyNoteReport(hazard: Hazard): { hazard: Hazard; removedNote?: string } {
+  const next: Hazard = { ...hazard, noteReports: (hazard.noteReports ?? 0) + 1 }
+  if (next.noteReports! >= NOTE_REPORT_LIMIT && next.note) {
+    const removedNote = next.note
+    delete next.note
+    next.noteHidden = true
+    return { hazard: next, removedNote }
+  }
+  return { hazard: next }
+}
+
 function ttlSeconds(h: Hazard): number {
   if (!h.expiresAt) return 0
   return Math.max(1, Math.round((new Date(h.expiresAt).getTime() - Date.now()) / 1000))
@@ -133,6 +162,7 @@ function ttlSeconds(h: Hazard): number {
 class MemoryHazardStore implements HazardStore {
   private hazards = new Map<string, Hazard>()
   private votes = new Map<string, Set<string>>()
+  private noteReports = new Map<string, Set<string>>()
   private reporterLog = new Map<string, number[]>() // hash → createdAt ms list
 
   async listActive(bbox: BBox): Promise<Hazard[]> {
@@ -187,6 +217,20 @@ class MemoryHazardStore implements HazardStore {
     return { hazard: updated, counted: true }
   }
 
+  async reportNote(id: string, reporterHash: string): Promise<NoteReportResult | null> {
+    const current = await this.get(id)
+    if (!current || !current.note) return null
+
+    const reporters = this.noteReports.get(id) ?? new Set<string>()
+    if (reporters.has(reporterHash)) return { hazard: current, counted: false }
+    reporters.add(reporterHash)
+    this.noteReports.set(id, reporters)
+
+    const { hazard, removedNote } = applyNoteReport(current)
+    this.hazards.set(id, hazard)
+    return { hazard, counted: true, removedNote }
+  }
+
   async countRecentByReporter(
     reporterHash: string,
     windowMs: number
@@ -206,6 +250,7 @@ const KEY = {
   hazard: (id: string) => `hz:h:${id}`,
   activeSet: "hz:active",
   votes: (id: string) => `hz:v:${id}`,
+  noteReports: (id: string) => `hz:nr:${id}`,
   rate: (hash: string) => `hz:rl:${hash}`,
 }
 
@@ -297,6 +342,19 @@ class RedisHazardStore implements HazardStore {
     }
 
     return { hazard: updated, counted: true }
+  }
+
+  async reportNote(id: string, reporterHash: string): Promise<NoteReportResult | null> {
+    const current = await this.get(id)
+    if (!current || !current.note) return null
+
+    const added = await this.redis.sadd(KEY.noteReports(id), reporterHash)
+    if (added === 0) return { hazard: current, counted: false }
+    await this.redis.expire(KEY.noteReports(id), Math.max(ttlSeconds(current), 3600))
+
+    const { hazard, removedNote } = applyNoteReport(current)
+    await this.redis.set(KEY.hazard(id), hazard, { keepTtl: true })
+    return { hazard, counted: true, removedNote }
   }
 
   async countRecentByReporter(

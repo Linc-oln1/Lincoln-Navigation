@@ -4,13 +4,14 @@ import { useI18n } from "@/components/i18n/language-provider"
 import type { MessageKey } from "@/lib/i18n/messages"
 
 import { useState } from "react"
-import { Check, ExternalLink, MapPin, ShieldAlert, X } from "lucide-react"
+import { Check, ExternalLink, Flag, MapPin, ShieldAlert, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
   hazardKindMeta,
   relativeTime,
+  reportHazardNote,
   voteHazard,
   type Hazard,
 } from "@/lib/hazards"
@@ -33,6 +34,22 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
   const [busy, setBusy] = useState<null | "confirm" | "clear">(null)
   const [voted, setVoted] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [noteState, setNoteState] = useState<"idle" | "confirm" | "busy" | "done">("idle")
+  const [noteMessage, setNoteMessage] = useState<string | null>(null)
+
+  const handleReportNote = async () => {
+    if (noteState === "busy" || noteState === "done") return
+    setNoteState("busy")
+    try {
+      const { hazard: updated, counted } = await reportHazardNote(hazard.id)
+      onVoted(updated)
+      setNoteMessage(counted ? t("haz.noteReported") : t("haz.noteAlreadyReported"))
+    } catch (err) {
+      setNoteMessage(err instanceof Error ? err.message : t("haz.noteReportFail"))
+    } finally {
+      setNoteState("done")
+    }
+  }
 
   const handleVote = async (vote: "confirm" | "clear") => {
     if (busy || voted) return
@@ -99,7 +116,43 @@ export function HazardDetails({ hazard, onClose, onVoted }: HazardDetailsProps) 
       {/* Body */}
       <div className="p-4 space-y-3">
         {hazard.note && (
-          <p className="text-sm text-foreground">&ldquo;{hazard.note}&rdquo;</p>
+          <div className="space-y-1.5">
+            <p className="text-sm text-foreground">&ldquo;{hazard.note}&rdquo;</p>
+            {isCrowd && (
+              noteState === "done" ? (
+                <p className="text-xs text-muted-foreground">{noteMessage}</p>
+              ) : noteState === "idle" ? (
+                <button
+                  type="button"
+                  onClick={() => setNoteState("confirm")}
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Flag className="w-3 h-3" />
+                  {t("haz.reportNote")}
+                </button>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">{t("haz.reportNoteAsk")}</span>
+                  <button
+                    type="button"
+                    onClick={handleReportNote}
+                    disabled={noteState === "busy"}
+                    className="font-semibold text-destructive hover:underline disabled:opacity-50"
+                  >
+                    {t("haz.reportNoteYes")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNoteState("idle")}
+                    disabled={noteState === "busy"}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    {t("haz.reportNoteCancel")}
+                  </button>
+                </div>
+              )
+            )}
+          </div>
         )}
 
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
