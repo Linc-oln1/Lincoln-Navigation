@@ -34,6 +34,7 @@ export const AUTH_EN = {
   "au.sending": "Sending…",
   "au.forgot": "Forgot password?",
   "au.divider": "Simple, secure access to your map",
+  "au.apple": "Sign in with Apple",
   "au.errShort": "Use at least 8 characters for your password.",
   "au.haveAccount": "Already have an account?",
   "au.signupEyebrow": "A better way to explore",

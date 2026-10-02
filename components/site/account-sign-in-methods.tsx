@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useI18n } from "@/components/i18n/language-provider"
 import type { MessageKey } from "@/lib/i18n/messages"
+import { isNativeApp, startLinkGoogle } from "@/lib/native"
 
 /**
  * Sign-in methods on the account: shows whether Google is linked and
@@ -35,13 +36,13 @@ export function AccountSignInMethods() {
     setBusy(true)
     setMessage(null)
     const next = "/account?linked=google"
-    const { error } = await createClient().auth.linkIdentity({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    })
-    // On success the browser is already heading to Google.
+    const { error } = await startLinkGoogle(
+      `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      next,
+    )
+    // On success the browser is already heading to Google
+    // (or, in the iPhone app, Google is open in a sheet).
+    if (!error && isNativeApp()) setBusy(false)
     if (error) {
       setMessage(/manual linking/i.test(error.message) ? { k: "ac.linkOff" } : { raw: error.message })
       setBusy(false)

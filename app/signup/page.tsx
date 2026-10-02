@@ -24,8 +24,9 @@ import {
 } from "@/components/auth/auth-shell"
 import { useI18n } from "@/components/i18n/language-provider"
 import { fillNodes } from "@/components/i18n/rich-text"
+import { isNativeApp, startOAuth } from "@/lib/native"
 
-type Busy = null | "google" | "email"
+type Busy = null | "google" | "apple" | "email"
 
 export default function SignupPage() {
   return (
@@ -81,18 +82,19 @@ function SignupContent() {
     else setSent(true)
   }
 
-  async function signInWithGoogle() {
-    setBusy("google")
+  async function signInWithProvider(provider: "google" | "apple") {
+    setBusy(provider)
     setError(null)
-    const { error } = await createClient().auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: callbackUrl(next) },
-    })
+    const { error } = await startOAuth(provider, callbackUrl(next), next)
     if (error) {
       setError({ raw: error.message })
       setBusy(null)
+    } else if (isNativeApp()) {
+      // The sign-in sheet is open; NativeBridge finishes when it returns.
+      setBusy(null)
     }
   }
+
 
   return (
     <AuthShell
@@ -155,7 +157,9 @@ function SignupContent() {
           <Divider>{t("au.divider")}</Divider>
           <AltMethods
             next={next}
-            onGoogle={signInWithGoogle}
+            onGoogle={() => signInWithProvider("google")}
+            onApple={() => signInWithProvider("apple")}
+            appleBusy={busy === "apple"}
             googleBusy={busy === "google"}
             disabled={busy !== null}
           />

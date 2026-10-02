@@ -259,20 +259,38 @@ export function Divider({ children }: { children: ReactNode }) {
   )
 }
 
+/** Sign in with Apple shows once the Supabase Apple provider is set up. */
+export const APPLE_SIGNIN_ENABLED = process.env.NEXT_PUBLIC_APPLE_SIGNIN === "1"
+
 export function AltMethods({
   next,
   onGoogle,
   googleBusy,
+  onApple,
+  appleBusy = false,
   disabled,
 }: {
   next: string
   onGoogle: () => void
   googleBusy: boolean
+  onApple?: () => void
+  appleBusy?: boolean
   disabled: boolean
 }) {
   const { t } = useI18n()
   return (
     <div className="grid grid-cols-2 gap-3">
+      {APPLE_SIGNIN_ENABLED && onApple && (
+        <button
+          type="button"
+          onClick={onApple}
+          disabled={disabled}
+          className="col-span-2 flex h-12 items-center justify-center gap-2.5 rounded-2xl bg-black text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+        >
+          {appleBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <AppleGlyph />}
+          {t("au.apple")}
+        </button>
+      )}
       <button
         type="button"
         onClick={onGoogle}
@@ -289,6 +307,14 @@ export function AltMethods({
         {t("au.guest")}
       </Link>
     </div>
+  )
+}
+
+function AppleGlyph() {
+  return (
+    <svg viewBox="0 0 17 20" className="h-[18px] w-[16px]" fill="currentColor" aria-hidden>
+      <path d="M14.06 10.62c-.02-2.27 1.86-3.36 1.94-3.41-1.06-1.55-2.71-1.76-3.29-1.78-1.4-.14-2.73.82-3.44.82-.71 0-1.8-.8-2.97-.78-1.53.02-2.94.89-3.72 2.25-1.59 2.75-.41 6.83 1.14 9.06.76 1.09 1.66 2.32 2.85 2.27 1.14-.05 1.57-.74 2.95-.74s1.77.74 2.97.71c1.23-.02 2.01-1.11 2.76-2.21.87-1.27 1.23-2.5 1.25-2.56-.03-.01-2.4-.92-2.44-3.63zM11.79 3.95c.63-.76 1.05-1.82.94-2.88-.9.04-2 .6-2.65 1.36-.58.67-1.09 1.75-.95 2.79 1.01.08 2.03-.51 2.66-1.27z" />
+    </svg>
   )
 }
 

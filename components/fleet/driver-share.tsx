@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { MapPin, Radio, Square } from "lucide-react"
 import { useI18n } from "@/components/i18n/language-provider"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
+import { geo } from "@/lib/native"
 
 /**
  * The page a driver opens from the link their dispatcher sent. No account:
@@ -66,7 +67,7 @@ export function DriverShare({ token }: { token: string }) {
   )
 
   const stop = useCallback(async () => {
-    if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current)
+    if (watchRef.current !== null) geo().clearWatch(watchRef.current)
     watchRef.current = null
     void wakeRef.current?.release().catch(() => {})
     wakeRef.current = null
@@ -84,7 +85,7 @@ export function DriverShare({ token }: { token: string }) {
   const start = () => {
     if (!("geolocation" in navigator)) return setStatus("denied")
     lastSentRef.current = 0
-    watchRef.current = navigator.geolocation.watchPosition(
+    watchRef.current = geo().watchPosition(
       (pos) => {
         setStatus("sharing")
         void send(pos)
@@ -102,7 +103,7 @@ export function DriverShare({ token }: { token: string }) {
   // Stop reporting if the page is closed.
   useEffect(() => {
     return () => {
-      if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current)
+      if (watchRef.current !== null) geo().clearWatch(watchRef.current)
     }
   }, [])
 

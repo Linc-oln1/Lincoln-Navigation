@@ -14,6 +14,7 @@ import { NavigationCamera } from "./navigation-camera"
 import { HazardLayer } from "./hazard-layer"
 import type { BBox, Hazard } from "@/lib/hazards"
 import { VECTOR_STYLE_URL } from "@/lib/map-style"
+import { geo } from "@/lib/native"
 
 /* =========================================================
    ROOT CAUSE OF THE BLANK MAP (found via direct WebGL/console
@@ -2093,10 +2094,10 @@ export function MapView({
 
   useEffect(() => {
     if (!showUserLocation) return
-    if (typeof navigator === "undefined" || !navigator.geolocation)
+    if (typeof navigator === "undefined" || !geo())
       return
 
-    const watchId = navigator.geolocation.watchPosition(
+    const watchId = geo().watchPosition(
       (position) => {
         setUserLocation([
           position.coords.latitude,
@@ -2118,7 +2119,7 @@ export function MapView({
       }
     )
 
-    return () => navigator.geolocation.clearWatch(watchId)
+    return () => geo().clearWatch(watchId)
   }, [showUserLocation])
 
   /* =======================================================
@@ -2143,8 +2144,8 @@ export function MapView({
       return
     }
 
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
+    if (typeof navigator !== "undefined" && geo()) {
+      geo().getCurrentPosition((position) => {
         const location: [number, number] = [
           position.coords.latitude,
           position.coords.longitude,

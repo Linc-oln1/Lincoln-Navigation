@@ -21,6 +21,7 @@ import {
   hazardsOnRoute,
   type OnRouteHazard,
 } from "@/lib/hazard-geometry"
+import { geo, hapticTurn } from "@/lib/native"
 
 /* =========================================================
    TYPES
@@ -959,6 +960,9 @@ export function useLiveNavigation({
       lastSpokenTimeRef.current =
         now
 
+      // A haptic tap for each new instruction (iPhone app only).
+      hapticTurn()
+
       speakNavigation(message, langRef.current)
     },
     []
@@ -975,10 +979,10 @@ export function useLiveNavigation({
           null &&
         typeof navigator !==
           "undefined" &&
-        navigator.geolocation
+        geo()
       ) {
         try {
-          navigator.geolocation.clearWatch(
+          geo().clearWatch(
             watchIdRef.current
           )
         } catch (error) {
@@ -1532,10 +1536,10 @@ export function useLiveNavigation({
               null &&
             typeof navigator !==
               "undefined" &&
-            navigator.geolocation
+            geo()
           ) {
             try {
-              navigator.geolocation.clearWatch(
+              geo().clearWatch(
                 watchIdRef.current
               )
             } catch {
@@ -1623,7 +1627,7 @@ export function useLiveNavigation({
       }
 
       if (
-        !navigator.geolocation
+        !geo()
       ) {
         setGpsError(
           "GPS location is not available on this device."
@@ -1641,7 +1645,7 @@ export function useLiveNavigation({
           null
       ) {
         try {
-          navigator.geolocation.clearWatch(
+          geo().clearWatch(
             watchIdRef.current
           )
         } catch {
@@ -1707,7 +1711,7 @@ export function useLiveNavigation({
        * This avoids the previous double-GPS-request
        * problem.
        */
-      navigator.geolocation.getCurrentPosition(
+      geo().getCurrentPosition(
         (gpsPosition) => {
           isStartingRef.current =
             false
@@ -1759,7 +1763,7 @@ export function useLiveNavigation({
           ------------------------------------------------ */
 
           watchIdRef.current =
-            navigator.geolocation.watchPosition(
+            geo().watchPosition(
               (
                 updatedPosition
               ) => {
@@ -1910,10 +1914,10 @@ export function useLiveNavigation({
           null &&
         typeof navigator !==
           "undefined" &&
-        navigator.geolocation
+        geo()
       ) {
         try {
-          navigator.geolocation.clearWatch(
+          geo().clearWatch(
             watchIdRef.current
           )
         } catch {

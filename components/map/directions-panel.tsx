@@ -71,6 +71,7 @@ import {
   reverseGeocode,
   searchNearbyPlaces,
 } from "@/lib/geocoding"
+import { geo } from "@/lib/native"
 
 /*
  * PREVIOUSLY: this file contained ~700 lines of its own Mapbox
@@ -606,14 +607,14 @@ export function DirectionsPanel({
   const handleUseCurrentLocation = () => {
     setError(null)
 
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
+    if (typeof navigator === "undefined" || !geo()) {
       setError(t("dir.locUnavailable"))
       return
     }
 
     setOrigin(t("dir.finding"))
 
-    navigator.geolocation.getCurrentPosition(
+    geo().getCurrentPosition(
       async (currentPosition) => {
         const { latitude, longitude } = currentPosition.coords
 
