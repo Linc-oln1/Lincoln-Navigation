@@ -24,8 +24,14 @@ import {
 import { getPlanCode, PLAN_TAGS } from "@/lib/paystack"
 import { currentSubscription, RENEWING } from "@/lib/plan-store"
 import { getSessionUser } from "@/lib/supabase/server"
+import { storePlatformOf } from "@/lib/store-app"
 
 export async function POST(req: Request) {
+  // The Play / App Store builds can't sell plans (lib/store-app.ts).
+  if (storePlatformOf(req)) {
+    return NextResponse.json({ error: "Purchases aren't available in the app." }, { status: 403 })
+  }
+
   const secret = process.env.PAYSTACK_SECRET_KEY
   if (!secret) {
     return NextResponse.json(

@@ -16,8 +16,14 @@ import { isValidRenewToken } from "@/lib/sponsor-link"
 import { renewalOffer } from "@/lib/sponsor-renewal"
 import { getSponsor } from "@/lib/sponsor-store"
 import { ADMIN_ENABLED } from "@/lib/supabase/admin"
+import { storePlatformOf } from "@/lib/store-app"
 
 export async function POST(req: Request) {
+  // The Play / App Store builds can't sell plans (lib/store-app.ts).
+  if (storePlatformOf(req)) {
+    return NextResponse.json({ error: "Purchases aren't available in the app." }, { status: 403 })
+  }
+
   const secret = process.env.PAYSTACK_SECRET_KEY
   if (!secret || !ADMIN_ENABLED) {
     return NextResponse.json({ error: "Online payment isn't set up yet." }, { status: 501 })

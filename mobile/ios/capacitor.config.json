@@ -1,0 +1,14 @@
+{
+  "appId": "com.lincolnnavigation.app",
+  "appName": "Lincoln Navigation",
+  "webDir": "www",
+  "server": {
+    "url": "https://www.lincolnnavigation.com/app?app=ios",
+    "allowNavigation": ["www.lincolnnavigation.com", "lincolnnavigation.com"]
+  },
+  "ios": {
+    "appendUserAgent": "LincolnNavigationApp",
+    "contentInset": "never",
+    "backgroundColor": "#0b1118"
+  }
+}

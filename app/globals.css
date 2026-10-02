@@ -1861,3 +1861,11 @@ input {
 .features-rail::-webkit-scrollbar {
     display: none;
 }
+
+/* Store-app mode (lib/store-app.ts): the Play / App Store builds can't sell
+   plans through Paystack, so every link to a purchase page is hidden. */
+html[data-store-app] a[href^="/pricing"],
+html[data-store-app] a[href^="/advertise"],
+html[data-store-app] [data-store-hide] {
+    display: none !important;
+}

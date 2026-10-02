@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { LanguageProvider } from '@/components/i18n/language-provider'
 import { SITE_BASE } from '@/lib/site-base'
 import { ADS_ENABLED, ADSENSE_CLIENT } from '@/lib/monetization'
+import { STORE_APP_HEAD_SCRIPT } from '@/lib/store-app'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -64,8 +65,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background">
+    <html lang="en" className="bg-background" suppressHydrationWarning>
       <head>
+        {/* Store-app mode (lib/store-app.ts): flag <html> before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: STORE_APP_HEAD_SCRIPT }} />
         <AdSenseScript />
       </head>
       {/*

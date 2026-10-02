@@ -1,0 +1,20 @@
+{
+  "name": "lincoln-navigation-ios",
+  "private": true,
+  "description": "App Store shell for www.lincolnnavigation.com — see docs/APP_STORES.md",
+  "scripts": {
+    "add-ios": "cap add ios",
+    "sync": "cap sync ios",
+    "open": "cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/geolocation": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/push-notifications": "^7.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}

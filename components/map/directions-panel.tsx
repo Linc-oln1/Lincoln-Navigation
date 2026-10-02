@@ -1186,7 +1186,8 @@ export function DirectionsPanel({
   const handleVoiceStep = (step: RouteStepView) => {
     // Reading a step aloud is part of the Premium voice feature.
     if (!hasVoice) {
-      window.location.href = "/pricing"
+      // Store apps can't sell plans (lib/store-app.ts).
+      if (!document.documentElement.hasAttribute("data-store-app")) window.location.href = "/pricing"
       return
     }
     speak(step.voiceInstruction || step.instruction)

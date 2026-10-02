@@ -1,0 +1,42 @@
+{
+  "packageId": "com.lincolnnavigation.app",
+  "host": "www.lincolnnavigation.com",
+  "name": "Lincoln Navigation",
+  "launcherName": "Lincoln Nav",
+  "display": "standalone",
+  "orientation": "any",
+  "themeColor": "#0B1118",
+  "themeColorDark": "#0B1118",
+  "navigationColor": "#0B1118",
+  "navigationColorDark": "#0B1118",
+  "navigationDividerColor": "#0B1118",
+  "navigationDividerColorDark": "#0B1118",
+  "backgroundColor": "#0B1118",
+  "enableNotifications": true,
+  "startUrl": "/app?app=android",
+  "iconUrl": "https://www.lincolnnavigation.com/pwa/icon-512.png",
+  "maskableIconUrl": "https://www.lincolnnavigation.com/pwa/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "lincoln-navigation"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://www.lincolnnavigation.com/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": { "enabled": true }
+  },
+  "alphaDependencies": { "enabled": false },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://www.lincolnnavigation.com/",
+  "minSdkVersion": 21,
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}

@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { AccountPlanRow } from "@/components/site/account-plan"
 import { AccountSignInMethods } from "@/components/site/account-sign-in-methods"
 import { AccountPaymentHistory } from "@/components/site/account-payment-history"
+import { AccountDelete } from "@/components/site/account-delete"
 import { T } from "@/components/i18n/rich-text"
 
 export const metadata = { title: "Account — Lincoln Navigation" }
@@ -53,6 +54,8 @@ export default async function AccountPage() {
           <T k="ac.seePlansArrow" />
         </Link>
       </p>
+
+      <AccountDelete />
     </Shell>
   )
 }

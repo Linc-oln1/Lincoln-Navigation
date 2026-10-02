@@ -30,6 +30,7 @@ export const LEGAL_UPDATED = {
   attributions: "27 September 2026",
   advertising: "1 October 2026",
   security: "27 September 2026",
+  deleteAccount: "2 October 2026",
 } as const
 
 /** Every legal document, in the order the legal pages list them. */
@@ -41,4 +42,5 @@ export const LEGAL_DOCS = [
   { href: "/advertising-policy", title: "Advertising & Affiliates" },
   { href: "/attributions", title: "Map Data & Attributions" },
   { href: "/security", title: "Security" },
+  { href: "/delete-account", title: "Delete Your Account" },
 ] as const

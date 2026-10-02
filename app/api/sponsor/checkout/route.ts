@@ -14,10 +14,16 @@ import { overLimit } from "@/lib/rate-limit"
 import { PREMIUM_CURRENCY, sponsorPackage } from "@/lib/monetization"
 import { SPONSOR_CATEGORIES } from "@/lib/sponsored-places"
 import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
+import { storePlatformOf } from "@/lib/store-app"
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "")
 
 export async function POST(req: Request) {
+  // The Play / App Store builds can't sell plans (lib/store-app.ts).
+  if (storePlatformOf(req)) {
+    return NextResponse.json({ error: "Purchases aren't available in the app." }, { status: 403 })
+  }
+
   const secret = process.env.PAYSTACK_SECRET_KEY
   if (!secret || !ADMIN_ENABLED) {
     return NextResponse.json({ error: "Online payment isn't set up yet." }, { status: 501 })
