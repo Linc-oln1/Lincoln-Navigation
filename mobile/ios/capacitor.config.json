@@ -4,7 +4,10 @@
   "webDir": "www",
   "server": {
     "url": "https://www.lincolnnavigation.com/app?app=ios",
-    "allowNavigation": ["www.lincolnnavigation.com", "lincolnnavigation.com"]
+    "allowNavigation": [
+      "www.lincolnnavigation.com",
+      "lincolnnavigation.com"
+    ]
   },
   "ios": {
     "appendUserAgent": "LincolnNavigationApp",
@@ -19,7 +22,8 @@
     },
     "StatusBar": {
       "style": "DARK",
-      "overlaysWebView": true
+      "overlaysWebView": false,
+      "backgroundColor": "#0b1118"
     }
   }
 }

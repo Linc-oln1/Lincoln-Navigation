@@ -58,6 +58,9 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#0b1118',
+  // Lets env(safe-area-inset-*) report the notch / home-indicator insets
+  // (the --safe-top / --safe-bottom vars in globals.css) on iPhone.
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
