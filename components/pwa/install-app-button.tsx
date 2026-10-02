@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils"
 
 interface InstallAppButtonProps {
   className?: string
+  /* e.g. "hidden 2xl:inline" to collapse to icon-only on tight navs */
+  labelClassName?: string
 }
 
 /* Surfaces "switch from website to app" directly in the nav, rather
@@ -14,7 +16,10 @@ interface InstallAppButtonProps {
    already installed, and nothing on browsers that neither support
    `beforeinstallprompt` nor are iOS Safari (nothing useful to do
    there — desktop Firefox, for instance). */
-export function InstallAppButton({ className }: InstallAppButtonProps) {
+export function InstallAppButton({
+  className,
+  labelClassName,
+}: InstallAppButtonProps) {
   const { canPromptInstall, showIOSInstructions, installed, promptInstall } =
     useInstallPrompt()
   const [showIOSTip, setShowIOSTip] = useState(false)
@@ -27,6 +32,8 @@ export function InstallAppButton({ className }: InstallAppButtonProps) {
     <div className="relative">
       <button
         type="button"
+        aria-label="Install App"
+        title="Install App"
         onClick={() =>
           canPromptInstall ? promptInstall() : setShowIOSTip((open) => !open)
         }
@@ -36,7 +43,7 @@ export function InstallAppButton({ className }: InstallAppButtonProps) {
         )}
       >
         <Download className="w-4 h-4" />
-        Install App
+        <span className={labelClassName}>Install App</span>
       </button>
 
       {showIOSTip && (

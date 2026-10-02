@@ -134,8 +134,8 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
           style={{ background: "linear-gradient(to bottom, transparent, #07080b)" }}
         />
 
-        <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between p-4 sm:p-5">
-          <div className="flex items-center">
+        <nav className="fixed top-0 left-0 right-0 z-[100] flex items-center justify-between gap-4 p-4 sm:p-5">
+          <div className="flex shrink-0 items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/logo/lincoln-navigation-logo.webp"
@@ -144,8 +144,11 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
             />
           </div>
 
-          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full px-2 py-2 items-center gap-1">
-            <button type="button" className="px-4 py-1.5 rounded-full text-sm font-medium text-white">
+          {/* In normal flow (not absolutely centred) so it can never slide
+              under the language/account controls; below xl everything
+              moves into the hamburger menu instead of getting cramped. */}
+          <div className="hidden xl:flex shrink-0 bg-white/20 backdrop-blur-md border border-white/30 rounded-full px-1.5 py-1.5 items-center gap-0.5">
+            <button type="button" className="px-3 2xl:px-4 py-1.5 rounded-full text-sm font-medium text-white">
               {t("nav.explore")}
             </button>
             {NAV_LINKS.map(({ id: label, labelKey }) => {
@@ -161,7 +164,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
                   key={label}
                   type="button"
                   onClick={onClick}
-                  className="px-4 py-1.5 rounded-full text-sm font-medium text-white/80 hover:bg-white/20 hover:text-white transition-colors"
+                  className="px-3 2xl:px-4 py-1.5 rounded-full text-sm font-medium text-white/80 hover:bg-white/20 hover:text-white transition-colors"
                 >
                   {t(labelKey)}
                 </button>
@@ -169,20 +172,23 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
             })}
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2 2xl:gap-3">
             <LanguageSwitcher
-              buttonClass="border border-white/25 bg-white/10 text-white hover:bg-white/20 h-10 md:h-auto"
+              buttonClass="border border-white/25 bg-white/10 text-white hover:bg-white/20 h-10 xl:h-auto"
               menuClass="border-white/20 bg-[#12141a]/95 text-white backdrop-blur-xl"
               showLabel
             />
-            <InstallAppButton className="hidden md:flex bg-white/10 hover:bg-white/20 border border-white/20 text-white" />
-            <span className="hidden text-white md:inline-flex">
+            <InstallAppButton
+              className="hidden xl:flex bg-white/10 hover:bg-white/20 border border-white/20 text-white px-2.5 2xl:px-4 py-2.5 2xl:py-1.5"
+              labelClassName="hidden 2xl:inline"
+            />
+            <span className="hidden text-white xl:inline-flex">
               <AccountLink className="rounded-full border border-white/25 bg-white/10 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/20" />
             </span>
             <button
               type="button"
               onClick={goToApp}
-              className="hidden md:block bg-white text-gray-900 text-sm font-semibold px-6 py-2.5 rounded-full hover:bg-gray-100"
+              className="hidden xl:block bg-white text-gray-900 text-sm font-semibold px-6 py-2.5 rounded-full hover:bg-gray-100"
             >
               {t("home.launch")}
             </button>
@@ -191,7 +197,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
               onClick={() => setMenuOpen((open) => !open)}
               aria-label={menuOpen ? t("nav.closeMenu") : t("nav.openMenu")}
               aria-expanded={menuOpen}
-              className="md:hidden w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white"
+              className="xl:hidden w-10 h-10 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white"
             >
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -200,10 +206,10 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
 
         {/* Mobile menu — the same five controls as the desktop nav
             pill + Launch Map button, since those are all `hidden`
-            below md and the hamburger was otherwise the only mobile
+            below xl and the hamburger was otherwise the only mobile
             nav control (and did nothing on its own). */}
         {menuOpen && (
-          <div className="md:hidden fixed inset-0 z-[90] bg-black/97 backdrop-blur-2xl flex flex-col items-center justify-center gap-3 hero-anim hero-fade">
+          <div className="xl:hidden fixed inset-0 z-[90] bg-black/97 backdrop-blur-2xl flex flex-col items-center justify-center gap-3 hero-anim hero-fade">
             <button
               type="button"
               onClick={handleMobileNavClick()}
