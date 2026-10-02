@@ -14,7 +14,7 @@ import { MobileNav } from "@/components/map/mobile-nav"
 import { WeatherWidget } from "@/components/map/weather-widget"
 import { HazardDetails } from "@/components/map/hazard-details"
 import { ReportHazardSheet } from "@/components/map/report-hazard-sheet"
-import { geocode } from "@/lib/geocoding"
+import { geocode, reverseGeocode } from "@/lib/geocoding"
 import { useSavedPlaces, type SavedPlaceInput } from "@/hooks/use-saved-places"
 import { useHazards } from "@/hooks/use-hazards"
 import { useI18n } from "@/components/i18n/language-provider"
@@ -460,21 +460,35 @@ function MapNavigator() {
   )
 
   const handleMapClick = useCallback(
-    () => {
-      if (activePanel) {
+    (lat: number, lng: number) => {
+      // A tap with something open just closes it.
+      if (activePanel || selectedLocation || selectedHazard) {
         setActivePanel(null)
-      }
-
-      if (selectedLocation) {
-        setSelectedLocation(null)
-        setMarkers([])
-      }
-
-      if (selectedHazard) {
+        if (selectedLocation) {
+          setSelectedLocation(null)
+          setMarkers([])
+        }
         setSelectedHazard(null)
+        return
       }
+      if (navigationState.isNavigating) return
+
+      // Otherwise drop a pin, GhanaPost-app style: the place panel
+      // shows the spot's digital address (tap your own blue dot to get
+      // yours), and the street fills in once reverse geocoding answers.
+      const pin = { name: t("map.droppedPin"), address: `${lat.toFixed(5)}, ${lng.toFixed(5)}`, lat, lng }
+      setSelectedLocation(pin)
+      setMarkers([{ position: [lat, lng], title: pin.name, description: pin.address }])
+      reverseGeocode(lat, lng)
+        .then((place) => {
+          if (!place?.address) return
+          setSelectedLocation((current) =>
+            current && current.lat === lat && current.lng === lng ? { ...current, address: place.address } : current
+          )
+        })
+        .catch(() => {})
     },
-    [activePanel, selectedLocation, selectedHazard]
+    [activePanel, selectedLocation, selectedHazard, navigationState.isNavigating, t]
   )
 
   return (

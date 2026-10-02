@@ -2,12 +2,12 @@
 
 import { useI18n } from "@/components/i18n/language-provider"
 
-import { X, Navigation, Share2, Star, MapPin, Phone, Globe, Clock, Lock, Images } from "lucide-react"
+import { X, Navigation, Share2, Star, MapPin, Phone, Globe, Clock, Lock, Images, Hash, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { usePremium } from "@/hooks/use-premium"
 import { openStatus } from "@/lib/opening-hours"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { StreetView } from "@/components/map/street-view"
 import { STREET_VIEW_ENABLED } from "@/lib/mapillary"
 import { BookLinks } from "@/components/map/book-links"
@@ -45,7 +45,17 @@ export function LocationDetails({
   const { t } = useI18n()
   const { isPremium } = usePremium()
   const [streetOpen, setStreetOpen] = useState(false)
+  const digital = useDigitalAddress(location?.lat, location?.lng)
+  const [copied, setCopied] = useState(false)
   if (!location) return null
+
+  const copyDigital = () => {
+    if (!digital) return
+    navigator.clipboard?.writeText(digital.code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    }).catch(() => {})
+  }
 
   const status = openStatus(location.openingHours)
   const hasBusinessInfo = Boolean(location.openingHours || location.phone || location.website)
@@ -85,7 +95,7 @@ export function LocationDetails({
             <p className="text-sm text-muted-foreground mt-1">{location.address}</p>
             {location.type && (
               <span className="inline-block mt-2 px-2 py-0.5 text-xs bg-primary/20 text-primary rounded-full capitalize">
-                {location.type}
+                {location.type.replace(/_/g, " ")}
               </span>
             )}
           </div>
@@ -134,6 +144,28 @@ export function LocationDetails({
           <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
           <span className="text-foreground">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</span>
         </div>
+        {digital && (
+          <div className="flex items-start gap-3 text-sm">
+            <Hash className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-muted-foreground">{t("loc.digitalAddress")}</p>
+              <p className="font-semibold tracking-wide text-foreground">{digital.code}</p>
+              {(digital.street || digital.area) && (
+                <p className="truncate text-xs text-muted-foreground">
+                  {[digital.street, digital.area].filter(Boolean).join(", ")}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={copyDigital}
+              aria-label={copied ? t("loc.copied") : `Copy ${digital.code}`}
+              className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            >
+              {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+            </button>
+          </div>
+        )}
         {isPremium && location.openingHours && (
           <div className="flex items-start gap-3 text-sm">
             <Clock className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
@@ -248,4 +280,30 @@ export function LocationDetails({
       </div>
     </div>
   )
+}
+
+interface DigitalAddressInfo {
+  code: string
+  street?: string
+  area?: string
+}
+
+/* GhanaPost GPS digital address for the open place, looked up via
+   /api/ghanapost. Null while loading, outside Ghana, or if the lookup
+   service is down — the row just doesn't show. */
+function useDigitalAddress(lat?: number, lng?: number): DigitalAddressInfo | null {
+  const [result, setResult] = useState<{ key: string; info: DigitalAddressInfo | null } | null>(null)
+  const key = lat != null && lng != null ? `${lat.toFixed(6)},${lng.toFixed(6)}` : ""
+
+  useEffect(() => {
+    if (!key) return
+    const controller = new AbortController()
+    fetch(`/api/ghanapost?lat=${lat}&lng=${lng}`, { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => setResult({ key, info: data?.result ?? null }))
+      .catch(() => {})
+    return () => controller.abort()
+  }, [key, lat, lng])
+
+  return result?.key === key ? result.info : null
 }

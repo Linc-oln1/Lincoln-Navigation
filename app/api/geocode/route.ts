@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { lookupDigitalAddress, parseDigitalAddress } from "@/lib/ghanapost"
 
 /* =========================================================
    GEOCODING PROXY
@@ -356,6 +357,32 @@ export async function GET(request: NextRequest) {
 
     if (cached) {
       return NextResponse.json(cached)
+    }
+
+    // A GhanaPost digital address ("GA-183-8164") is an exact location —
+    // no text geocoder knows these codes, so resolve it directly. If the
+    // lookup fails, say so rather than letting Mapbox/OSM fuzzy-match
+    // the digits to somewhere random.
+    const digitalCode = parseDigitalAddress(query)
+    if (digitalCode) {
+      const found = await lookupDigitalAddress(digitalCode)
+      const results = {
+        results: found
+          ? [
+              {
+                id: `ghanapost-${found.code}`,
+                name: found.code,
+                address: [found.street, found.area, found.district, found.region].filter(Boolean).join(", "),
+                lat: found.lat,
+                lng: found.lng,
+                type: "digital_address",
+                importance: 1,
+              },
+            ]
+          : [],
+      }
+      if (found) setCached(cacheKey, results)
+      return NextResponse.json(results)
     }
 
     // Kept as a last resort: weak Mapbox matches beat "nothing found" only
