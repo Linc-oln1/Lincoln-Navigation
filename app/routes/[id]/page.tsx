@@ -4,6 +4,7 @@ import { ArrowRight, Bus, Car, Clock, Lightbulb, Navigation, Route } from "lucid
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { JsonLd } from "@/components/seo/json-ld"
+import { ShareGuide } from "@/components/site/share-guide"
 import { playfair } from "@/app/fonts/playfair"
 import { ROUTE_GUIDES, findRoute, routeDirectionsHref } from "@/lib/route-guides"
 import { blurb, findDestination } from "@/lib/place-guide"
@@ -109,6 +110,11 @@ export default async function RoutePage({ params }: Props) {
           >
             <Navigation className="h-4 w-4" aria-hidden /> Get directions to {r.to.name}
           </Link>
+          <ShareGuide
+            className="mt-3"
+            url={url}
+            text={`${title}: ${r.roadKm} km, ${r.driveTime} by car — towns on the way, buses and tips`}
+          />
         </header>
 
         <div className="mt-12 grid gap-10 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">

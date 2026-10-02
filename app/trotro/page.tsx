@@ -3,6 +3,7 @@ import { ArrowRight, Bus, Coins, Hand, Lightbulb, MapPin, Megaphone } from "luci
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { JsonLd } from "@/components/seo/json-ld"
+import { ShareGuide } from "@/components/site/share-guide"
 import { playfair } from "@/app/fonts/playfair"
 import { ROUTE_GUIDES } from "@/lib/route-guides"
 import { pageMeta } from "@/lib/page-meta"
@@ -16,6 +17,7 @@ export const metadata = pageMeta({
   description:
     "A first-timer's guide to Ghana's trotros: what they are, where to catch one in Accra and Kumasi, how the mate works, paying, getting off and staying safe.",
   path: "/trotro",
+  image: { url: "/trotro/opengraph-image", alt: "How to ride a trotro in Ghana — Lincoln Navigation guide" },
 })
 
 const STEPS = [
@@ -127,6 +129,11 @@ export default function TrotroPage() {
             Trotros are the shared minibuses that carry most of Ghana&apos;s commuters — cheap, frequent and everywhere.
             They can look chaotic the first time, but there&apos;s a simple system behind them. Here&apos;s how it works.
           </p>
+          <ShareGuide
+            className="mt-5"
+            url={`${SITE_BASE}/trotro`}
+            text="How to ride a trotro in Ghana — stations, paying the mate and tips for first-timers"
+          />
         </header>
 
         <div className="mt-12 grid gap-10 md:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">

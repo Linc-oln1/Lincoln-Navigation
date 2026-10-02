@@ -4,6 +4,7 @@ import { ArrowRight, MapPin, Navigation, Lightbulb, Route } from "lucide-react"
 import { SiteHeader } from "@/components/site/site-header"
 import { SiteFooter } from "@/components/site/site-footer"
 import { JsonLd } from "@/components/seo/json-ld"
+import { ShareGuide } from "@/components/site/share-guide"
 import { playfair } from "@/app/fonts/playfair"
 import { GHANA_DESTINATIONS } from "@/lib/ghana-destinations"
 import { DESTINATION_GUIDES, GUIDE_ORIGINS } from "@/lib/destination-guides"
@@ -91,6 +92,7 @@ export default async function PlacePage({ params }: Props) {
             >
               <Navigation className="h-4 w-4" aria-hidden /> Get directions to {d.name}
             </Link>
+            <ShareGuide className="mt-3" url={`${SITE_BASE}/places/${d.id}`} text={`${d.name}: ${blurb(d)}`} />
           </div>
           <figure>
             {/* eslint-disable-next-line @next/next/no-img-element */}
