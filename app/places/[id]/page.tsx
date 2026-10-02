@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props) {
     title: `How to Get to ${d.name} — Visitor Guide`,
     description: `${blurb(d)} Directions from Accra, Kumasi and Tamale, and tips before you go.`,
     path: `/places/${d.id}`,
-    image: { url: d.photo, alt: d.name },
+    image: { url: `/places/${d.id}/opengraph-image`, alt: `${d.name} — visitor guide` },
   })
 }
 

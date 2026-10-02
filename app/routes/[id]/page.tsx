@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: Props) {
     title: `${r.from.name} to ${r.to.name}: Distance, Travel Time & Directions`,
     description: `${r.summary} The towns on the way, bus and trotro options, and tips for the drive.`,
     path: `/routes/${r.id}`,
+    image: { url: `/routes/${r.id}/opengraph-image`, alt: `${r.from.name} to ${r.to.name} — route guide` },
   })
 }
 

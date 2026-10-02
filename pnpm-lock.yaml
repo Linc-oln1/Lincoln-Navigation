@@ -158,6 +158,9 @@ importers:
       recharts:
         specifier: 2.15.0
         version: 2.15.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      sharp:
+        specifier: 0.34.5
+        version: 0.34.5
       sonner:
         specifier: ^1.7.1
         version: 1.7.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -2118,8 +2121,7 @@ snapshots:
     dependencies:
       react-hook-form: 7.85.0(react@19.2.8)
 
-  '@img/colour@1.1.0':
-    optional: true
+  '@img/colour@1.1.0': {}
 
   '@img/sharp-darwin-arm64@0.34.5':
     optionalDependencies:
@@ -3697,8 +3699,7 @@ snapshots:
 
   scheduler@0.27.0: {}
 
-  semver@7.8.5:
-    optional: true
+  semver@7.8.5: {}
 
   sharp@0.34.5:
     dependencies:
@@ -3730,7 +3731,6 @@ snapshots:
       '@img/sharp-win32-arm64': 0.34.5
       '@img/sharp-win32-ia32': 0.34.5
       '@img/sharp-win32-x64': 0.34.5
-    optional: true
 
   sonner@1.7.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
