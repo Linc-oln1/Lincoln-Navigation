@@ -91,36 +91,52 @@ Upload key SHA-256:
 
 ## 3. App Store
 
-Apple rejects plain website wrappers (guideline 4.2), so the iOS build has to
-add native value before submission. Planned: native GPS
-(`@capacitor/geolocation`), push alerts for hazards on a saved route
-(`@capacitor/push-notifications`), haptics on turn prompts.
+Apple doesn't accept a sole proprietorship as an organisation, so the
+account is enrolled as an **Individual** (seller name: Jonathan Kwaku Abra).
+No D-U-N-S needed, and no 12-tester rule.
 
-Still to build before submitting to Apple:
-- **Sign in with Apple** (guideline 4.8, because Google sign-in is offered):
-  enable the Apple provider in Supabase → Auth → Providers and add the button
-  on `/login` and `/signup`.
-- **Google sign-in inside the app**: Google blocks OAuth in embedded web views
-  (`disallowed_useragent`). In the iOS app, start Google sign-in in
-  `SFSafariViewController` (`@capacitor/browser`) and return through a
-  universal link to `/auth/callback`.
-- The native features above.
+### What's built (2026-10-02)
 
-Setup once those are in:
-1. Enrol at <https://developer.apple.com/programs/enroll/> (organisation,
-   D-U-N-S). Install Xcode and CocoaPods (`brew install cocoapods`).
-2. ```bash
-   cd mobile/ios
-   npm install
-   npx cap add ios
-   npx cap open ios
-   ```
-3. In Xcode: set the Team, add Info.plist strings
-   `NSLocationWhenInUseUsageDescription` ("Shows where you are on the map and
-   gives turn-by-turn directions.") and, for push, the Push Notifications
-   capability. Add the 1024×1024 app icon.
-4. Product → Archive → Distribute → App Store Connect. Test with TestFlight.
-5. App Store Connect: privacy policy URL, App Privacy labels (same data as the
-   Play data-safety form), screenshots (6.7" and 6.5" iPhone), a demo account
-   in *App Review Information*, and note that plans are bought on the website
-   and the app doesn't sell them.
+- `mobile/ios`: Capacitor 8 (Swift Package Manager — no CocoaPods) loading
+  `https://www.lincolnnavigation.com/app?app=ios`. Plugins: Geolocation,
+  Haptics, Browser, App, SplashScreen, StatusBar. Info.plist has the
+  location-permission text, the `com.lincolnnavigation.app://` URL scheme
+  and `ITSAppUsesNonExemptEncryption = false`. Web view starts below the
+  status bar. Icon: 1024px upscale of `public/pwa/icon-512.png` (a real
+  1024px master would be sharper).
+- `lib/native.ts` (website side, used only when `window.Capacitor` exists):
+  `geo()` native GPS (one iOS prompt), `hapticTurn()` on each turn
+  instruction, `startOAuth()` / `startLinkGoogle()` open Google/Apple
+  sign-in in Safari's in-app browser and return via
+  `com.lincolnnavigation.app://auth-callback`; `components/native/native-bridge.tsx`
+  finishes the sign-in at `/auth/callback` inside the app.
+- Sign in with Apple button on /login and /signup, hidden until
+  `NEXT_PUBLIC_APPLE_SIGNIN=1` (Apple guideline 4.8, because Google
+  sign-in is offered).
+- Purchases are hidden in the app by store-app mode (`?app=ios` + UA token).
+
+Verified in the iPhone 17 Pro simulator: site loads, native location
+prompt, map follows GPS, layout clear of the notch.
+
+### Still to do
+
+1. Supabase → Authentication → URL Configuration → Redirect URLs: add
+   `com.lincolnnavigation.app://**` (in-app Google/Apple sign-in returns
+   there).
+2. After Apple enrolment: Certificates, IDs & Profiles → create the App ID
+   `com.lincolnnavigation.app` with "Sign in with Apple"; create a Services
+   ID + key for Supabase's Apple provider; enable Apple in Supabase; set
+   `NEXT_PUBLIC_APPLE_SIGNIN=1` in Vercel and redeploy.
+3. Xcode: open `mobile/ios/ios/App/App.xcodeproj`, set the Team, add the
+   "Sign in with Apple" capability, Product → Archive → upload to App Store
+   Connect; test with TestFlight.
+4. App Store Connect listing: screenshots (6.9" iPhone), description,
+   privacy labels (same data as Play's data safety), demo account
+   (lincolnjonathan8+playreview@gmail.com), review note that plans are
+   bought on the website and not sold in the app.
+
+Rebuild after native changes:
+```bash
+cd mobile/ios && npx cap sync ios
+```
+Website changes need no new App Store build.
