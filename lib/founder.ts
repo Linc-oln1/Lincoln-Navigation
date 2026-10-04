@@ -20,9 +20,6 @@ export const FOUNDER = {
   path: "/about/jonathan-kwaku-abra",
   photo: "/team/jonathan-kwaku-abra.webp",
   photoSquare: "/team/jonathan-kwaku-abra-square.jpg",
-  gallery: [
-    { src: "/team/jonathan-kwaku-abra-portrait-bw.webp", alt: "Black and white portrait of Jonathan Kwaku Abra (Lincoln), Founder & CEO of Lincoln Navigation", caption: "Black and white" },
-  ],
   profiles: [
     { label: "LinkedIn", href: "https://www.linkedin.com/in/jonathan-kwaku-abra/" },
     { label: "X", href: "https://x.com/lincoln__jnr" },
@@ -52,10 +49,7 @@ export function founderPerson() {
     jobTitle: FOUNDER.title,
     description: FOUNDER.summary,
     url: `${SITE_BASE}${FOUNDER.path}`,
-    image: [
-      `${SITE_BASE}${FOUNDER.photoSquare}`,
-      ...FOUNDER.gallery.map((g) => `${SITE_BASE}${g.src}`),
-    ],
+    image: `${SITE_BASE}${FOUNDER.photoSquare}`,
     sameAs: FOUNDER.profiles.map((p) => p.href),
     knowsAbout: FOUNDER.expertise,
     worksFor: { "@id": `${SITE_BASE}/#organization` },

@@ -105,26 +105,6 @@ export default function FounderPage() {
             ))}
           </div>
 
-          <h2 className="mt-12 text-2xl text-neutral-100" style={PLAYFAIR}>Photos</h2>
-          <ul className="mt-5 grid max-w-xs grid-cols-1 gap-3">
-            {FOUNDER.gallery.map((g) => (
-              <li key={g.src}>
-                <figure>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={g.src}
-                    alt={g.alt}
-                    width={1200}
-                    height={1600}
-                    loading="lazy"
-                    className="aspect-[3/4] w-full rounded-2xl border border-[#c9a06e]/20 object-cover"
-                  />
-                  <figcaption className="mt-2 text-xs text-neutral-500">{g.caption}</figcaption>
-                </figure>
-              </li>
-            ))}
-          </ul>
-
           <blockquote className="mt-10 rounded-2xl border border-[#c9a06e]/20 bg-[#161310] px-6 py-6">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#c9a06e]">Vision</p>
             <p className="mt-3 text-xl leading-snug text-neutral-100" style={{ ...PLAYFAIR, fontStyle: "italic" }}>
