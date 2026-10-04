@@ -4,11 +4,13 @@
 //   GET                                   → every promoter with live numbers
 //   POST { action:"add", email }          → make an existing account a promoter
 //   POST { action:"remove", userId }      → stop being a promoter (history kept)
+//   POST { action:"email", userId }       → (re)send their welcome email with code + link
 //   POST { action:"payout", userId, amountGhs, note? } → record money paid out
 
 import { NextResponse } from "next/server"
 import { getAdminUser } from "@/lib/admin-auth"
 import { listAmbassadors, statsFor } from "@/lib/ambassadors"
+import { sendAmbassadorWelcome } from "@/lib/ambassador-emails"
 import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 
 const notFound = () => NextResponse.json({ error: "Not found" }, { status: 404 })
@@ -37,11 +39,21 @@ export async function POST(req: Request) {
     }
     if (!id) return NextResponse.json({ error: "No account with that email yet — ask them to sign up first." }, { status: 404 })
     await admin.from("profiles").update({ is_ambassador: true }).eq("id", id)
-    return NextResponse.json({ ok: true })
+    const stats = await statsFor(admin, id)
+    const emailed = stats?.email ? await sendAmbassadorWelcome({ email: stats.email, name: stats.name, code: stats.code }) : false
+    return NextResponse.json({ ok: true, emailed })
   }
 
   const userId = String(body.userId ?? "")
   if (!userId) return NextResponse.json({ error: "Missing userId." }, { status: 400 })
+
+  if (body.action === "email") {
+    const stats = await statsFor(admin, userId)
+    if (!stats?.email) return NextResponse.json({ error: "Unknown user." }, { status: 404 })
+    const emailed = await sendAmbassadorWelcome({ email: stats.email, name: stats.name, code: stats.code })
+    if (!emailed) return NextResponse.json({ error: "Couldn't send — email isn't set up (RESEND_API_KEY) or was refused." }, { status: 502 })
+    return NextResponse.json({ ok: true, emailed: true })
+  }
 
   if (body.action === "remove") {
     await admin.from("profiles").update({ is_ambassador: false }).eq("id", userId)

@@ -36,11 +36,15 @@ export function AmbassadorsAdmin() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     })
-    const data = (await res.json().catch(() => ({}))) as { error?: string }
+    const data = (await res.json().catch(() => ({}))) as { error?: string; emailed?: boolean }
     setBusy(false)
     if (!res.ok) window.alert(data.error || "Something went wrong.")
     else {
-      if (body.action === "add") setEmail("")
+      if (body.action === "add") {
+        setEmail("")
+        window.alert(data.emailed ? "Added. Their welcome email with code and link was sent." : "Added, but the welcome email couldn't be sent — use “Email link” on their card.")
+      }
+      if (body.action === "email") window.alert("Welcome email sent.")
       await load()
     }
   }
@@ -91,6 +95,9 @@ export function AmbassadorsAdmin() {
               }}
             >
               Mark GHS {r.owedGhs} paid
+            </button>
+            <button className={btn} disabled={busy} onClick={() => void act({ action: "email", userId: r.userId })}>
+              Email code &amp; link
             </button>
             <button
               className={btn}
