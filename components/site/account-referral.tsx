@@ -7,7 +7,7 @@ export async function AccountReferral({ userId }: { userId: string }) {
   if (!ADMIN_ENABLED) return null
   const admin = createAdminClient()
   const [{ data: me }, { count }] = await Promise.all([
-    admin.from("profiles").select("referral_code").eq("id", userId).maybeSingle(),
+    admin.from("profiles").select("referral_code, pro_until").eq("id", userId).maybeSingle(),
     admin.from("profiles").select("id", { count: "exact", head: true }).eq("referred_by", userId),
   ])
   if (!me?.referral_code) return null
@@ -24,6 +24,11 @@ export async function AccountReferral({ userId }: { userId: string }) {
       <p className="mt-3 text-xs text-muted-foreground">
         <T k="ac.refCount" params={{ n: count ?? 0 }} />
       </p>
+      {me.pro_until && Date.parse(me.pro_until) > Date.now() && (
+        <p className="mt-1 text-xs font-semibold text-primary">
+          <T k="ac.refProUntil" params={{ date: new Date(me.pro_until).toISOString().slice(0, 10) }} />
+        </p>
+      )}
     </section>
   )
 }
