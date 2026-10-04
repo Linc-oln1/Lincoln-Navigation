@@ -9,7 +9,7 @@ import { ADMIN_ENABLED, createAdminClient } from "@/lib/supabase/admin"
 
 export const REWARD_DAYS = 7
 /** Most friends who can earn a referrer a reward. */
-export const MAX_REFERRER_REWARDS = 10
+export const MAX_REFERRER_REWARDS = 5
 
 type Admin = ReturnType<typeof createAdminClient>
 
@@ -28,9 +28,37 @@ async function grant(admin: Admin, userId: string, referredUser: string, role: "
   return true
 }
 
-async function confirmed(admin: Admin, userId: string) {
-  const { data } = await admin.auth.admin.getUserById(userId)
-  return Boolean(data.user?.email_confirmed_at)
+/**
+ * One mailbox, one key: lowercase, drop "+tag", and for Gmail ignore dots
+ * (and treat googlemail.com as gmail.com), so alias tricks map to one person.
+ */
+export function emailKey(email: string): string {
+  const [rawLocal, rawDomain = ""] = email.trim().toLowerCase().split("@")
+  const domain = rawDomain === "googlemail.com" ? "gmail.com" : rawDomain
+  let local = rawLocal.split("+")[0]
+  if (domain === "gmail.com") local = local.replace(/\./g, "")
+  return `${local}@${domain}`
+}
+
+/**
+ * Whether `friendId` may earn rewards: email confirmed, not the referrer's
+ * own mailbox, and that mailbox hasn't already earned a reward for anyone
+ * (claimed permanently, even if the account is later deleted).
+ */
+async function eligibleFriend(admin: Admin, friendId: string, referrerId: string) {
+  const [{ data: f }, { data: r }] = await Promise.all([
+    admin.auth.admin.getUserById(friendId),
+    admin.auth.admin.getUserById(referrerId),
+  ])
+  const email = f.user?.email
+  if (!f.user?.email_confirmed_at || !email) return false
+  const key = emailKey(email)
+  if (r.user?.email && emailKey(r.user.email) === key) return false
+
+  const { error } = await admin.from("referral_email_claims").insert({ email_key: key, user_id: friendId })
+  if (!error) return true
+  const { data: existing } = await admin.from("referral_email_claims").select("user_id").eq("email_key", key).maybeSingle()
+  return existing?.user_id === friendId
 }
 
 /**
@@ -46,7 +74,7 @@ export async function grantReferralRewards(user: { id: string; email_confirmed_a
     // As the friend: both sides are paid out the moment this user is confirmed.
     if (user.email_confirmed_at) {
       const { data: me } = await admin.from("profiles").select("referred_by").eq("id", user.id).maybeSingle()
-      if (me?.referred_by) {
+      if (me?.referred_by && (await eligibleFriend(admin, user.id, me.referred_by))) {
         await grant(admin, user.id, user.id, "friend")
         const { count } = await admin
           .from("referral_rewards")
@@ -66,7 +94,7 @@ export async function grantReferralRewards(user: { id: string; email_confirmed_a
     let slots = MAX_REFERRER_REWARDS - done.size
     for (const f of friends ?? []) {
       if (slots <= 0) break
-      if (done.has(f.id) || !(await confirmed(admin, f.id))) continue
+      if (done.has(f.id) || !(await eligibleFriend(admin, f.id, user.id))) continue
       if (await grant(admin, user.id, f.id, "referrer")) slots--
     }
   } catch (e) {
