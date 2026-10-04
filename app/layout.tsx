@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import { RegisterServiceWorker } from '@/components/pwa/register-service-worker'
 import { PlanRestorer } from '@/components/site/plan-restorer'
+import { ReferralClaimer } from '@/components/site/referral-claimer'
 import { NativeBridge } from '@/components/native/native-bridge'
 import { AdSenseScript } from '@/components/ads/adsense-script'
 import { Toaster } from '@/components/ui/toaster'
@@ -92,6 +93,7 @@ export default function RootLayout({
         <Toaster />
         <RegisterServiceWorker />
         <PlanRestorer />
+        <ReferralClaimer />
         <NativeBridge />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

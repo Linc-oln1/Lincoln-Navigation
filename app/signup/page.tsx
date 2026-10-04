@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Navigation } from "lucide-react"
 import { useSession } from "@/hooks/use-session"
 import { AUTH_ENABLED } from "@/lib/supabase/config"
@@ -25,6 +25,7 @@ import {
 import { useI18n } from "@/components/i18n/language-provider"
 import { fillNodes } from "@/components/i18n/rich-text"
 import { isNativeApp, startOAuth } from "@/lib/native"
+import { REFERRAL_STORAGE_KEY, cleanReferralCode } from "@/lib/referral"
 
 type Busy = null | "google" | "apple" | "email"
 
@@ -50,6 +51,8 @@ function SignupContent() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const refParam = useSearchParams().get("ref")
+  const [refCode, setRefCode] = useState(cleanReferralCode(refParam) ?? "")
   const [busy, setBusy] = useState<Busy>(null)
   const [sent, setSent] = useState(false)
   const [error, setError] = useState<AuthMsg | null>(null)
@@ -68,7 +71,7 @@ function SignupContent() {
       email,
       password,
       options: {
-        data: { full_name: name.trim() },
+        data: { full_name: name.trim(), referral_code: cleanReferralCode(refCode) ?? undefined },
         emailRedirectTo: callbackUrl(next),
       },
     })
@@ -85,6 +88,11 @@ function SignupContent() {
   async function signInWithProvider(provider: "google" | "apple") {
     setBusy(provider)
     setError(null)
+    // Google can't carry the code through sign-up; <ReferralClaimer/> sends it afterwards.
+    try {
+      const code = cleanReferralCode(refCode)
+      if (code) localStorage.setItem(REFERRAL_STORAGE_KEY, code)
+    } catch {}
     const { error } = await startOAuth(provider, callbackUrl(next), next)
     if (error) {
       setError({ raw: error.message })
@@ -149,6 +157,13 @@ function SignupContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("au.pwNewPh")}
+            />
+            <Field
+              label={t("au.refCode")}
+              autoComplete="off"
+              value={refCode}
+              onChange={(e) => setRefCode(e.target.value.toUpperCase())}
+              placeholder={t("au.refCodePh")}
             />
             {error && <Notice tone="error">{msg(error)}</Notice>}
             <SubmitButton busy={busy === "email"}>{t("au.createAccount")}</SubmitButton>

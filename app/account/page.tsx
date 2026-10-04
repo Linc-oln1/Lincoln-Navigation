@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site/site-footer"
 import { AccountPlanRow } from "@/components/site/account-plan"
 import { AccountSignInMethods } from "@/components/site/account-sign-in-methods"
 import { AccountPaymentHistory } from "@/components/site/account-payment-history"
+import { AccountReferral } from "@/components/site/account-referral"
 import { AccountDelete } from "@/components/site/account-delete"
 import { T } from "@/components/i18n/rich-text"
 
@@ -39,6 +40,8 @@ export default async function AccountPage() {
       </dl>
 
       <AccountPaymentHistory />
+
+      <AccountReferral userId={user.id} />
 
       <form action="/auth/signout" method="post" className="mt-6">
         <button
