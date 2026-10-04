@@ -2,7 +2,7 @@
  * Intercity route guides for the /routes/[id] pages. English only (the
  * pages are written for search), kept to well-established facts about
  * each road. Road distances come from OSRM's driving route between the
- * two city centres (checked 2026-10-02); travel times are typical door-
+ * two city centres (checked 2026-10-02 to 2026-10-04); travel times are typical door-
  * to-door ranges with normal traffic, not free-flow estimates. Fares
  * change often, so the guides never quote them.
  */
@@ -376,6 +376,110 @@ export const ROUTE_GUIDES: RouteGuide[] = [
       "If you are going on to Elmina, it is only about 15 km west of Cape Coast.",
     ],
     places: ["cape-coast", "elmina", "kakum"],
+  },
+  {
+    id: "kumasi-to-takoradi",
+    from: { name: "Kumasi", lat: 6.696, lng: -1.623 },
+    to: { name: "Takoradi", lat: 4.898, lng: -1.76 },
+    roadKm: 291,
+    driveTime: "5–6½ hours",
+    mainRoad: "N8 to Yamoransa, then N1",
+    via: ["Bekwai", "Fomena", "New Edubiase", "Assin Fosu", "Yamoransa", "Cape Coast", "Komenda Junction"],
+    summary:
+      "About 290 km from Kumasi to Sekondi-Takoradi — the N8 south to the coast near Cape Coast, then the N1 west. Usually 5 to 6½ hours.",
+    driving: [
+      "The first part is the Kumasi–Cape Coast trip: the N8 south past Bekwai, through Fomena and New Edubiase, across the Pra River into the Central Region and on through Assin Fosu to Yamoransa.",
+      "At Yamoransa the road meets the coastal N1. From there you turn west, pass Cape Coast and the turn-offs for Elmina and Komenda, and cross into the Western Region shortly before Sekondi-Takoradi.",
+      "There is also an inland way through Obuasi, Dunkwa-on-Offin and Tarkwa. It is no shorter and has more slow stretches, so most drivers heading straight for Takoradi stay on the N8 and the coast road.",
+    ],
+    publicTransport: [
+      "Intercity coaches and minibuses run directly between Kumasi and Takoradi during the day.",
+      "You can also travel in two legs, changing at Cape Coast, which is handy if you want to stop at the castles on the way.",
+    ],
+    tips: [
+      "Assin Fosu is the usual stop for fuel, food and toilets on the N8.",
+      "Cape Coast and Elmina are right on the route — a good break about two-thirds of the way.",
+      "Traffic builds up approaching Takoradi in the evening, so aim to arrive before dark.",
+    ],
+    places: ["cape-coast", "elmina", "nzulezo"],
+  },
+  {
+    id: "accra-to-hohoe",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Hohoe", lat: 7.1518, lng: 0.4736 },
+    roadKm: 223,
+    driveTime: "4–5 hours",
+    mainRoad: "Tema Motorway, then N2",
+    via: ["Tema", "Afienya", "Kpong", "Atimpoku", "Juapong", "Asikuma", "Peki", "Kpeve", "Have", "Logba Alakpeti"],
+    summary:
+      "About 225 km from Accra to Hohoe in the Volta Region — the motorway towards Tema, then the N2 north across the Adomi Bridge. Usually 4 to 5 hours.",
+    driving: [
+      "The route takes the Accra–Tema Motorway east, then the N2 north past Afienya and Kpong to Atimpoku, where the Adomi Bridge crosses the Volta River.",
+      "Across the bridge the road passes Juapong and Asikuma, then climbs gently through the hill towns of the Volta Region — Peki, Kpeve, Have and Logba Alakpeti — before reaching Hohoe.",
+      "The motorway and Tema are the main delay. North of the bridge the road is single lane each way with bends and villages, so the second half is slower than the distance suggests.",
+    ],
+    publicTransport: [
+      "Minibuses and trotros for Hohoe leave from Accra's lorry stations for the Volta Region, and leave when full.",
+      "From Hohoe, shared taxis and trotros run to the nearby villages, including Wli for the waterfall.",
+    ],
+    tips: [
+      "Leave Accra early to clear the motorway and Tema before the morning rush.",
+      "Atimpoku, by the Adomi Bridge, is a good halfway stop and is known for its roadside fried fish and shrimp.",
+      "Hohoe is the base for Wli Waterfalls, about 20 km to the east near the Togo border.",
+    ],
+    places: ["wli", "akosombo"],
+  },
+  {
+    id: "tamale-to-mole-national-park",
+    from: { name: "Tamale", lat: 9.4034, lng: -0.8424 },
+    to: { name: "Mole National Park", lat: 9.2607, lng: -1.8553 },
+    roadKm: 146,
+    driveTime: "2½–3 hours",
+    mainRoad: "N10 to Fufulso, then N7",
+    via: ["Yapei", "Fufulso Junction", "Busunu", "Damongo", "Larabanga"],
+    summary:
+      "About 145 km from Tamale to Mole National Park — the N10 south to Fufulso, then the N7 west through Damongo and Larabanga. Usually 2½ to 3 hours.",
+    driving: [
+      "Leave Tamale on the N10 towards Kumasi. The road crosses the White Volta at Yapei and reaches Fufulso Junction after about an hour, where you turn west onto the N7.",
+      "The N7 runs through Busunu to Damongo, the Savannah Region capital and the last sizeable town before the park. Larabanga is a short drive further on; the park road turns off there and reaches the entrance gate a few kilometres later.",
+      "The road is tarred as far as Larabanga and traffic is light, but watch for animals, motorbikes and unmarked speed bumps in the villages.",
+    ],
+    publicTransport: [
+      "Buses and minibuses from Tamale to Damongo and Wa pass through Larabanga. There is little scheduled transport into the park itself.",
+      "From Larabanga or Damongo, most visitors take a taxi or motorbike for the last stretch to the park, or arrange a pick-up with their lodge.",
+    ],
+    tips: [
+      "Fill up in Tamale or Damongo — there is no fuel inside the park.",
+      "Aim to arrive the afternoon before: the walking and driving safaris with rangers set out early in the morning and again in the late afternoon.",
+      "Stop at the old mud-and-stick mosque in Larabanga, right by the park turn-off.",
+    ],
+    places: ["mole", "larabanga"],
+  },
+  {
+    id: "tamale-to-wa",
+    from: { name: "Tamale", lat: 9.4034, lng: -0.8424 },
+    to: { name: "Wa", lat: 10.0601, lng: -2.5099 },
+    roadKm: 303,
+    driveTime: "5–6 hours",
+    mainRoad: "N10 to Fufulso, N7 to Sawla, then N12",
+    via: ["Yapei", "Fufulso Junction", "Damongo", "Larabanga", "Sawla"],
+    summary:
+      "About 300 km from Tamale to Wa, the Upper West capital — the N10 to Fufulso, the N7 west past Mole to Sawla, then the N12 north. Usually 5 to 6 hours.",
+    driving: [
+      "The first half is the road to Mole National Park: the N10 south from Tamale across the White Volta at Yapei to Fufulso Junction, then the N7 west through Damongo and Larabanga.",
+      "Past Larabanga the N7 carries on across open savanna to Sawla, where it meets the N12. Turn north there for the last 95 km or so into Wa.",
+      "Towns are far apart on this route and there is little traffic. Carry water, keep the tank topped up and avoid driving the long empty stretches after dark.",
+    ],
+    publicTransport: [
+      "Buses and minibuses run between Tamale and Wa during the day, most of them leaving in the morning.",
+      "Travellers heading for Mole can take the same transport and get off at Larabanga.",
+    ],
+    tips: [
+      "Fill up in Tamale or Damongo; Sawla is the next reliable stop before Wa.",
+      "Leave in the morning so the whole trip is in daylight.",
+      "Mole National Park and the Larabanga mosque are right on the way if you want to break the journey.",
+    ],
+    places: ["mole", "larabanga"],
   },
 ]
 
