@@ -22,6 +22,15 @@ Cape Coast from Accra is about 163 km, 3–4 hours. Kasoa is where it usually sl
 
 Anyone here done it recently? What time do you leave to beat the Kasoa traffic?
 
+**WhatsApp version:**
+
+Hey all 👋 Heading to Cape Coast from Accra? It's about 163 km, 3–4 hours. Kasoa is where it usually slows down, so leave early if you can.
+
+I put together a guide with the stops, how to go by bus, and what's worth seeing when you arrive:
+https://www.lincolnnavigation.com/routes/accra-to-cape-coast?utm_source=whatsapp
+
+Free, no sign-up. If you've done the trip recently, what time do you leave to beat the Kasoa traffic?
+
 ## Day 3: Kumasi to Tamale
 /routes/kumasi-to-tamale
 
