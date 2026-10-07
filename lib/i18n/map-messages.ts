@@ -15,6 +15,8 @@ export const MAP_EN = {
   "places.none": "No places found in this area",
   "places.noneCategory": "No places found in this area for this category.",
   "places.sponsored": "Sponsored",
+  "places.scrollUp": "Scroll up",
+  "places.scrollDown": "Scroll down",
   "cat.restaurant": "Restaurants",
   "cat.cafe": "Cafes",
   "cat.shop": "Shopping",

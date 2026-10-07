@@ -39,6 +39,7 @@ import {
 } from "lucide-react"
 import { BookLinks } from "@/components/map/book-links"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { GlassScrollButtons } from "@/components/ui/glass-scroll-buttons"
 import { cn } from "@/lib/utils"
 import { searchNearbyPlaces, type Place } from "@/lib/geocoding"
 import { usePremium } from "@/hooks/use-premium"
@@ -129,6 +130,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const scrollWrapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Cancel any in-flight lookup when the panel closes or the
@@ -240,7 +242,8 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <div ref={scrollWrapRef} className="relative min-h-0 flex-1">
+      <ScrollArea className="h-full">
         {/* contain: inline-size stops Radix's Viewport (which sizes
             itself like a table cell, shrink-to-fit) from stretching
             to match a result's un-wrapped `truncate` text — without
@@ -582,6 +585,8 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
           <AdSlot name="placesFooter" className="mt-6" />
         </div>
       </ScrollArea>
+      <GlassScrollButtons containerRef={scrollWrapRef} upLabel={t("places.scrollUp")} downLabel={t("places.scrollDown")} />
+      </div>
     </div>
   )
 }
