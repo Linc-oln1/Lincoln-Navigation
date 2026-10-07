@@ -4,6 +4,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { FOOTER_GROUPS } from "@/lib/site-nav"
 import { useI18n } from "@/components/i18n/language-provider"
+import { FOUNDER } from "@/lib/founder"
 import { SITE_THEME, type SiteVariant } from "@/components/site/site-theme"
 
 /** Shared footer: every public page, grouped by purpose. */
@@ -43,7 +44,12 @@ export function SiteFooter({ variant = "app" }: { variant?: SiteVariant }) {
             t.muted,
           )}
         >
-          <span>© {new Date().getFullYear()} LincolnNavigation.com</span>
+          <span>
+            © {new Date().getFullYear()} LincolnNavigation.com · {FOUNDER.title}:{" "}
+            <Link href={FOUNDER.path} className="underline-offset-2 hover:underline">
+              {FOUNDER.name}
+            </Link>
+          </span>
           <span>{tr("footer.tagline")}</span>
         </div>
       </div>

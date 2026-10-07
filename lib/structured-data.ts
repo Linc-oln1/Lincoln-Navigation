@@ -24,6 +24,7 @@ export const ORGANIZATION = {
   foundingDate: FOUNDING_YEAR,
   foundingLocation: { "@type": "Place", name: FOUNDING_PLACE },
   founder: { "@id": FOUNDER_ID },
+  employee: { "@id": FOUNDER_ID },
   areaServed: { "@type": "Country", name: "Ghana" },
 }
 
