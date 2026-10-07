@@ -232,6 +232,16 @@ function MapNavigator() {
      map's weather widget and hazard markers for that area.
   ======================================================= */
 
+  // /app?panel=places opens the Explore Nearby panel (used by the landing
+  // page's globe). A link with a place or route in it takes priority.
+  useEffect(() => {
+    const panel = searchParams.get("panel")
+    const hasPlace = searchParams.get("to") || searchParams.get("lat")
+    if (panel === "places" && !hasPlace) setActivePanel("places")
+    // One-time handoff from the URL, like the effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   useEffect(() => {
     const toQuery = searchParams.get("to")?.trim()
     const lat = Number.parseFloat(searchParams.get("lat") ?? "")

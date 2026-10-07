@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Menu, X } from "lucide-react"
+import { Compass, Menu, X } from "lucide-react"
 import { InstallAppButton } from "@/components/pwa/install-app-button"
 import { useI18n } from "@/components/i18n/language-provider"
 import { LanguageSwitcher } from "@/components/i18n/language-switcher"
@@ -300,13 +300,24 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
           <p className="text-xs sm:text-sm text-white/80 leading-relaxed">
             {t("home.tagRight")}
           </p>
-          <button
-            type="button"
-            onClick={onEnter}
-            className="bg-[#e8702a] hover:bg-[#d2611f] text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-[#e8702a]/30"
-          >
-            {t("home.startExploring")}
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={onEnter}
+              className="bg-[#e8702a] hover:bg-[#d2611f] text-white text-sm font-medium px-7 py-3 rounded-full transition-all hover:scale-[1.03] active:scale-95 hover:shadow-lg hover:shadow-[#e8702a]/30"
+            >
+              {t("home.startExploring")}
+            </button>
+            {/* Opens the live map with the Explore Nearby panel already open. */}
+            <button
+              type="button"
+              onClick={() => router.push("/app?panel=places")}
+              className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-5 py-3 text-sm font-medium text-white backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_8px_24px_rgba(0,0,0,0.35)] transition-all hover:bg-white/20 active:scale-95"
+            >
+              <Compass className="h-4 w-4" />
+              {t("places.title")}
+            </button>
+          </div>
         </div>
       </section>
     </div>
