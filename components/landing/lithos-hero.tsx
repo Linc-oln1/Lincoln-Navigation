@@ -52,6 +52,15 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  // The 2.5 MB hero video only loads on wide screens (and not on Data Saver):
+  // phones get the still frame, which is most of the homepage's weight saved.
+  const [loadVideo, setLoadVideo] = useState(false)
+  const [videoReady, setVideoReady] = useState(false)
+  useEffect(() => {
+    const wide = window.matchMedia("(min-width: 768px)").matches
+    const saveData = Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
+    if (wide && !saveData) setLoadVideo(true)
+  }, [])
 
   const goToApp = () => router.push("/app")
   const scrollToId = (id: string) =>
@@ -115,15 +124,23 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
         className="relative w-full overflow-hidden h-screen bg-black"
         style={{ height: "100dvh" }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/landing/hero-poster.jpg"
+          alt=""
+          fetchPriority="high"
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        />
         <video
           ref={videoRef}
-          className="absolute inset-0 w-full h-full object-cover z-0"
-          src="/landing/video/hero-bg.mp4"
+          className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
+          src={loadVideo ? "/landing/video/hero-bg.mp4" : undefined}
           autoPlay
           loop
           muted
           playsInline
           preload="auto"
+          onLoadedData={() => setVideoReady(true)}
         />
 
         {/* Softens the hard cut into the features section below —
