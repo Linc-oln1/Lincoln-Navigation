@@ -20,6 +20,7 @@ import { LithosHero } from "@/components/landing/lithos-hero"
 import { LithosFeatures } from "@/components/landing/lithos-features"
 import { LithosStats } from "@/components/landing/lithos-stats"
 import { ProductShowcase } from "@/components/landing/product-showcase"
+import { PopularRoutes } from "@/components/landing/popular-routes"
 import { AdSlot } from "@/components/ads/ad-slot"
 import { useI18n } from "@/components/i18n/language-provider"
 import type { MessageKey } from "@/lib/i18n/messages"
@@ -456,6 +457,7 @@ export function LandingPage() {
       )}
 
       {phase === "destination" && <ProductShowcase />}
+      <PopularRoutes />
       <SiteFooter />
     </main>
   )
