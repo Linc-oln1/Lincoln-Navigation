@@ -15,6 +15,7 @@
 
 import { usePathname } from "next/navigation"
 import { ADS_ENABLED, ADSENSE_CLIENT } from "@/lib/monetization"
+import { isIosStoreApp } from "@/lib/store-app"
 
 const ADSENSE_SRC = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`
 
@@ -29,7 +30,7 @@ export function AdSenseScript() {
 
 /** Adds the AdSense loader to the page if no earlier render did. */
 export function ensureAdSenseScript() {
-  if (!ADS_ENABLED || document.querySelector('script[src*="adsbygoogle.js"]')) return
+  if (!ADS_ENABLED || isIosStoreApp() || document.querySelector('script[src*="adsbygoogle.js"]')) return
   const s = document.createElement("script")
   s.async = true
   s.src = ADSENSE_SRC

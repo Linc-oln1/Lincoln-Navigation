@@ -1869,3 +1869,8 @@ html[data-store-app] a[href^="/advertise"],
 html[data-store-app] [data-store-hide] {
     display: none !important;
 }
+
+/* Google ads are never shown in the iPhone app (App Tracking Transparency). */
+html[data-store-app="ios"] [data-ios-hide] {
+  display: none !important;
+}

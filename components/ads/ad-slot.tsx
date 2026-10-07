@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react"
 import { AD_SLOTS, ADS_ENABLED, ADSENSE_CLIENT, type AdSlotName } from "@/lib/monetization"
 import { usePremium } from "@/hooks/use-premium"
 import { ensureAdSenseScript } from "@/components/ads/adsense-script"
+import { isIosStoreApp } from "@/lib/store-app"
 import { cn } from "@/lib/utils"
 
 declare global {
@@ -35,7 +36,7 @@ export function AdSlot({ name, className, label = "Advertisement" }: AdSlotProps
   const pushed = useRef(false)
 
   useEffect(() => {
-    if (!ADS_ENABLED || !slotId || isPremium || pushed.current) return
+    if (!ADS_ENABLED || !slotId || isPremium || pushed.current || isIosStoreApp()) return
     ensureAdSenseScript()
     try {
       ;(window.adsbygoogle = window.adsbygoogle || []).push({})
@@ -66,7 +67,7 @@ export function AdSlot({ name, className, label = "Advertisement" }: AdSlotProps
   }
 
   return (
-    <div className={cn("mx-auto w-full max-w-[728px] text-center", className)}>
+    <div data-ios-hide className={cn("mx-auto w-full max-w-[728px] text-center", className)}>
       <p className="mb-1 text-[10px] uppercase tracking-wider text-muted-foreground/70">
         {label}
       </p>

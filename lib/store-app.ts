@@ -43,3 +43,12 @@ export function storePlatformOf(req: Request): StorePlatform | null {
  * so purchase links never flash. Mirrors storePlatformOf on the client.
  */
 export const STORE_APP_HEAD_SCRIPT = `try{var m=document.cookie.match(/(?:^|; )${STORE_APP_COOKIE}=(android|ios)/);var p=m?m[1]:(navigator.userAgent.indexOf("${STORE_APP_UA_TOKEN}")>-1?"ios":null);if(p)document.documentElement.setAttribute("data-store-app",p)}catch(e){}`
+
+/**
+ * Client only: true inside the iPhone app. Apple's App Tracking Transparency
+ * rules make Google ads a problem there, so no ads are shown or loaded in it
+ * (see components/ads). Reads the attribute STORE_APP_HEAD_SCRIPT sets.
+ */
+export function isIosStoreApp(): boolean {
+  return typeof document !== "undefined" && document.documentElement.getAttribute("data-store-app") === "ios"
+}
