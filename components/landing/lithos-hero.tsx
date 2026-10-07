@@ -52,14 +52,26 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  // The 2.5 MB hero video only loads on wide screens (and not on Data Saver):
-  // phones get the still frame, which is most of the homepage's weight saved.
-  const [loadVideo, setLoadVideo] = useState(false)
+  // The globe video starts after the page has appeared, so it never delays
+  // the first paint. Wide screens get the full 2.5 MB file; phones get a
+  // 0.7 MB version. Data Saver and "reduce motion" keep the still frame.
+  const [videoSrc, setVideoSrc] = useState<string | null>(null)
   const [videoReady, setVideoReady] = useState(false)
   useEffect(() => {
-    const wide = window.matchMedia("(min-width: 768px)").matches
     const saveData = Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
-    if (wide && !saveData) setLoadVideo(true)
+    if (saveData || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const wide = window.matchMedia("(min-width: 768px)").matches
+    const src = wide ? "/landing/video/hero-bg.mp4" : "/landing/video/hero-bg-mobile.mp4"
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const start = () => {
+      timer = setTimeout(() => setVideoSrc(src), wide ? 0 : 400)
+    }
+    if (document.readyState === "complete") start()
+    else window.addEventListener("load", start, { once: true })
+    return () => {
+      window.removeEventListener("load", start)
+      if (timer) clearTimeout(timer)
+    }
   }, [])
 
   const goToApp = () => router.push("/app")
@@ -134,7 +146,7 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
         <video
           ref={videoRef}
           className={`absolute inset-0 w-full h-full object-cover z-0 transition-opacity duration-700 ${videoReady ? "opacity-100" : "opacity-0"}`}
-          src={loadVideo ? "/landing/video/hero-bg.mp4" : undefined}
+          src={videoSrc ?? undefined}
           autoPlay
           loop
           muted
