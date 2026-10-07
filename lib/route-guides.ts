@@ -533,6 +533,110 @@ export const ROUTE_GUIDES: RouteGuide[] = [
     ],
     places: [],
   },
+  {
+    id: "accra-to-sunyani",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Sunyani", lat: 7.3349, lng: -2.3123 },
+    roadKm: 370,
+    driveTime: "6½–8½ hours",
+    mainRoad: "N6 through Kumasi",
+    via: ["Nsawam", "Suhum", "Nkawkaw", "Konongo", "Ejisu", "Kumasi", "Abuakwa", "Bechem"],
+    summary:
+      "About 370 km from Accra to Sunyani, the Bono Region capital: the N6 to Kumasi and then the N6 on to Sunyani — usually 6½ to 8½ hours.",
+    driving: [
+      "There is no direct road: you drive to Kumasi and carry on. The first part is the Accra–Kumasi Highway (N6) through Nsawam, Suhum, Nkawkaw and Konongo to Ejisu on the edge of Kumasi, about 250 km.",
+      "From Kumasi the N6 continues north-west to Sunyani, about 120 km, through Abuakwa and Bechem.",
+      "Most of the delay is at the ends and in Kumasi: leaving Accra past Ofankor and Nsawam, and getting through Kumasi's western side at rush hour. Plan a stop in Kumasi or Nkawkaw to break up a long day.",
+    ],
+    publicTransport: [
+      "Intercity coaches and buses run between Accra and Sunyani, and many go through Kumasi. Ask at the lorry stations in central Accra which ones leave direct.",
+      "If there is no direct vehicle, travel in two legs: coaches and trotros run from Accra to Kumasi all day, and from Kumasi there are regular buses on to Sunyani.",
+    ],
+    tips: [
+      "Leave Accra before 6 a.m. to miss the worst of the Ofankor–Nsawam traffic.",
+      "Nkawkaw is the usual halfway stop on the Accra–Kumasi stretch, and Bechem is a convenient stop before Sunyani.",
+      "Try not to reach Kumasi's western exit at rush hour.",
+    ],
+    places: [],
+  },
+  {
+    id: "kumasi-to-techiman",
+    from: { name: "Kumasi", lat: 6.696, lng: -1.623 },
+    to: { name: "Techiman", lat: 7.5833, lng: -1.9333 },
+    roadKm: 119,
+    driveTime: "2–2½ hours",
+    mainRoad: "N10 (Kumasi–Tamale road)",
+    via: ["Offinso"],
+    summary:
+      "About 120 km north on the N10 from Kumasi to Techiman, the big market town of the Bono East Region — usually 2 to 2½ hours.",
+    driving: [
+      "The whole trip is on the N10, the road to Tamale. It leaves Kumasi northwards through Offinso and runs to Techiman, where the forest thins out and the land starts to open into savanna.",
+      "Techiman is a major market town and a junction: the road you are on carries on north to Kintampo and Tamale, and other roads branch off to the west.",
+      "Expect slow trucks, especially on the way out of Kumasi and on the single-lane stretches. Watch for animals and cyclists on the shoulder near villages.",
+    ],
+    publicTransport: [
+      "Minibuses and shared vehicles run between Kumasi and Techiman throughout the day, and the coaches that go on to Tamale also pass through.",
+      "Techiman is the usual place to change if you are heading further north or west.",
+    ],
+    tips: [
+      "Leave Kumasi early to clear the northern exit before the morning traffic.",
+      "Fill up in Techiman; fuel stations are further apart north of it.",
+      "Avoid driving the northern roads after dark if you can.",
+    ],
+    places: [],
+  },
+  {
+    id: "kumasi-to-obuasi",
+    from: { name: "Kumasi", lat: 6.696, lng: -1.623 },
+    to: { name: "Obuasi", lat: 6.2025, lng: -1.66 },
+    roadKm: 64,
+    driveTime: "1½–2 hours",
+    mainRoad: "N8 south",
+    via: ["Bekwai"],
+    summary:
+      "About 65 km south from Kumasi to Obuasi, the Ashanti gold-mining town, through Bekwai — usually 1½ to 2 hours.",
+    driving: [
+      "The road leaves Kumasi southwards, the same road that carries on to Cape Coast, and runs through Bekwai to Obuasi in the Adansi area.",
+      "It is a short trip, but a busy one: the stretch out of Kumasi can be slow at rush hour and there are many trucks on the way.",
+      "If you are going further, the road continues south from Obuasi through Fomena and Assin Fosu towards Cape Coast.",
+    ],
+    publicTransport: [
+      "Buses, minibuses and shared vehicles run between Kumasi and Obuasi throughout the day.",
+      "Vehicles for Obuasi leave when full, so the wait varies.",
+    ],
+    tips: [
+      "Leave Kumasi outside rush hour if you can; it is the part that costs the most time.",
+      "Check the live map before you leave, since a slow stretch near Kumasi can add time.",
+      "For Cape Coast and the coast, see the Kumasi to Cape Coast guide.",
+    ],
+    places: [],
+  },
+  {
+    id: "accra-to-winneba",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Winneba", lat: 5.3511, lng: -0.6231 },
+    roadKm: 63,
+    driveTime: "1½–2½ hours",
+    mainRoad: "N1 (Accra–Cape Coast road)",
+    via: ["Kasoa", "Winneba Junction"],
+    summary:
+      "About 65 km west from Accra to Winneba on the N1, passing Kasoa and turning off at Winneba Junction — usually 1½ to 2½ hours.",
+    driving: [
+      "Leave Accra westwards on the N1. After about 30 km you reach Kasoa, on the Central Region border, which is the main bottleneck of the trip: at rush hour it can take longer to get through than to drive the rest.",
+      "Past Kasoa the road runs on to Winneba Junction, where you turn off for the town of Winneba on the coast.",
+      "The last stretch is quieter. Most of the time you lose is in Accra and at Kasoa, so the hour you leave matters more than the distance.",
+    ],
+    publicTransport: [
+      "Buses, minibuses and trotros for Winneba leave from Accra's Kaneshie station and run through the day, and many Cape Coast vehicles pass the junction.",
+      "From Winneba Junction, local transport runs the short distance into town.",
+    ],
+    tips: [
+      "Time your trip to avoid Kasoa at rush hour: early morning or mid-morning is usually best leaving Accra.",
+      "If you are going on to Cape Coast, stay on the N1 past the junction.",
+      "Check the live map for Kasoa before you set off.",
+    ],
+    places: [],
+  },
 ]
 
 export const findRoute = (id: string) => ROUTE_GUIDES.find((r) => r.id === id)
