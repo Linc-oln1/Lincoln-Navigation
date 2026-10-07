@@ -14,6 +14,8 @@ export async function DELETE(_req: Request, context: { params: Promise<{ id: str
   if (!store) return NextResponse.json({ error: "No hazard store is configured." }, { status: 501 })
 
   const { id } = await context.params
+  // Crowd hazard ids are UUIDs; anything else never reaches the store.
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return NextResponse.json({ error: "Not found" }, { status: 404 })
   const hazard = await store.get(id)
   // Only user-submitted reports can be removed; seed zones and forecast
   // flood zones are not stored here.

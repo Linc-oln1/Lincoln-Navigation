@@ -4,7 +4,7 @@ import { getSessionUser } from "@/lib/supabase/server"
 import { currentSubscription, findEntitlement, RENEWING } from "@/lib/plan-store"
 import { grantReferralRewards, referralProUntil } from "@/lib/referral-rewards"
 import { clientIp } from "@/lib/hazard-identity"
-import { bump, peek } from "@/lib/rate-limit"
+import { bump, overLimit, peek } from "@/lib/rate-limit"
 
 /* Restore a paid plan on this device (signed-in users only). Also how a
    monthly renewal reaches the browser: PlanRestorer calls this as the
@@ -32,7 +32,8 @@ export async function POST(req: Request) {
   }
 
   // Free Pro days from referrals (paid plans take precedence while they last).
-  await grantReferralRewards(user)
+  // The reward check makes several admin calls, so cap how often one account can run it.
+  if (!(await overLimit(`restore:referral:${user.id}`, 12, 60))) await grantReferralRewards(user)
   const purchase = await findEntitlement(user, reference)
   const paidEnd = purchase ? Math.floor(Date.parse(purchase.expires_at) / 1000) : 0
   const bonusEnd = await referralProUntil(user.id)

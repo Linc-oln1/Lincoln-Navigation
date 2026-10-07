@@ -87,7 +87,7 @@ export async function grantReferralRewards(user: { id: string; email_confirmed_a
 
     // As the referrer: friends who confirmed before the referrer came back.
     const [{ data: friends }, { data: paid }] = await Promise.all([
-      admin.from("profiles").select("id").eq("referred_by", user.id),
+      admin.from("profiles").select("id").eq("referred_by", user.id).order("referred_at", { ascending: true }).limit(50),
       admin.from("referral_rewards").select("referred_user").eq("user_id", user.id).eq("role", "referrer"),
     ])
     const done = new Set((paid ?? []).map((r) => r.referred_user))
