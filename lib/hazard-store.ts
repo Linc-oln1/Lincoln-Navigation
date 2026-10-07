@@ -66,6 +66,10 @@ export interface HazardStore {
   reportNote(id: string, reporterHash: string): Promise<NoteReportResult | null>
   /** Reports created by this reporter within the last `windowMs`. */
   countRecentByReporter(reporterHash: string, windowMs: number): Promise<number>
+  /** Every live crowd report, newest first (admin moderation list). */
+  listAll(): Promise<Hazard[]>
+  /** Takes a hazard off the map for good (admin). False when it was already gone. */
+  remove(id: string): Promise<boolean>
 }
 
 /* =========================================================
@@ -150,6 +154,10 @@ function applyNoteReport(hazard: Hazard): { hazard: Hazard; removedNote?: string
   return { hazard: next }
 }
 
+function newestFirst(list: Hazard[]): Hazard[] {
+  return list.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
+}
+
 function ttlSeconds(h: Hazard): number {
   if (!h.expiresAt) return 0
   return Math.max(1, Math.round((new Date(h.expiresAt).getTime() - Date.now()) / 1000))
@@ -229,6 +237,22 @@ class MemoryHazardStore implements HazardStore {
     const { hazard, removedNote } = applyNoteReport(current)
     this.hazards.set(id, hazard)
     return { hazard, counted: true, removedNote }
+  }
+
+  async listAll(): Promise<Hazard[]> {
+    for (const [id, h] of this.hazards) {
+      if (isExpired(h)) {
+        this.hazards.delete(id)
+        this.votes.delete(id)
+      }
+    }
+    return newestFirst([...this.hazards.values()].filter((h) => h.status === "active"))
+  }
+
+  async remove(id: string): Promise<boolean> {
+    this.votes.delete(id)
+    this.noteReports.delete(id)
+    return this.hazards.delete(id)
   }
 
   async countRecentByReporter(
@@ -355,6 +379,23 @@ class RedisHazardStore implements HazardStore {
     const { hazard, removedNote } = applyNoteReport(current)
     await this.redis.set(KEY.hazard(id), hazard, { keepTtl: true })
     return { hazard, counted: true, removedNote }
+  }
+
+  async listAll(): Promise<Hazard[]> {
+    const ids = await this.redis.smembers(KEY.activeSet)
+    if (ids.length === 0) return []
+    const raw = await this.redis.mget<(Hazard | null)[]>(...ids.map((id) => KEY.hazard(id)))
+    return newestFirst(raw.filter((h): h is Hazard => Boolean(h) && !isExpired(h!) && h!.status === "active"))
+  }
+
+  async remove(id: string): Promise<boolean> {
+    const [deleted] = await Promise.all([
+      this.redis.del(KEY.hazard(id)),
+      this.redis.srem(KEY.activeSet, id),
+      this.redis.del(KEY.votes(id)),
+      this.redis.del(KEY.noteReports(id)),
+    ])
+    return deleted > 0
   }
 
   async countRecentByReporter(
