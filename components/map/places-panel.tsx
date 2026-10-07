@@ -43,7 +43,7 @@ import { cn } from "@/lib/utils"
 import { searchNearbyPlaces, type Place } from "@/lib/geocoding"
 import { usePremium } from "@/hooks/use-premium"
 import { openStatus } from "@/lib/opening-hours"
-import { getSponsoredPlaces, trackSponsor, type SponsoredPlace } from "@/lib/sponsored-places"
+import { getSponsoredPlaces, loadLiveSponsors, trackSponsor, trackSponsorViewOnce, type SponsoredPlace } from "@/lib/sponsored-places"
 import { AdSlot } from "@/components/ads/ad-slot"
 import { HOUSE_PROMO, HOUSE_PROMO_ENABLED } from "@/lib/monetization"
 
@@ -117,18 +117,6 @@ function formatMeters(m: number) {
 function webHref(url: string) {
   return /^https?:\/\//i.test(url) ? url : `https://${url}`
 }
-
-// Live sponsors, fetched once per page load and shared by every render.
-let sponsorsRequest: Promise<SponsoredPlace[]> | null = null
-function loadSponsors(): Promise<SponsoredPlace[]> {
-  sponsorsRequest ??= fetch("/api/sponsored")
-    .then((r) => (r.ok ? r.json() : { sponsors: [] }))
-    .then((d: { sponsors?: SponsoredPlace[] }) => d.sponsors ?? [])
-    .catch(() => [])
-  return sponsorsRequest
-}
-// One view per sponsor per page load, however often the list re-renders.
-const sponsorsSeen = new Set<string>()
 
 export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: PlacesPanelProps) {
   const { t } = useI18n()
@@ -204,7 +192,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
   // lib/sponsored-places.ts).
   const [liveSponsors, setLiveSponsors] = useState<SponsoredPlace[]>([])
   useEffect(() => {
-    if (isOpen) loadSponsors().then(setLiveSponsors)
+    if (isOpen) loadLiveSponsors().then(setLiveSponsors)
   }, [isOpen])
   const sponsored = selectedCategory
     ? getSponsoredPlaces(liveSponsors, selectedCategory, mapCenter)
@@ -213,9 +201,7 @@ export function PlacesPanel({ isOpen, onClose, onSelectPlace, mapCenter }: Place
   useEffect(() => {
     if (isLoading || !sponsoredIds) return
     for (const id of sponsoredIds.split(",")) {
-      if (sponsorsSeen.has(id)) continue
-      sponsorsSeen.add(id)
-      trackSponsor(id, "impression")
+      trackSponsorViewOnce(id)
     }
   }, [sponsoredIds, isLoading])
 

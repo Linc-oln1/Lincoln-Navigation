@@ -7,6 +7,7 @@ import { Header } from "@/components/map/header"
 import { SearchPanel } from "@/components/map/search-panel"
 import { DirectionsPanel, type TravelMode } from "@/components/map/directions-panel"
 import { PlacesPanel } from "@/components/map/places-panel"
+import { SponsorCard } from "@/components/map/sponsor-card"
 import { SavedPlacesPanel } from "@/components/map/saved-places"
 import { MapControls } from "@/components/map/map-controls"
 import { LocationDetails } from "@/components/map/location-details"
@@ -624,6 +625,14 @@ function MapNavigator() {
         onNavigationStateChange={setNavigationState}
         onFocusHazard={handleFocusHazard}
         onAlternativeRoute={setAlternativeRoutePoints}
+      />
+
+      {/* SPONSORED (nearest paying sponsor, any category) */}
+      <SponsorCard
+        hidden={Boolean(activePanel || selectedLocation || selectedHazard || navigationState.isNavigating)}
+        userLocation={userLocation}
+        mapCenter={weatherCenter ?? mapCenter}
+        onSelect={handleSelectPlace}
       />
 
       {/* PLACES */}

@@ -59,7 +59,7 @@ export function sponsorCategoryLabel(id: string): string {
 
 const EARTH_RADIUS_KM = 6371
 
-function distanceKm(a: [number, number], b: [number, number]): number {
+export function distanceKm(a: [number, number], b: [number, number]): number {
   const toRad = (d: number) => (d * Math.PI) / 180
   const dLat = toRad(b[0] - a[0])
   const dLng = toRad(b[1] - a[1])
@@ -109,4 +109,46 @@ export function trackSponsor(id: string, kind: "impression" | "click" | "website
   } catch {
     /* tracking must never break the map */
   }
+}
+
+// Live sponsors, fetched once per page load and shared by every surface
+// (Explore panel, map-screen card).
+let sponsorsRequest: Promise<SponsoredPlace[]> | null = null
+export function loadLiveSponsors(): Promise<SponsoredPlace[]> {
+  sponsorsRequest ??= fetch("/api/sponsored")
+    .then((r) => (r.ok ? r.json() : { sponsors: [] }))
+    .then((d: { sponsors?: SponsoredPlace[] }) => d.sponsors ?? [])
+    .catch(() => [])
+  return sponsorsRequest
+}
+
+// One view per sponsor per page load, however many surfaces show it.
+const sponsorsSeen = new Set<string>()
+export function trackSponsorViewOnce(id: string) {
+  if (sponsorsSeen.has(id)) return
+  sponsorsSeen.add(id)
+  trackSponsor(id, "impression")
+}
+
+/**
+ * The nearest live sponsor (any category) whose radius covers one of the
+ * given points: the visitor's location and/or the map centre.
+ */
+export function nearestSponsor(
+  sponsors: SponsoredPlace[],
+  points: ([number, number] | null | undefined)[],
+): SponsoredPlace | null {
+  let best: SponsoredPlace | null = null
+  let bestKm = Infinity
+  for (const s of sponsors) {
+    for (const p of points) {
+      if (!p) continue
+      const km = distanceKm(p, [s.lat, s.lng])
+      if (km <= s.radiusKm && km < bestKm) {
+        best = s
+        bestKm = km
+      }
+    }
+  }
+  return best
 }
