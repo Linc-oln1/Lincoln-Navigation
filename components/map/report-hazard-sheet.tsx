@@ -196,6 +196,13 @@ export function ReportHazardSheet({
         </Button>
 
         <p className="text-[10px] text-muted-foreground text-center">
+          {t("report.agreeBefore")}
+          <a href="/terms" target="_blank" rel="noopener" className="underline underline-offset-2">
+            {t("report.agreeLink")}
+          </a>
+          {t("report.agreeAfter")}
+        </p>
+        <p className="text-[10px] text-muted-foreground text-center">
           {t("report.footer")}
         </p>
       </div>
