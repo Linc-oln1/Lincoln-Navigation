@@ -54,14 +54,14 @@ export function LithosHero({ onEnter }: LithosHeroProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   // The globe video starts after the page has appeared, so it never delays
   // the first paint. Wide screens get the full 2.5 MB file; phones get a
-  // 0.7 MB version. Data Saver and "reduce motion" keep the still frame.
+  // 1.3 MB 720p version. Data Saver and "reduce motion" keep the still frame.
   const [videoSrc, setVideoSrc] = useState<string | null>(null)
   const [videoReady, setVideoReady] = useState(false)
   useEffect(() => {
     const saveData = Boolean((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
     if (saveData || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
     const wide = window.matchMedia("(min-width: 768px)").matches
-    const src = wide ? "/landing/video/hero-bg.mp4" : "/landing/video/hero-bg-mobile.mp4"
+    const src = wide ? "/landing/video/hero-bg.mp4" : "/landing/video/hero-bg-mobile-hd.mp4"
     let timer: ReturnType<typeof setTimeout> | undefined
     const start = () => {
       timer = setTimeout(() => setVideoSrc(src), wide ? 0 : 400)
