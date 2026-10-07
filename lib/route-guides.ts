@@ -481,6 +481,58 @@ export const ROUTE_GUIDES: RouteGuide[] = [
     ],
     places: ["mole", "larabanga"],
   },
+  {
+    id: "accra-to-nkawkaw",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Nkawkaw", lat: 6.55, lng: -0.7686 },
+    roadKm: 141,
+    driveTime: "2½–3½ hours",
+    mainRoad: "N6 (Accra–Kumasi Highway)",
+    via: ["Nsawam", "Suhum", "Bunso", "Anyinam"],
+    summary:
+      "About 140 km on the N6 from Accra to Nkawkaw, the gateway to the Kwahu ridge and roughly halfway to Kumasi — usually 2½ to 3½ hours.",
+    driving: [
+      "The whole trip is on the N6 towards Kumasi. Leaving Accra you head north-west through Ofankor and Nsawam, then climb through the forest towns of the Eastern Region: Suhum, Bunso and Anyinam.",
+      "Nkawkaw sits at the foot of the Kwahu ridge and is where most travellers on the Accra–Kumasi road take a break. The N6 now passes the town on a bypass, so turn off if you want to stop in the centre.",
+      "As on the rest of the N6, the slow part is getting out of Accra past Ofankor and Nsawam. After Nsawam the road is faster, but slow trucks and single-lane stretches can hold you up.",
+    ],
+    publicTransport: [
+      "Buses and trotros heading to Kumasi stop at Nkawkaw, and there are also direct vehicles from Accra's main lorry stations such as Neoplan at Kwame Nkrumah Circle. They leave when full, so the wait varies.",
+      "From Nkawkaw, local transport goes up the Kwahu ridge to towns such as Atibie and Nkwatia.",
+    ],
+    tips: [
+      "Leave Accra before 6 a.m. to miss the worst of the Ofankor–Nsawam traffic.",
+      "Nkawkaw is the usual halfway stop for food, fuel and toilets if you are driving on to Kumasi.",
+      "Traffic to the Kwahu ridge is heavy over Easter, when many people travel for the Kwahu festivities; allow extra time.",
+    ],
+    places: [],
+  },
+  {
+    id: "accra-to-obuasi",
+    from: { name: "Accra", lat: 5.57, lng: -0.215 },
+    to: { name: "Obuasi", lat: 6.2025, lng: -1.66 },
+    roadKm: 282,
+    driveTime: "4½–6 hours",
+    mainRoad: "N6 to Ejisu, then the N8 south",
+    via: ["Nsawam", "Suhum", "Nkawkaw", "Konongo", "Ejisu", "Bekwai"],
+    summary:
+      "About 280 km from Accra to Obuasi, the Ashanti gold-mining town: the N6 towards Kumasi, then south on the N8 — usually 4½ to 6 hours.",
+    driving: [
+      "Follow the N6 from Accra through Nsawam, Suhum and Nkawkaw, then on through Konongo to Ejisu on the edge of Kumasi.",
+      "From the Ejisu area the route turns south to join the N8 and runs through Bekwai to Obuasi, in the Adansi area. You do not need to go into central Kumasi.",
+      "The N6 is busy with trucks and has single-lane stretches, so most of the delay is at the ends: leaving Accra past Ofankor and Nsawam, and getting around Kumasi.",
+    ],
+    publicTransport: [
+      "The simplest way by public transport is in two legs: coaches and trotros run from Accra to Kumasi all day, and from Kumasi there are regular buses and shared vehicles south to Obuasi.",
+      "Ask at the lorry stations in central Accra whether a vehicle is going straight through to Obuasi; availability changes.",
+    ],
+    tips: [
+      "Leave Accra before 6 a.m. to miss the worst of the Ofankor–Nsawam traffic.",
+      "Nkawkaw is the usual halfway stop for food, fuel and toilets.",
+      "If you are going on to Cape Coast, the N8 continues south from Obuasi through Fomena and Assin Fosu.",
+    ],
+    places: [],
+  },
 ]
 
 export const findRoute = (id: string) => ROUTE_GUIDES.find((r) => r.id === id)
