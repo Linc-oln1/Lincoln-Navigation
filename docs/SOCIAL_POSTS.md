@@ -31,6 +31,15 @@ https://www.lincolnnavigation.com/routes/accra-to-cape-coast?utm_source=whatsapp
 
 Free, no sign-up. If you've done the trip recently, what time do you leave to beat the Kasoa traffic?
 
+**X version:**
+
+Accra → Cape Coast: ~163 km, 3–4 hrs. Kasoa is where it slows down.
+
+Guide with the stops, bus options and what to see when you arrive 👇
+https://www.lincolnnavigation.com/routes/accra-to-cape-coast?utm_source=x
+
+What time do you leave to beat the Kasoa traffic?
+
 ## Day 3: Kumasi to Tamale
 /routes/kumasi-to-tamale
 
