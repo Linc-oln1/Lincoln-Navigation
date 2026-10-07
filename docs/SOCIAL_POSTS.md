@@ -286,5 +286,135 @@ Been? Worth the trip?
 
 ---
 
+# More posts: Days 13–16 (the four newest guides)
+
+Same format as above: Facebook, WhatsApp and X versions with the matching `utm_source`. Facts come from the route guides on the site.
+
+## Day 13: Accra to Sunyani
+/routes/accra-to-sunyani
+
+**Facebook:**
+
+Accra → Sunyani is about 370 km, usually 6½ to 8½ hours. There is no direct road: you take the N6 to Kumasi and carry on north-west to Sunyani through Abuakwa and Bechem.
+
+Most of the delay is at the ends. Leave Accra before 6 a.m. to miss Ofankor and Nsawam, and try not to hit Kumasi's western exit at rush hour. Nkawkaw and Bechem are the natural stops.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/accra-to-sunyani?utm_source=facebook
+
+Do you break the trip in Kumasi, or drive straight through?
+
+**WhatsApp version:**
+
+Hey all 👋 Accra → Sunyani is about 370 km, usually 6½ to 8½ hours. There is no direct road: you take the N6 to Kumasi and carry on north-west to Sunyani through Abuakwa and Bechem.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/accra-to-sunyani?utm_source=whatsapp
+
+Do you break the trip in Kumasi, or drive straight through?
+
+**X version:**
+
+Accra → Sunyani: ~370 km, 6½–8½ hrs. The N6 to Kumasi, then on to Sunyani via Abuakwa and Bechem. Leave before 6 a.m. to miss Ofankor and Nsawam.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/accra-to-sunyani?utm_source=x
+
+Break it in Kumasi or drive through?
+
+## Day 14: Kumasi to Techiman
+/routes/kumasi-to-techiman
+
+**Facebook:**
+
+Kumasi → Techiman is about 119 km on the N10, usually 2 to 2½ hours, through Offinso. Techiman is a big market town in the Bono East Region, and the road carries on from there to Kintampo and Tamale.
+
+Leave Kumasi early to clear the northern exit, and fill up in Techiman: fuel stations are further apart north of it.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/kumasi-to-techiman?utm_source=facebook
+
+What do you usually stop for in Techiman?
+
+**WhatsApp version:**
+
+Hey all 👋 Kumasi → Techiman is about 119 km on the N10, usually 2 to 2½ hours, through Offinso. Techiman is a big market town in the Bono East Region, and the road carries on from there to Kintampo and Tamale.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/kumasi-to-techiman?utm_source=whatsapp
+
+What do you usually stop for in Techiman?
+
+**X version:**
+
+Kumasi → Techiman: ~119 km on the N10, 2–2½ hrs, via Offinso. Techiman is the big market town where the road carries on north to Tamale. Fill up there.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/kumasi-to-techiman?utm_source=x
+
+What do you stop for in Techiman?
+
+## Day 15: Kumasi to Obuasi
+/routes/kumasi-to-obuasi
+
+**Facebook:**
+
+Kumasi → Obuasi is about 64 km, usually 1½ to 2 hours, south through Bekwai. It is a short trip, but the stretch out of Kumasi can be slow at rush hour, so leave outside it if you can.
+
+If you are going on, the same road continues south through Fomena and Assin Fosu towards Cape Coast.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/kumasi-to-obuasi?utm_source=facebook
+
+How long does it take you at different times of day?
+
+**WhatsApp version:**
+
+Hey all 👋 Kumasi → Obuasi is about 64 km, usually 1½ to 2 hours, south through Bekwai. It is a short trip, but the stretch out of Kumasi can be slow at rush hour, so leave outside it if you can.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/kumasi-to-obuasi?utm_source=whatsapp
+
+How long does it take you at different times of day?
+
+**X version:**
+
+Kumasi → Obuasi: ~64 km, 1½–2 hrs, south through Bekwai. The slow part is leaving Kumasi at rush hour. The same road goes on to Cape Coast.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/kumasi-to-obuasi?utm_source=x
+
+How long does it take you?
+
+## Day 16: Accra to Winneba
+/routes/accra-to-winneba
+
+**Facebook:**
+
+Accra → Winneba is about 63 km on the N1, usually 1½ to 2½ hours. You pass Kasoa, then turn off at Winneba Junction for the town on the coast.
+
+The distance is short. What decides your time is Kasoa: at rush hour it can take longer to get through than to drive the rest of the way. Early or mid-morning is usually best leaving Accra.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/accra-to-winneba?utm_source=facebook
+
+Are you a before-6 a.m. leaver or an after-9 a.m. leaver?
+
+**WhatsApp version:**
+
+Hey all 👋 Accra → Winneba is about 63 km on the N1, usually 1½ to 2½ hours. You pass Kasoa, then turn off at Winneba Junction for the town on the coast.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/accra-to-winneba?utm_source=whatsapp
+
+Are you a before-6 a.m. leaver or an after-9 a.m. leaver?
+
+**X version:**
+
+Accra → Winneba: ~63 km on the N1, 1½–2½ hrs. You pass Kasoa, then turn off at Winneba Junction. Kasoa is what decides your time.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/accra-to-winneba?utm_source=x
+
+Before 6 a.m. or after 9 a.m.?
+
+---
+
 ## After 7 days
 Search Console → Performance → Pages (around Oct 15) plus your analytics referrers. Note which post got clicks and double down on that kind of route.
