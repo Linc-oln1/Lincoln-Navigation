@@ -5,7 +5,7 @@ Traffic is the bottleneck (about 90 real Ghana visitors a month), so the first s
 
 ## Every day
 
-- [ ] Post one social post from `docs/SOCIAL_POSTS.md` (16 days are ready: 18 route guides and Boti Falls).
+- [ ] Post one social post from `docs/SOCIAL_POSTS.md` (16 days are ready, covering 15 route guides and Boti Falls).
   - Start with Day 1 (Accra to Kumasi), then Day 2, and so on.
   - Join groups as yourself: Ghana travel, trotro, expat and diaspora groups on Facebook, WhatsApp communities, X.
   - Paste the link into a chat with yourself first, so the preview is ready when you post.

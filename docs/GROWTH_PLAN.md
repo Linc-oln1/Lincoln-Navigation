@@ -7,7 +7,7 @@ Companion files: `docs/OWNER_CHECKLIST.md` (what to do and when) and `docs/SOCIA
 
 - About **90 real Ghana visitors a month**. Google Search Console (30 Sep to 4 Oct): 85 impressions, 16 clicks, all from searches for the site itself. The route guides were shown but not clicked yet because they are new.
 - 69% of visitors are on phones and 61% on iPhones.
-- Assets you already have: 18 route guides and Boti Falls (all in Google's queue), a share-ready preview image on every page, 16 social posts, a referral reward (7 free Pro days for both people), a promoter programme (`/ambassador`), one paying sponsor, an Android app in closed testing.
+- Assets you already have: 23 route guides and Boti Falls (all submitted to Google), a share-ready preview image on every page, 16 social posts, a referral reward (7 free Pro days for both people), a promoter programme (`/ambassador`), one paying sponsor, an Android app in closed testing.
 - Nothing is wrong with the product. The problem is that few people know it exists. So the plan is mostly about being seen where Ghanaians already look for directions.
 
 ## What "working" looks like in 30 days (guess)
