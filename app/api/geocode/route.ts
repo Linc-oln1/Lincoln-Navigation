@@ -180,6 +180,39 @@ interface CacheEntry {
 const CACHE_TTL_MS = 5 * 60 * 1000
 const cache = new Map<string, CacheEntry>()
 
+/* Wording people use for the same place. OpenStreetMap names a place one way
+   ("Boti Waterfalls") and visitors type another ("Boti Falls"). When a search
+   finds nothing at all, these variants are tried before giving up. */
+const WORD_SWAPS: Record<string, string[]> = {
+  falls: ["waterfalls", "waterfall"],
+  waterfall: ["waterfalls", "falls"],
+  waterfalls: ["falls", "waterfall"],
+  stn: ["station"],
+  jn: ["junction"],
+  jct: ["junction"],
+  mkt: ["market"],
+  hosp: ["hospital"],
+  univ: ["university"],
+  rd: ["road"],
+  mall: ["shopping mall"],
+}
+// Generic last words that can be dropped to find the place itself
+// ("Boti Falls" -> "Boti") when nothing more exact exists.
+const GENERIC_LAST_WORDS = new Set(["falls", "waterfall", "waterfalls", "market", "station", "junction", "park", "beach"])
+
+function queryVariants(query: string): string[] {
+  const words = query.trim().split(/\s+/)
+  const out: string[] = []
+  words.forEach((w, i) => {
+    for (const alt of WORD_SWAPS[w.toLowerCase()] ?? []) {
+      out.push([...words.slice(0, i), alt, ...words.slice(i + 1)].join(" "))
+    }
+  })
+  const last = words[words.length - 1]?.toLowerCase()
+  if (words.length > 1 && last && GENERIC_LAST_WORDS.has(last)) out.push(words.slice(0, -1).join(" "))
+  return [...new Set(out)].filter((v) => v.toLowerCase() !== query.toLowerCase()).slice(0, 3)
+}
+
 function getCached(key: string) {
   const entry = cache.get(key)
 
@@ -451,11 +484,35 @@ export async function GET(request: NextRequest) {
       throw error
     }
 
-    const osmResults = Array.isArray(data) ? data.map(normalizeResult) : []
+    let osmResults = Array.isArray(data) ? data.map(normalizeResult) : []
+    // Nothing found anywhere: try the other ways people word the same place.
+    let effectiveQuery = query
+    if (osmResults.length === 0 && weakMapboxResults.length === 0) {
+      for (const variant of queryVariants(query)) {
+        try {
+          const altParams = new URLSearchParams(params)
+          altParams.set("q", variant)
+          const altResponse = await fetch(`${base}/search?${altParams.toString()}`, {
+            headers,
+            cache: "no-store",
+            signal: AbortSignal.timeout(5000),
+          })
+          if (!altResponse.ok) continue
+          const altData = (await altResponse.json()) as NominatimResult[]
+          if (Array.isArray(altData) && altData.length > 0) {
+            osmResults = altData.map(normalizeResult)
+            effectiveQuery = variant
+            break
+          }
+        } catch {
+          /* a slow variant never blocks the search */
+        }
+      }
+    }
     // Best to worst: OSM exact hits, Mapbox near-misses, OSM near-misses,
     // OSM's own ranking. (Off-topic Mapbox results are never returned.)
-    const osmExact = relevantResults(osmResults, query, true)
-    const osmNear = relevantResults(osmResults, query)
+    const osmExact = relevantResults(osmResults, effectiveQuery, true)
+    const osmNear = relevantResults(osmResults, effectiveQuery)
     const results = {
       results:
         osmExact.length > 0
