@@ -1,5 +1,6 @@
 "use client"
 
+import { TrotroPlanCard } from "@/components/map/trotro-plan-card"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import {
@@ -1454,6 +1455,17 @@ export function DirectionsPanel({
               </a>
             )}
           </div>
+
+          {/* TROTRO LINES — beta, hidden: renders nothing unless the API says yes */}
+          {travelMode === "bus" && !hubMode && originCoordinates && destinationCoordinates && (
+            <TrotroPlanCard
+              fromLngLat={originCoordinates}
+              toLngLat={destinationCoordinates}
+              fromName={origin || undefined}
+              toName={destination || undefined}
+              onShowPath={onRouteCalculated}
+            />
+          )}
 
           {/* TRUCK ROUTING — Pro (driving only) */}
           {travelMode === "driving" && (

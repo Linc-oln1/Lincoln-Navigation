@@ -25,6 +25,7 @@ const DATA: Credit[] = [
   { name: "Mapbox", href: "https://www.mapbox.com/about/maps", use: "Search and geocoding (when enabled)", licence: "© Mapbox, © OpenStreetMap" },
   { name: "Foursquare", href: "https://foursquare.com", use: "Place data (when enabled)", licence: "Foursquare terms" },
   { name: "openrouteservice by HeiGIT", href: "https://openrouteservice.org", use: "Routing and route-around-hazard", licence: "© openrouteservice.org by HeiGIT, data © OpenStreetMap contributors" },
+  { name: "Accra Mobile 3 trotro lines (OpenStreetMap Ghana)", href: "https://wiki.openstreetmap.org/wiki/AccraMobile3", use: "Trotro lines and stops for Accra (beta)", licence: "ODbL, © OpenStreetMap contributors" },
   { name: "OSRM", href: "https://project-osrm.org", use: "Routing", licence: "BSD-2-Clause, data © OpenStreetMap contributors" },
   { name: "GraphHopper", href: "https://www.graphhopper.com", use: "Routing (when enabled)", licence: "GraphHopper terms" },
   { name: "Open-Meteo", href: "https://open-meteo.com", use: "Weather and forecasts", licence: "CC BY 4.0" },
