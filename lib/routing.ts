@@ -140,23 +140,6 @@ export interface RoutingResult {
 }
 
 /**
- * Base URL of the OSRM (or OSRM-compatible) routing server.
- *
- * Falls back to the public OSRM demo server, which supports the
- * "driving", "walking" and "cycling" profiles used by this app.
- */
-function getRoutingBaseUrl(): string {
-  const configured =
-    process.env.NEXT_PUBLIC_OSRM_URL
-
-  if (configured && configured.trim()) {
-    return configured.trim().replace(/\/+$/, "")
-  }
-
-  return "https://router.project-osrm.org"
-}
-
-/**
  * Convert our travel mode into an OSRM routing profile.
  *
  * OSRM has no dedicated "traffic-aware" profile (that was a
@@ -219,6 +202,25 @@ function durationMultiplierFor(mode: TravelMode): number {
 }
 
 /**
+ * Where to send a route request for an OSRM profile.
+ *
+ * The public demo server (router.project-osrm.org) only knows the CAR
+ * network: it ignores "walking" and "cycling" in the URL and answers with the
+ * car route, so a 3.6 km walk was reported as 6.5 minutes (about 33 km/h)
+ * and followed one-way streets. The OpenStreetMap community's FOSSGIS
+ * servers run real foot and bike profiles (they expose each one under the
+ * name "driving" in the URL), so walking and cycling go there. A self-hosted
+ * OSRM set in NEXT_PUBLIC_OSRM_URL still wins for every profile.
+ */
+function routePrefixFor(profile: string): string {
+  const configured = process.env.NEXT_PUBLIC_OSRM_URL?.trim()
+  if (configured) return `${configured.replace(/\/+$/, "")}/route/v1/${profile}`
+  if (profile === "walking") return "https://routing.openstreetmap.de/routed-foot/route/v1/driving"
+  if (profile === "cycling") return "https://routing.openstreetmap.de/routed-bike/route/v1/driving"
+  return "https://router.project-osrm.org/route/v1/driving"
+}
+
+/**
  * Build the OSRM route request URL.
  */
 function buildDirectionsUrl(
@@ -231,11 +233,11 @@ function buildDirectionsUrl(
     )
   }
 
-  const base = getRoutingBaseUrl()
-
   const profile = normalizeMode(
     options.mode ?? "driving"
   )
+
+  const routePrefix = routePrefixFor(profile)
 
   const coordinateString = coordinates
     .map(([lng, lat]) => `${lng},${lat}`)
@@ -261,7 +263,7 @@ function buildDirectionsUrl(
   params.set("geometries", "geojson")
 
   return (
-    `${base}/route/v1/${profile}/${coordinateString}?${params.toString()}`
+    `${routePrefix}/${coordinateString}?${params.toString()}`
   )
 }
 
