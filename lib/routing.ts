@@ -202,6 +202,37 @@ function durationMultiplierFor(mode: TravelMode): number {
 }
 
 /**
+ * Free-flow routing (OSRM, OpenRouteService) assumes empty roads at the speed
+ * limit, which is too fast for Ghana: it said Accra to Kumasi takes 3.2 hours
+ * (77 km/h on average) when 4.5 to 6 hours is typical, and in 11 of 23 tested
+ * inter-city drives the free-flow time was more than 15% under the fastest
+ * time in our own route guides. Road-vehicle times get this correction.
+ * It is a calibration to typical trips, not a measurement. It is NOT applied
+ * to walking/cycling (they use real foot and bike speeds) or to the Premium
+ * live-traffic route (already based on real traffic).
+ */
+export const GHANA_ROAD_TIME_FACTOR = 1.25
+
+const ROAD_MODES: TravelMode[] = ["driving", "driving-traffic", "motorcycle", "bus"]
+
+function roadTimeFactor(mode: TravelMode): number {
+  return ROAD_MODES.includes(mode) ? GHANA_ROAD_TIME_FACTOR : 1
+}
+
+/** A copy of a result with every route and step duration multiplied by k. */
+function scaleDurations(result: RoutingResult, k: number): RoutingResult {
+  if (k === 1) return result
+  return {
+    ...result,
+    routes: result.routes.map((r) => ({
+      ...r,
+      duration: r.duration * k,
+      steps: r.steps.map((st) => ({ ...st, duration: st.duration * k })),
+    })),
+  }
+}
+
+/**
  * Where to send a route request for an OSRM profile.
  *
  * The public demo server (router.project-osrm.org) only knows the CAR
@@ -612,7 +643,7 @@ export async function calculateRoute(
 
   if (orsResult) {
     return {
-      ...localizeSteps(orsResult, options.lang ?? "en"),
+      ...localizeSteps(scaleDurations(orsResult, roadTimeFactor(options.mode ?? "driving")), options.lang ?? "en"),
       optionsApplied: true,
     }
   }
@@ -667,9 +698,9 @@ export async function calculateRoute(
     }
   }
 
-  const durationMultiplier = durationMultiplierFor(
-    options.mode ?? "driving"
-  )
+  const durationMultiplier =
+    durationMultiplierFor(options.mode ?? "driving") *
+    (trafficData ? 1 : roadTimeFactor(options.mode ?? "driving"))
 
   const routes: Route[] = (
     data.routes ?? []
