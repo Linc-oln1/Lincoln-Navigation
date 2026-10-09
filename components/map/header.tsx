@@ -90,14 +90,14 @@ export function Header({ onSearchClick, onDirectionsClick, onPlacesClick, active
             <button
               onClick={onSearchClick}
               className={cn(
-                "flex-1 flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-left",
+                "flex-1 min-w-0 flex items-center gap-2 px-3 py-2.5 rounded-xl transition-colors text-left sm:gap-3 sm:px-4",
                 activePanel === "search"
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary hover:bg-secondary/80 text-muted-foreground"
               )}
             >
-              <Search className="w-4 h-4" />
-              <span className="text-sm">{t("map.search")}</span>
+              <Search className="w-4 h-4 shrink-0" />
+              <span className="truncate whitespace-nowrap text-[13px] sm:text-sm">{t("map.search")}</span>
             </button>
 
             {/* Quick Actions */}

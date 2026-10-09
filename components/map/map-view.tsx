@@ -1539,6 +1539,9 @@ export function MapView({
   const showTrafficRef = useRef(showTraffic)
   showTrafficRef.current = showTraffic
   const mapContainerRef = useRef<HTMLDivElement>(null)
+  // False until the first map frame is drawn; shows a "Loading map" hint so a
+  // slow connection doesn't look like a broken blank screen.
+  const [mapPainted, setMapPainted] = useState(false)
   const mapInstanceRef = useRef<maplibregl.Map | null>(null)
   const resizeObserverRef = useRef<ResizeObserver | null>(null)
   const markerObjectsRef = useRef<maplibregl.Marker[]>([])
@@ -1772,6 +1775,7 @@ export function MapView({
       })
 
       map.on("load", emitBounds)
+      map.once("load", () => setMapPainted(true))
 
       // Defensive resize handling: MapLibre sizes its WebGL canvas
       // from the container's dimensions AT CONSTRUCTION TIME. In a
@@ -2192,6 +2196,17 @@ export function MapView({
     <div className="relative h-full w-full">
       {/* MAP */}
       <div ref={mapContainerRef} className="h-full w-full" />
+
+      {!mapPainted && (
+        <div
+          role="status"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        >
+          <span className="animate-pulse rounded-full bg-card/90 px-4 py-2 text-sm text-muted-foreground shadow-lg">
+            Loading map…
+          </span>
+        </div>
+      )}
 
       {/* LIVE GPS PUCK */}
       {showUserLocation && (
