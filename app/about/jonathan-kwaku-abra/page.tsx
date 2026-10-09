@@ -23,7 +23,14 @@ export default function FounderPage() {
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
-      { "@type": "ProfilePage", "@id": url, url, name: `${FOUNDER.name} — ${FOUNDER.title}`, mainEntity: { "@id": `${url}#person` } },
+      {
+        "@type": "ProfilePage",
+        "@id": url,
+        url,
+        name: `${FOUNDER.name} — ${FOUNDER.title}`,
+        primaryImageOfPage: { "@type": "ImageObject", contentUrl: `${SITE_BASE}${FOUNDER.photo}`, caption: `${FOUNDER.name} (${FOUNDER.knownAs}), ${FOUNDER.title} of Lincoln Navigation` },
+        mainEntity: { "@id": `${url}#person` },
+      },
       founderPerson(),
       ORGANIZATION,
       {
@@ -109,6 +116,7 @@ export default function FounderPage() {
                 loading="lazy"
                 className="aspect-[2/3] w-full rounded-2xl border border-[#c9a06e]/20 object-cover"
               />
+              <figcaption className="mt-2 text-xs leading-snug text-neutral-500">{g.caption}</figcaption>
             </figure>
           ))}
         </section>
@@ -135,6 +143,12 @@ export default function FounderPage() {
             >
               <Mail className="h-4 w-4" aria-hidden /> Press &amp; partnerships
             </a>
+            <Link
+              href="/press"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#c9a06e]/30 px-5 py-2.5 text-sm font-semibold text-[#d9b98c] transition hover:bg-[#c9a06e]/10"
+            >
+              Press kit &amp; photos <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
             <Link
               href="/about"
               className="inline-flex items-center gap-2 rounded-xl border border-[#c9a06e]/30 px-5 py-2.5 text-sm font-semibold text-[#d9b98c] transition hover:bg-[#c9a06e]/10"

@@ -22,8 +22,22 @@ export const FOUNDER = {
   photoSquare: "/team/jonathan-kwaku-abra-square.jpg",
   /** Extra portraits (Seoul, 2026). Each has a portrait and a 1:1 crop for search results. */
   gallery: [
-    { src: "/team/jonathan-kwaku-abra-hanbok-1.jpg", square: "/team/jonathan-kwaku-abra-hanbok-1-square.jpg", width: 1000, height: 1500, alt: "Jonathan Kwaku Abra (Lincoln), Founder & CEO of Lincoln Navigation, in traditional hanbok at Gyeongbokgung Palace, Seoul" },
-    { src: "/team/jonathan-kwaku-abra-hanbok-2.jpg", square: "/team/jonathan-kwaku-abra-hanbok-2-square.jpg", width: 1000, height: 1500, alt: "Jonathan Kwaku Abra (Lincoln), CEO of Lincoln Navigation, portrait in Seoul, South Korea" },
+    {
+      src: "/team/jonathan-kwaku-abra-founder-ceo-lincoln-navigation-1.jpg",
+      square: "/team/jonathan-kwaku-abra-founder-ceo-lincoln-navigation-1-square.jpg",
+      width: 1000,
+      height: 1500,
+      alt: "Jonathan Kwaku Abra (Lincoln), Founder & CEO of Lincoln Navigation, in traditional hanbok at Gyeongbokgung Palace, Seoul",
+      caption: "Jonathan Kwaku Abra (Lincoln), Founder & CEO of Lincoln Navigation, in Seoul, South Korea",
+    },
+    {
+      src: "/team/jonathan-kwaku-abra-founder-ceo-lincoln-navigation-2.jpg",
+      square: "/team/jonathan-kwaku-abra-founder-ceo-lincoln-navigation-2-square.jpg",
+      width: 1000,
+      height: 1500,
+      alt: "Jonathan Kwaku Abra (Lincoln), CEO of Lincoln Navigation, portrait in Seoul, South Korea",
+      caption: "Portrait of Jonathan Kwaku Abra (Lincoln), CEO of Lincoln Navigation, Ghana's maps and navigation platform",
+    },
   ],
   profiles: [
     { label: "LinkedIn", href: "https://www.linkedin.com/in/jonathan-kwaku-abra/" },
@@ -44,6 +58,19 @@ export const FOUNDER = {
 
 export const FOUNDER_ID = `${SITE_BASE}${FOUNDER.path}#person`
 
+/** Every founder photo, with the caption search engines should associate with it. */
+export function founderImages(): { url: string; path: string; caption: string }[] {
+  const base = `${FOUNDER.name} (${FOUNDER.knownAs}), ${FOUNDER.title} of Lincoln Navigation`
+  return [
+    { path: FOUNDER.photoSquare, caption: base },
+    { path: FOUNDER.photo, caption: base },
+    ...FOUNDER.gallery.flatMap((g) => [
+      { path: g.square, caption: g.caption },
+      { path: g.src, caption: g.caption },
+    ]),
+  ].map((i) => ({ ...i, url: `${SITE_BASE}${i.path}` }))
+}
+
 /** schema.org Person for the founder. */
 export function founderPerson() {
   return {
@@ -54,11 +81,13 @@ export function founderPerson() {
     jobTitle: FOUNDER.title,
     description: FOUNDER.summary,
     url: `${SITE_BASE}${FOUNDER.path}`,
-    image: [
-      `${SITE_BASE}${FOUNDER.photoSquare}`,
-      `${SITE_BASE}${FOUNDER.photo}`,
-      ...FOUNDER.gallery.flatMap((g) => [`${SITE_BASE}${g.square}`, `${SITE_BASE}${g.src}`]),
-    ],
+    image: founderImages().map((i) => ({
+      "@type": "ImageObject",
+      contentUrl: i.url,
+      url: i.url,
+      caption: i.caption,
+      name: i.caption,
+    })),
     sameAs: FOUNDER.profiles.map((p) => p.href),
     knowsAbout: FOUNDER.expertise,
     worksFor: { "@id": `${SITE_BASE}/#organization` },

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next"
 import { SITE_BASE } from "@/lib/site-base"
+import { founderImages } from "@/lib/founder"
 import { GHANA_DESTINATIONS } from "@/lib/ghana-destinations"
 import { ROUTE_GUIDES } from "@/lib/route-guides"
 
@@ -18,6 +19,7 @@ const PAGES: { path: string; priority: number; changeFrequency: MetadataRoute.Si
   { path: "/business", priority: 0.7, changeFrequency: "monthly" },
   { path: "/about", priority: 0.6, changeFrequency: "monthly" },
   { path: "/about/jonathan-kwaku-abra", priority: 0.6, changeFrequency: "monthly" },
+  { path: "/press", priority: 0.5, changeFrequency: "monthly" },
   { path: "/advertise", priority: 0.5, changeFrequency: "monthly" },
   { path: "/contact", priority: 0.5, changeFrequency: "yearly" },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" },
@@ -37,5 +39,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified,
     changeFrequency: p.changeFrequency,
     priority: p.priority,
+    // The founder's photos go in the sitemap of the pages that show them.
+    ...(p.path === "/about/jonathan-kwaku-abra" || p.path === "/press" ? { images: founderImages().map((i) => i.url) } : {}),
   }))
 }
