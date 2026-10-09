@@ -88,7 +88,7 @@ export function AuthShell({
           <div className="flex items-center justify-between gap-4">
             <Link href="/" className="flex items-center gap-2.5 lg:invisible">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#dcefe0]"><Compass className="h-[18px] w-[18px]" /></span>
-              <span className="text-sm font-semibold">LincolnNavigation</span>
+              <span className="text-sm font-semibold">Lincoln Navigation</span>
             </Link>
             <p className="text-right text-sm text-[#5b6875]">{topLink}</p>
           </div>
@@ -111,7 +111,7 @@ export function AuthShell({
           </div>
 
           <div className="mx-auto flex w-full max-w-[440px] items-center justify-between border-t border-[#e6e2d6] pt-5 text-sm text-[#5b6875]">
-            <span>&copy; {YEAR} LincolnNavigation</span>
+            <span>&copy; {YEAR} Lincoln Navigation</span>
             <span className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-[#4caf6e]" />
               {t("au.safeTravels")}
@@ -139,7 +139,7 @@ function PhotoPanel() {
           <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/40 bg-white/15 backdrop-blur-md">
             <Compass className="h-5 w-5" />
           </span>
-          <span className="text-lg font-semibold">LincolnNavigation</span>
+          <span className="text-lg font-semibold">Lincoln Navigation</span>
         </Link>
 
         <div className="max-w-xl">
@@ -174,7 +174,7 @@ function PhotoPanel() {
         </div>
 
         <div className="flex items-center justify-between text-sm text-white/85">
-          <span>&copy; {YEAR} LincolnNavigation</span>
+          <span>&copy; {YEAR} Lincoln Navigation</span>
           <span className="flex items-center gap-2">
             <MapPin className="h-4 w-4" />
             {t("au.findOwnWay")}

@@ -36,7 +36,7 @@ async function firstName(sub: { user_id: string | null }): Promise<string | null
 }
 
 function reason(sub: SubscriptionRow) {
-  return `You're getting this because you have a ${planName(sub)} subscription with LincolnNavigation.`
+  return `You're getting this because you have a ${planName(sub)} subscription with Lincoln Navigation.`
 }
 
 /** A renewal charge failed. `eventKey` identifies this attempt (invoice code). */
@@ -77,7 +77,7 @@ export async function sendRenewalFailed(sub: SubscriptionRow, eventKey: string):
         `Update your card: ${accountUrl} (Plan → Update card)`,
         ``,
         `Thanks,`,
-        `The LincolnNavigation Team`,
+        `The Lincoln Navigation Team`,
       ].join("\n"),
     }),
   )
@@ -126,7 +126,7 @@ export async function sendCardExpiring(sub: SubscriptionRow, expiry: string, des
         `Update your card: ${accountUrl} (Plan → Update card)`,
         ``,
         `Thanks,`,
-        `The LincolnNavigation Team`,
+        `The Lincoln Navigation Team`,
       ].join("\n"),
     }),
   )
@@ -165,7 +165,7 @@ export async function sendPlanEnding(p: {
         ],
         button: { label: `Keep ${plan}`, href: url },
         note: `Tired of remembering? Choose <strong>Monthly</strong> on the pricing page and your card renews it automatically. You can cancel any time.`,
-        reason: `You're getting this because you have a ${plan} plan on LincolnNavigation.`,
+        reason: `You're getting this because you have a ${plan} plan on Lincoln Navigation.`,
         siteUrl: siteUrl(),
       }),
       text: [
@@ -176,7 +176,7 @@ export async function sendPlanEnding(p: {
         `Paying early is fine — the new days start when these run out.`,
         ``,
         `Thanks,`,
-        `The LincolnNavigation Team`,
+        `The Lincoln Navigation Team`,
       ].join("\n"),
     }),
   )

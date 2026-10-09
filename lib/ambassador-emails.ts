@@ -22,7 +22,7 @@ export async function sendAmbassadorWelcome(to: { email: string; name: string | 
 
   return sendEmail({
     to: to.email,
-    subject: "Your LincolnNavigation promoter link",
+    subject: "Your Lincoln Navigation promoter link",
     html: emailLayout({
       preheader: `Your referral code is ${to.code}`,
       emoji: "🚀",
@@ -35,7 +35,7 @@ export async function sendAmbassadorWelcome(to: { email: string; name: string | 
         `Share your link. Everyone who signs up with it and confirms their email counts as one of your users, and you can watch your numbers live on your dashboard.`,
       ],
       button: { label: "Open your dashboard", href: dashboard },
-      reason: "You're getting this because you were added as a LincolnNavigation promoter.",
+      reason: "You're getting this because you were added as a Lincoln Navigation promoter.",
       siteUrl: siteUrl(),
     }),
     text: [
@@ -54,7 +54,7 @@ export async function sendAmbassadorWelcome(to: { email: string; name: string | 
       `Your dashboard: ${dashboard}`,
       "",
       "Thanks,",
-      "The LincolnNavigation Team",
+      "The Lincoln Navigation Team",
     ].join("\n"),
   })
 }

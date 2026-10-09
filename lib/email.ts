@@ -137,7 +137,7 @@ export function emailLayout(o: {
                 </td>
               </tr>
             </table>
-            <p style="margin:32px 0 0 0;font-family:${font};font-size:14px;line-height:1.6;color:#8a939c;">Thanks,<br>The LincolnNavigation Team</p>
+            <p style="margin:32px 0 0 0;font-family:${font};font-size:14px;line-height:1.6;color:#8a939c;">Thanks,<br>The Lincoln Navigation Team</p>
             ${o.note ? `<p style="margin:20px auto 0 auto;max-width:440px;font-family:${font};font-size:13px;line-height:1.6;color:#8a939c;">${o.note}</p>` : ""}
           </td>
         </tr>

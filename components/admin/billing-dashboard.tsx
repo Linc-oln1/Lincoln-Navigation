@@ -221,7 +221,7 @@ export function BillingDashboard({ report: r, adminEmail }: { report: BillingRep
                     </span>
                     <a
                       href={`mailto:${s.email}?subject=${encodeURIComponent("Your Lincoln Navigation renewal")}&body=${encodeURIComponent(
-                        `Hi,\n\nYour last ${planName(s)} renewal didn't go through. You can update your card on your account page: https://www.lincolnnavigation.com/account (Plan → Update card).\n\nThanks,\nThe LincolnNavigation Team`,
+                        `Hi,\n\nYour last ${planName(s)} renewal didn't go through. You can update your card on your account page: https://www.lincolnnavigation.com/account (Plan → Update card).\n\nThanks,\nThe Lincoln Navigation Team`,
                       )}`}
                       className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3 py-1.5 text-xs font-semibold text-[#141110] hover:bg-white/90"
                     >

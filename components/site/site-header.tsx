@@ -35,7 +35,7 @@ export function SiteHeader({ variant = "app" }: { variant?: SiteVariant }) {
             aria-hidden="true"
             className="h-7 w-7 rounded-md object-contain"
           />
-          <span className="text-sm font-bold tracking-tight">LincolnNavigation</span>
+          <span className="text-sm font-bold tracking-tight">Lincoln Navigation</span>
         </Link>
 
         <nav aria-label="Main" className="hidden items-center gap-6 lg:flex">

@@ -8,7 +8,7 @@ import { pageMeta } from "@/lib/page-meta"
 export const metadata = pageMeta({
   title: "Contact us — Lincoln Navigation",
   description:
-    "Get in touch with the LincolnNavigation team — questions, feedback, bug reports and advertising.",
+    "Get in touch with the Lincoln Navigation team — questions, feedback, bug reports and advertising.",
   path: "/contact",
 })
 

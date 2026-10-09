@@ -80,7 +80,7 @@ async function emailAdmins(id: string, kind: HazardKind, note: string) {
               `Nothing to do unless the note was fine — in that case, notes expire with the report, so it will simply be gone when the report does.`,
             ],
             button: { label: "Open the map", href: `${siteUrl()}/app` },
-            reason: "You're getting this because your address is in ADMIN_EMAILS for LincolnNavigation.",
+            reason: "You're getting this because your address is in ADMIN_EMAILS for Lincoln Navigation.",
             siteUrl: siteUrl(),
           }),
           text: [

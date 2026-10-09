@@ -17,7 +17,7 @@ export function ContactForm() {
       setForm((f) => ({ ...f, [k]: e.target.value }))
 
   const mailto = `mailto:${TO}?subject=${encodeURIComponent(
-    `Message from ${form.name || "a LincolnNavigation user"}`,
+    `Message from ${form.name || "a Lincoln Navigation user"}`,
   )}&body=${encodeURIComponent(
     `Name: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone || "-"}\n\n${form.message}`,
   )}`

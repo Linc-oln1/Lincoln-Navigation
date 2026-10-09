@@ -59,7 +59,7 @@ export async function alertWebhookFailure(f: WebhookFailure): Promise<void> {
         ],
         button: { label: "Open Paystack transactions", href: paystackLink(f.ref) },
         note: `Customers' plans also show in <a href="${siteUrl()}/admin/billing">/admin/billing</a> once recorded.`,
-        reason: "You're getting this because your address is in ADMIN_EMAILS for LincolnNavigation.",
+        reason: "You're getting this because your address is in ADMIN_EMAILS for Lincoln Navigation.",
         siteUrl: siteUrl(),
       },
       [
@@ -91,7 +91,7 @@ export async function noteWebhookRecovered(f: { type: string; ref: string }): Pr
           `Paystack retried <strong>${escapeHtml(f.type)}</strong> for <strong>${escapeHtml(f.ref)}</strong> and this time it was recorded. Nothing else needed.`,
         ],
         button: { label: "Open billing", href: `${siteUrl()}/admin/billing` },
-        reason: "You're getting this because your address is in ADMIN_EMAILS for LincolnNavigation.",
+        reason: "You're getting this because your address is in ADMIN_EMAILS for Lincoln Navigation.",
         siteUrl: siteUrl(),
       },
       [`Recovered: Paystack retried ${f.type} for ${f.ref} and it was recorded. Nothing to do.`],

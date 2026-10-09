@@ -37,8 +37,8 @@ type Sponsor = Pick<
   | "amount_pesewas"
 >
 
-const ADVERTISER_REASON = "You're getting this because you bought a sponsored listing on LincolnNavigation."
-const ADMIN_REASON = "You're getting this because your address is in ADMIN_EMAILS for LincolnNavigation."
+const ADVERTISER_REASON = "You're getting this because you bought a sponsored listing on Lincoln Navigation."
+const ADMIN_REASON = "You're getting this because your address is in ADMIN_EMAILS for Lincoln Navigation."
 
 function firstName(s: Sponsor) {
   return s.contact_name?.trim().split(/\s+/)[0]?.slice(0, 40) || null
@@ -81,7 +81,7 @@ function toAdvertiser(
         reason: ADVERTISER_REASON,
         siteUrl: siteUrl(),
       }),
-      text: [o.heading, "", ...o.text, "", `${o.button.label}: ${o.button.href}`, "", "Thanks,", "The LincolnNavigation Team"].join("\n"),
+      text: [o.heading, "", ...o.text, "", `${o.button.label}: ${o.button.href}`, "", "Thanks,", "The Lincoln Navigation Team"].join("\n"),
     }),
   )
 }
@@ -157,7 +157,7 @@ export async function sendListingPaid(s: Sponsor) {
 export function sendListingApproved(s: Sponsor) {
   const ends = s.ends_at ? longDate(new Date(s.ends_at)) : null
   return toAdvertiser(s, `sponsor-live:${s.id}:${s.ends_at}`, {
-    subject: `${s.name} is now live on LincolnNavigation`,
+    subject: `${s.name} is now live on Lincoln Navigation`,
     emoji: "🎉",
     heading: "Your listing is live",
     paragraphs: [

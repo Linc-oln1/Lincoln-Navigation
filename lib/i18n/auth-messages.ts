@@ -23,7 +23,7 @@ export const AUTH_EN = {
   "au.errCreds": "That email and password don't match. If you used to sign in with an email link, use “Forgot password?” to set one.",
   "au.errNeedEmail": "Enter your email address first, then tap “Forgot password?”.",
   "au.resetSent": "We sent a password reset link to {email}.",
-  "au.newHere": "New to LincolnNavigation?",
+  "au.newHere": "New to Lincoln Navigation?",
   "au.createAccount": "Create account",
   "au.loginEyebrow": "Your journey continues",
   "au.loginTitle": "Welcome back",
