@@ -414,6 +414,227 @@ https://www.lincolnnavigation.com/routes/accra-to-winneba?utm_source=x
 
 Before 6 a.m. or after 9 a.m.?
 
+# More posts: Days 17–23
+
+The last seven route guides that hadn't been posted yet. Same rules and three versions each. All facts come from the route guides.
+
+## Day 17: Accra to Aflao
+/routes/accra-to-aflao
+
+**Facebook:**
+
+Accra → Aflao is about 194 km east on the N1, usually 3 to 4 hours. It's the road to the Togo border, through Tema, Dawhenya, Sogakope, Akatsi and Denu.
+
+Leave early to clear Tema before the morning rush. Sogakope, by the Volta bridge, is a good place to stop, and Ada and the Volta estuary are a short detour south of the N1.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/accra-to-aflao?utm_source=facebook
+
+Do you stop at Sogakope or push straight through?
+
+**WhatsApp version:**
+
+Hey all 👋 Accra → Aflao is about 194 km east on the N1, usually 3 to 4 hours. It's the road to the Togo border, through Tema, Dawhenya, Sogakope, Akatsi and Denu.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/accra-to-aflao?utm_source=whatsapp
+
+Do you stop at Sogakope or push straight through?
+
+**X version:**
+
+Accra → Aflao: ~194 km on the N1, 3–4 hrs, via Tema, Sogakope, Akatsi and Denu. Leave early to clear Tema before the rush.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/accra-to-aflao?utm_source=x
+
+Stop at Sogakope or drive straight through?
+
+## Day 18: Accra to Koforidua
+/routes/accra-to-koforidua
+
+**Facebook:**
+
+Accra → Koforidua is about 89 km, usually 1½ to 2½ hours: the N6 to Suhum, then east into town. The slow part is Ofankor and Nsawam, so leaving before 6 a.m. or after the morning rush helps a lot.
+
+Koforidua's bead market on Thursdays is one of the best known in Ghana. Coming back, the Aburi road is a nice change and passes the Aburi Botanical Gardens.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/accra-to-koforidua?utm_source=facebook
+
+Ever been to the Thursday bead market?
+
+**WhatsApp version:**
+
+Hey all 👋 Accra → Koforidua is about 89 km, usually 1½ to 2½ hours: the N6 to Suhum, then east into town. The slow part is Ofankor and Nsawam, so leaving before 6 a.m. or after the morning rush helps a lot.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/accra-to-koforidua?utm_source=whatsapp
+
+Ever been to the Thursday bead market?
+
+**X version:**
+
+Accra → Koforidua: ~89 km, 1½–2½ hrs. N6 to Suhum, then east. The Thursday bead market is one of the best known in Ghana.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/accra-to-koforidua?utm_source=x
+
+Been to the bead market?
+
+## Day 19: Accra to Obuasi
+/routes/accra-to-obuasi
+
+**Facebook:**
+
+Accra → Obuasi is about 282 km, usually 4½ to 6 hours: the N6 towards Kumasi, then south on the N8 at Ejisu through Bekwai. Leave Accra before 6 a.m. to miss the worst of the Ofankor–Nsawam traffic.
+
+Nkawkaw is the usual halfway stop for food, fuel and toilets. If you're going on to Cape Coast, the N8 continues south from Obuasi through Fomena and Assin Fosu.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/accra-to-obuasi?utm_source=facebook
+
+Where do you stop on the way, Nkawkaw?
+
+**WhatsApp version:**
+
+Hey all 👋 Accra → Obuasi is about 282 km, usually 4½ to 6 hours: the N6 towards Kumasi, then south on the N8 at Ejisu through Bekwai. Leave Accra before 6 a.m. to miss the worst of the Ofankor–Nsawam traffic.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/accra-to-obuasi?utm_source=whatsapp
+
+Where do you stop on the way, Nkawkaw?
+
+**X version:**
+
+Accra → Obuasi: ~282 km, 4½–6 hrs. N6 towards Kumasi, then the N8 south from Ejisu. Nkawkaw is the usual halfway stop.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/accra-to-obuasi?utm_source=x
+
+Where do you stop?
+
+## Day 20: Accra to Tamale
+/routes/accra-to-tamale
+
+**Facebook:**
+
+Accra → Tamale is about 622 km, usually 9 to 11 hours: the N6 to Kumasi, then the N10 north through Offinso, Techiman, Kintampo and Buipe.
+
+Leave Accra before 5 a.m. or take an overnight coach to avoid both the Accra and Kumasi traffic. Fill up in Kumasi, Techiman or Kintampo, because fuel stations are further apart north of Kintampo.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/accra-to-tamale?utm_source=facebook
+
+Do you drive it in one day or break it in Kumasi?
+
+**WhatsApp version:**
+
+Hey all 👋 Accra → Tamale is about 622 km, usually 9 to 11 hours: the N6 to Kumasi, then the N10 north through Offinso, Techiman, Kintampo and Buipe.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/accra-to-tamale?utm_source=whatsapp
+
+Do you drive it in one day or break it in Kumasi?
+
+**X version:**
+
+Accra → Tamale: ~622 km, 9–11 hrs. N6 to Kumasi, then the N10 via Techiman and Kintampo. Fill up before Kintampo; stations are further apart after it.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/accra-to-tamale?utm_source=x
+
+One day or break it in Kumasi?
+
+## Day 21: Accra to Tema
+/routes/accra-to-tema
+
+**Facebook:**
+
+Accra → Tema is only about 31 km, but it ranges from 30 minutes off-peak on the motorway to well over an hour at rush hour. Avoid the motorway between about 6 and 9 a.m. into Accra and 4 and 8 p.m. out of it.
+
+If there's an accident on the motorway, the coastal road can be the faster choice, so check the live map before you leave. Labadi Beach is on the coastal route if you want a stop.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/accra-to-tema?utm_source=facebook
+
+Motorway or coastal road, which do you take?
+
+**WhatsApp version:**
+
+Hey all 👋 Accra → Tema is only about 31 km, but it ranges from 30 minutes off-peak on the motorway to well over an hour at rush hour. Avoid the motorway between about 6 and 9 a.m. into Accra and 4 and 8 p.m. out of it.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/accra-to-tema?utm_source=whatsapp
+
+Motorway or coastal road, which do you take?
+
+**X version:**
+
+Accra → Tema: ~31 km. 30 mins off-peak, over an hour at rush hour. Avoid the motorway ~6–9 a.m. inbound and 4–8 p.m. outbound.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/accra-to-tema?utm_source=x
+
+Motorway or coastal road?
+
+## Day 22: Kumasi to Takoradi
+/routes/kumasi-to-takoradi
+
+**Facebook:**
+
+Kumasi → Takoradi is about 291 km, usually 5 to 6½ hours: the N8 south through Bekwai, Fomena and Assin Fosu to the coast near Cape Coast, then the N1 west.
+
+Assin Fosu is the usual stop for fuel, food and toilets. Cape Coast and Elmina are right on the route, about two-thirds of the way, so they make a good break. Traffic builds up approaching Takoradi in the evening, so aim to arrive before dark.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/kumasi-to-takoradi?utm_source=facebook
+
+Do you stop in Cape Coast or Elmina on the way?
+
+**WhatsApp version:**
+
+Hey all 👋 Kumasi → Takoradi is about 291 km, usually 5 to 6½ hours: the N8 south through Bekwai, Fomena and Assin Fosu to the coast near Cape Coast, then the N1 west.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/kumasi-to-takoradi?utm_source=whatsapp
+
+Do you stop in Cape Coast or Elmina on the way?
+
+**X version:**
+
+Kumasi → Takoradi: ~291 km, 5–6½ hrs. N8 south to the coast, then the N1 west. Cape Coast and Elmina make a good break. Aim to arrive before dark.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/kumasi-to-takoradi?utm_source=x
+
+Cape Coast or Elmina?
+
+## Day 23: Tamale to Bolgatanga
+/routes/tamale-to-bolgatanga
+
+**Facebook:**
+
+Tamale → Bolgatanga is about 162 km north on the N10, usually 2½ to 3 hours, through Savelugu, Pong-Tamale, Nasia and Walewale. Walewale is the main stop.
+
+Carry water, because it gets very hot in the afternoon, especially in the dry season. Bolgatanga is known for its woven straw baskets, and Paga's crocodile ponds are a short drive further north.
+
+Full guide with the towns on the way and how to go by bus or trotro: https://www.lincolnnavigation.com/routes/tamale-to-bolgatanga?utm_source=facebook
+
+Ever bought a basket in Bolgatanga?
+
+**WhatsApp version:**
+
+Hey all 👋 Tamale → Bolgatanga is about 162 km north on the N10, usually 2½ to 3 hours, through Savelugu, Pong-Tamale, Nasia and Walewale. Walewale is the main stop.
+
+Guide with the stops and how to go by bus or trotro:
+https://www.lincolnnavigation.com/routes/tamale-to-bolgatanga?utm_source=whatsapp
+
+Ever bought a basket in Bolgatanga?
+
+**X version:**
+
+Tamale → Bolgatanga: ~162 km on the N10, 2½–3 hrs, via Savelugu, Nasia and Walewale. Carry water; afternoons are very hot.
+
+Guide 👇
+https://www.lincolnnavigation.com/routes/tamale-to-bolgatanga?utm_source=x
+
+Bought a basket in Bolgatanga?
+
 ---
 
 ## After 7 days
