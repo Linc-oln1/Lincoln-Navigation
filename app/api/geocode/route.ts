@@ -200,9 +200,38 @@ const WORD_SWAPS: Record<string, string[]> = {
 // ("Boti Falls" -> "Boti") when nothing more exact exists.
 const GENERIC_LAST_WORDS = new Set(["falls", "waterfall", "waterfalls", "market", "station", "junction", "park", "beach"])
 
+/* Common misspellings of Ghanaian place and map words, fixed word by word. */
+const SPELLING_FIXES: Record<string, string> = {
+  kumassi: "kumasi",
+  kumase: "kumasi",
+  accera: "accra",
+  acra: "accra",
+  takaradi: "takoradi",
+  takoradie: "takoradi",
+  tamele: "tamale",
+  koforidwa: "koforidua",
+  airpot: "airport",
+  airpoty: "airport",
+  natonal: "national",
+  nationl: "national",
+  castel: "castle",
+  hospitl: "hospital",
+  hospitale: "hospital",
+  univeristy: "university",
+  univesity: "university",
+}
+
 function queryVariants(query: string): string[] {
   const words = query.trim().split(/\s+/)
   const out: string[] = []
+  // Misspellings first: fix every known one at once, then try collapsing a
+  // doubled letter ("Kumassi" -> "Kumasi") one word at a time.
+  const fixed = words.map((w) => SPELLING_FIXES[w.toLowerCase()] ?? w)
+  if (fixed.some((w, i) => w !== words[i])) out.push(fixed.join(" "))
+  words.forEach((w, i) => {
+    const collapsed = w.replace(/([a-z])\1+/gi, "$1")
+    if (collapsed !== w && collapsed.length > 3) out.push([...words.slice(0, i), collapsed, ...words.slice(i + 1)].join(" "))
+  })
   words.forEach((w, i) => {
     for (const alt of WORD_SWAPS[w.toLowerCase()] ?? []) {
       out.push([...words.slice(0, i), alt, ...words.slice(i + 1)].join(" "))
@@ -210,7 +239,7 @@ function queryVariants(query: string): string[] {
   })
   const last = words[words.length - 1]?.toLowerCase()
   if (words.length > 1 && last && GENERIC_LAST_WORDS.has(last)) out.push(words.slice(0, -1).join(" "))
-  return [...new Set(out)].filter((v) => v.toLowerCase() !== query.toLowerCase()).slice(0, 3)
+  return [...new Set(out)].filter((v) => v.toLowerCase() !== query.toLowerCase()).slice(0, 4)
 }
 
 function getCached(key: string) {
