@@ -1,2 +1,5 @@
 allowBuilds:
   sharp: true
+# Next bundles an old PostCSS that pulls a vulnerable source-map-js (DoS).
+overrides:
+  source-map-js: ">=1.2.2"
