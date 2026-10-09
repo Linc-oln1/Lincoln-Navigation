@@ -21,10 +21,16 @@ async function grant(admin: Admin, userId: string, referredUser: string, role: "
 
   const { data } = await admin.from("profiles").select("pro_until").eq("id", userId).maybeSingle()
   const base = Math.max(Date.now(), data?.pro_until ? Date.parse(data.pro_until) : 0)
-  await admin
+  const { error: updateError } = await admin
     .from("profiles")
     .update({ pro_until: new Date(base + REWARD_DAYS * 86_400_000).toISOString() })
     .eq("id", userId)
+  if (updateError) {
+    // The record would block every retry while the days were never added, so
+    // take it back and let the next visit try again.
+    await admin.from("referral_rewards").delete().eq("user_id", userId).eq("referred_user", referredUser)
+    return false
+  }
   return true
 }
 
