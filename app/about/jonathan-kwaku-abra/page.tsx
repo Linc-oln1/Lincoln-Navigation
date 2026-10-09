@@ -97,6 +97,22 @@ export default function FounderPage() {
           </div>
         </header>
 
+        <section aria-label="Photos" className="mx-auto mt-14 grid max-w-3xl grid-cols-2 gap-4">
+          {FOUNDER.gallery.map((g) => (
+            <figure key={g.src}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={g.src}
+                alt={g.alt}
+                width={g.width}
+                height={g.height}
+                loading="lazy"
+                className="aspect-[2/3] w-full rounded-2xl border border-[#c9a06e]/20 object-cover"
+              />
+            </figure>
+          ))}
+        </section>
+
         <div className="mx-auto mt-14 max-w-3xl">
           <h2 className="text-2xl text-neutral-100" style={PLAYFAIR}>About Jonathan</h2>
           <div className="mt-5 space-y-5 text-[15px] leading-relaxed text-neutral-400">
