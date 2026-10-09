@@ -28,7 +28,7 @@ import {
   Truck,
 } from "lucide-react"
 
-import { Input } from "@/components/ui/input"
+import { PlaceSuggestInput } from "@/components/map/place-suggest-input"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
@@ -1310,25 +1310,31 @@ export function DirectionsPanel({
         <div className="space-y-3">
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-500" />
-            <Input
+            <PlaceSuggestInput
               placeholder={t("dir.start")}
               value={origin}
-              onChange={(event) => {
-                setOrigin(event.target.value)
+              onTextChange={(text) => {
+                setOrigin(text)
                 setOriginCoordinates(null)
                 setError(null)
               }}
+              onPick={(name, coords) => {
+                setOrigin(name)
+                setOriginCoordinates(coords)
+                setError(null)
+              }}
               className="pl-8 pr-10 bg-secondary border-0"
-            />
-            <button
-              type="button"
-              onClick={handleUseCurrentLocation}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
-              title={t("dir.currentLoc")}
-              aria-label={t("dir.currentLoc")}
             >
-              <LocateFixed className="w-4 h-4 text-muted-foreground" />
-            </button>
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
+                title={t("dir.currentLoc")}
+                aria-label={t("dir.currentLoc")}
+              >
+                <LocateFixed className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </PlaceSuggestInput>
           </div>
 
           <div className="flex items-center gap-2">
@@ -1347,13 +1353,18 @@ export function DirectionsPanel({
 
           <div className="relative">
             <div className="absolute left-3 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary" />
-            <Input
+            <PlaceSuggestInput
               placeholder={hubMode ? t(HUBS[hubMode].nearest) : t("dir.dest")}
               value={destination}
               readOnly={hubMode !== null}
-              onChange={(event) => {
-                setDestination(event.target.value)
+              onTextChange={(text) => {
+                setDestination(text)
                 setDestinationCoordinates(null)
+                setError(null)
+              }}
+              onPick={(name, coords) => {
+                setDestination(name)
+                setDestinationCoordinates(coords)
                 setError(null)
               }}
               className="pl-8 bg-secondary border-0"
